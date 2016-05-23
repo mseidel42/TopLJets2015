@@ -194,8 +194,8 @@ void RunTopJetShape(TString filename,
 	  bool passLooseKin(ev.l_pt[il]>10 && fabs(ev.l_eta[il])<2.5);
 	  bool passTightId(ev.l_id[il]==13 ? (ev.l_pid[il]>>1)&0x1  : (ev.l_pid[il]>>2)&0x1);
 	  float relIso(ev.l_relIso[il]);
-	  bool passTightIso( ev.l_id[il]==13 ? relIso<0.15 : (ev.l_pid[il]>>1)&0x1 );
-	  bool passLooseIso(  ev.l_id[il]==13 ? relIso<0.25 : true);
+	  bool passTightIso( ev.l_id[il]==13 ? relIso<0.15 : (ev.l_pid[il]>>1)&0x1);
+	  bool passLooseIso( ev.l_id[il]==13 ? relIso<0.25 : (ev.l_pid[il]   )&0x1);
 	  if(passTightKin && passTightId && passTightIso) tightLeptons.push_back(il);
 	  else if(passLooseKin && passLooseIso)           looseLeptons.push_back(il);
 	}
