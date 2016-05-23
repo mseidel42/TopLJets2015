@@ -78,7 +78,7 @@ The analysis (histogram filling, final selection) is in src/ReadTree.cc.
 Recompile (scram b) everytime you change it so that you can test the new features.
 To test the code on a single file to produce plots.
 ```
-python scripts/runLocalAnalysis.py -i MiniEvents.root
+python scripts/runLocalAnalysis.py -i MiniEvents.root -o analysis.root --tag MC13TeV_TTJets
 ```
 To run the code on a set of samples stored in EOS you can run it as shown below.
 If "-q queue_name" is appended the jobs are submitted to the batch system instead of running locally. 
