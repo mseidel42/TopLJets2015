@@ -316,7 +316,7 @@ void RunTopJetShape(TString filename,
 	  Int_t hadFlav=ev.j_hadflav[k];
 	  Int_t flav=ev.j_flav[k];
 	  TLorentzVector gjp4(0,0,0,0);
-	  if(ev.j_g[k]>0)
+	  if(ev.j_g[k]>-1)
 	    {
 	      int gidx=ev.j_g[k];
 	      gjp4.SetPtEtaPhiM( ev.g_pt[gidx], ev.g_eta[gidx], ev.g_phi[gidx], ev.g_m[gidx] );
