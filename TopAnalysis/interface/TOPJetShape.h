@@ -18,7 +18,7 @@ struct TopJetShapeEvent_t
   
   Int_t gen_sel;
   Float_t gj_pt[50],gj_eta[50],gj_phi[50],gj_m[50];
-  Int_t gj_flav[50],gj_hadflav[50],gj_w[50];
+  Int_t gj_flav[50],gj_hadflav[50];
   Float_t gj_ga[50][3][3][3][3];
   
 };
@@ -37,7 +37,6 @@ struct Jet {
   std::vector<Particle> particles;
   int flav;
   int oldidx;
-  int wcandidate = 0;
   
   double ga[3][3][3][3]; // beta/kappa/iptcut/icharge
   

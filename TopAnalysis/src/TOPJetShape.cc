@@ -184,9 +184,10 @@ void RunTopJetShape(TString filename,
       int vet_ngleptons = 0;
       int sel_ngbjets   = 0;
       int sel_ngjets    = 0;
+      int sel_ngwcand   = 0;
       std::vector<Jet> genJets;
       
-      //loop over gen objects from pseudotop producer
+      //loop over gen jets and leptons from pseudotop producer
       for (int i = 0; i < ev.ng; i++) {
         //jets
         if (ev.g_pt[i]>30 && abs(ev.g_eta[i])<2.4 && abs(ev.g_id[i])<10) {
@@ -214,22 +215,23 @@ void RunTopJetShape(TString filename,
         }
       }
       
-      //event selected on generator level?
-      if (sel_ngbjets==2 && sel_ngjets+sel_ngbjets>=4 &&
-          sel_ngleptons==1 && vet_ngleptons==0) tjsev.gen_sel = 1;
-      
-      //flag jets as part of W boson candidates
+      //flag non-b jets as part of W boson candidates: flav 0->1
       for (int i = 0; i < tjsev.ngj; i++) {
         if (genJets[i].flav==5) continue;
         for (int j = i+1; j < tjsev.ngj; j++) {
           if (genJets[j].flav==5) continue;
           TLorentzVector wCand = genJets[i].p4 + genJets[j].p4;
           if (abs(wCand.M()-80.4) < 10.) {
-            genJets[i].wcandidate++;
-            genJets[j].wcandidate++;
+            genJets[i].flav = 1;
+            genJets[j].flav = 1;
+            sel_ngwcand++;
           }
         }
       }
+      
+      //event selected on generator level?
+      if (sel_ngbjets==2 && sel_ngwcand>0 && 
+          sel_ngleptons==1 && vet_ngleptons==0) tjsev.gen_sel = 1;
       
       //fill jet constituents
       for (int i = 0; i < tjsev.ngj; i++) {
@@ -256,7 +258,6 @@ void RunTopJetShape(TString filename,
         tjsev.gj_phi [i] = genJets[i].p4.Phi();
         tjsev.gj_m   [i] = genJets[i].p4.M();
         tjsev.gj_flav[i] = genJets[i].flav;
-        tjsev.gj_w   [i] = genJets[i].wcandidate;
       }
 
       //RECO LEVEL
@@ -639,7 +640,6 @@ void createTopJetShapeEventTree(TTree *t,TopJetShapeEvent_t &tjsev)
   t->Branch("gj_m",   tjsev.gj_m ,   "gj_m[ngj]/F");
   t->Branch("gj_flav",  tjsev.gj_flav ,  "gj_flav[ngj]/I");
   t->Branch("gj_hadflav",  tjsev.gj_hadflav ,  "gj_hadflav[ngj]/I");
-  t->Branch("gj_w",  tjsev.gj_w ,  "gj_w[ngj]/I");
   t->Branch("gj_ga",  tjsev.gj_ga ,  "gj_ga[ngj][3][3][3][3]/F");
 
   //mc truth
@@ -661,7 +661,7 @@ void resetTopJetShapeEvent(TopJetShapeEvent_t &tjsev)
   for(int i=0; i<10; i++) tjsev.weight[i]=0;
   for(int i=0; i<5; i++) { tjsev.l_pt[i]=0;   tjsev.l_eta[i]=0;   tjsev.l_phi[i]=0;   tjsev.l_m[i]=0; tjsev.l_id[i]=0; tjsev.gl_pt[i]=0;   tjsev.gl_eta[i]=0;   tjsev.gl_phi[i]=0;   tjsev.gl_m[i]=0; tjsev.gl_id[i]=0; }
   for(int i=0; i<50; i++) {
-    tjsev.j_pt[i]=0;   tjsev.j_eta[i]=0;   tjsev.j_phi[i]=0;   tjsev.j_m[i]=0; tjsev.gj_pt[i]=0;   tjsev.gj_eta[i]=0;   tjsev.gj_phi[i]=0;   tjsev.gj_m[i]=0; tjsev.gj_flav[i]=0; tjsev.gj_hadflav[i]=0; tjsev.gj_w[i]=0;
+    tjsev.j_pt[i]=0;   tjsev.j_eta[i]=0;   tjsev.j_phi[i]=0;   tjsev.j_m[i]=0; tjsev.gj_pt[i]=0;   tjsev.gj_eta[i]=0;   tjsev.gj_phi[i]=0;   tjsev.gj_m[i]=0; tjsev.gj_flav[i]=0; tjsev.gj_hadflav[i]=0;
     for (int i1 = 0; i1 < 3; ++i1) for (int i2 = 0; i2 < 3; ++i2) for (int i3 = 0; i3 < 3; ++i3) for (int i4 = 0; i4 < 3; ++i4) tjsev.gj_ga[i][i1][i2][i3][i4] = 0;
   } 
   for(int i=0; i<4; i++) { tjsev.t_pt[i]=0;   tjsev.t_eta[i]=0;   tjsev.t_phi[i]=0;   tjsev.t_m[i]=0; tjsev.t_id[i]=0; }
