@@ -57,8 +57,8 @@ void RunTopJetShape(TString filename,
   attachToMiniEventTree(t,ev, true);
   Int_t nentries(t->GetEntriesFast());
   t->GetEntry(0);
-  bool requireEtriggerOnly(false);
-  if(ev.isData && filename.Contains("SingleElectron")) requireEtriggerOnly=true;
+  //bool requireEtriggerOnly(false);
+  //if(ev.isData && filename.Contains("SingleElectron")) requireEtriggerOnly=true;
 
   cout << "...producing " << outname << " from " << nentries << " events" << endl;
 
@@ -263,8 +263,8 @@ void RunTopJetShape(TString filename,
         }
       
       //check if triggers have fired
-      bool hasMuTrigger((ev.muTrigger & 0x3)!=0);
-      bool hasEleTrigger((ev.elTrigger & 0x1)!=0);
+      //bool hasMuTrigger((ev.muTrigger & 0x3)!=0);
+      //bool hasEleTrigger((ev.elTrigger & 0x1)!=0);
 
       //decide the channel
       std::vector<int> selLeptons;
