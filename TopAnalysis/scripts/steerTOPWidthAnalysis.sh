@@ -29,7 +29,7 @@ case $WHAT in
 	python scripts/runLocalAnalysis.py -i ${eosdir} -q ${queue} -o ${outdir} -m TOPWidth::RunTopWidth --ch 0;
 	;;
     MERGESEL )
-	./scripts/mergeOutputs.py ${outdir};	
+	./scripts/mergeOutputs.py ${outdir} True;	
 	;;
     PLOTSEL )
 	python scripts/plotter.py -i ${outdir} --puNormSF puwgtctr  -j data/samples_Run2015.json -l ${lumi};	
