@@ -536,18 +536,16 @@ void RunTopJetShape(TString filename,
 double calcGA(Jet jet, int beta, int kappa, int iptcut, int icharge) {
   double sumpt = 0;
   for (auto p : jet.particles) {
-    if (p.p4.Pt() < iptcut*0.500) continue;
+    if (p.p4.Pt() < (iptcut+1)*0.500) continue;
     if      (icharge == 0 && p.charge!=0) sumpt += p.p4.Pt();
     else if (icharge == 1) sumpt += p.p4.Pt();
     else if (icharge == 2) sumpt += p.p4.Pt()*p.puppi;
   }
   //std::cout << "sumpt" << beta << kappa << iptcut << icharge << ": " << sumpt << std::endl;
-  //FIXME! jet pt > sum particle pt
-  //if (beta == 0 && kappa == 0 && iptcut == 0 && icharge == 1) std::cout << "jet pt: " << jet.p4.Pt() << ", sum pt: " << sumpt << std::endl;
   
   double ga = 0;
   for (auto p : jet.particles) {
-    if (p.p4.Pt() < iptcut*0.500) continue;
+    if (p.p4.Pt() < (iptcut+1)*0.500) continue;
     if(icharge == 0 && p.charge==0) continue;
     double weight = 1.;
     if (icharge == 2) weight = p.puppi;
