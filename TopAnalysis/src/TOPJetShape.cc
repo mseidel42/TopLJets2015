@@ -15,12 +15,24 @@
 #include "CondFormats/BTauObjects/interface/BTagCalibration.h"
 #include "CondFormats/BTauObjects/interface/BTagCalibrationReader.h"
 
-
 #include <vector>
 #include <iostream>
 #include <algorithm>
 
 #include "TMath.h"
+
+#include "fastjet/tools/Recluster.hh"
+#include "fastjet/contrib/Nsubjettiness.hh"
+using fastjet::PseudoJet;
+using fastjet::contrib::Nsubjettiness;
+using fastjet::contrib::NsubjettinessRatio;
+using fastjet::contrib::OnePass_WTA_KT_Axes;
+using fastjet::contrib::UnnormalizedMeasure;
+
+#include "Rivet/Math/MatrixN.hh"
+#include "Rivet/Math/MatrixDiag.hh"
+using Rivet::Matrix;
+using Rivet::EigenSystem;
 
 using namespace std;
 
@@ -187,18 +199,9 @@ void RunTopJetShape(TString filename,
       std::vector<Jet> genJets;
       
       //loop over gen jets and leptons from pseudotop producer
+      //leptons
       for (int i = 0; i < ev.ng; i++) {
-        //jets
-        if (ev.g_pt[i]>30 && abs(ev.g_eta[i])<2.4 && abs(ev.g_id[i])<10) {
-          //store to jet analysis objects
-          TLorentzVector jp4; jp4.SetPtEtaPhiM(ev.g_pt[i],ev.g_eta[i],ev.g_phi[i],ev.g_m[i]);
-          genJets.push_back(Jet(jp4, abs(ev.g_id[i]), i));
-          //count
-          tjsev.ngj++;
-          if (abs(ev.g_id[i])==5) sel_ngbjets++;
-        }
-        //leptons
-        else if (abs(ev.g_id[i])>10) {
+        if (abs(ev.g_id[i])>10) {
           //store to tree
           tjsev.gl_id [tjsev.ngl] = ev.g_id [i];
           tjsev.gl_pt [tjsev.ngl] = ev.g_pt [i];
@@ -209,20 +212,41 @@ void RunTopJetShape(TString filename,
           //count
           tjsev.ngl++;
           if      (ev.g_pt[i]>30 && abs(ev.g_eta[i])<2.1) sel_ngleptons++;
-          else if (ev.g_pt[i]>10 && abs(ev.g_eta[i])<2.5) vet_ngleptons++;
+          else if (ev.g_pt[i]>15 && abs(ev.g_eta[i])<2.5) vet_ngleptons++;
+        }
+      }
+      //jets
+      for (int i = 0; i < ev.ng; i++) {
+        if (ev.g_pt[i]>30 && abs(ev.g_eta[i])<2.4 && abs(ev.g_id[i])<10) {
+          TLorentzVector jp4; jp4.SetPtEtaPhiM(ev.g_pt[i],ev.g_eta[i],ev.g_phi[i],ev.g_m[i]);
+          //check overlap with leptons
+          bool lepJetOverlap = false;
+          for (int l = 0; l < tjsev.ngl; l++) {
+            if (tjsev.gl_pt[l] < 30) continue;
+            TLorentzVector lp4; lp4.SetPtEtaPhiM(tjsev.gl_pt[l],tjsev.gl_eta[l],tjsev.gl_phi[l],tjsev.gl_m[l]);
+            if (jp4.DeltaR(lp4) < 0.4) lepJetOverlap = true;
+          }
+          if (lepJetOverlap) continue;
+          genJets.push_back(Jet(jp4, abs(ev.g_id[i]), i));
+          //count
+          tjsev.ngj++;
+          if (abs(ev.g_id[i])==5) sel_ngbjets++;
         }
       }
       
-      //flag non-b jets as part of W boson candidates: flav 0->1
+      //flag non-b jets as part of W boson candidates: flavor 0->1
       //TODO: matched events at 8 TeV: mu=84.23, sigma=12.39 GeV. Correction needed?
       for (int i = 0; i < tjsev.ngj; i++) {
-        if (genJets[i].flav==5) continue;
         for (int j = i+1; j < tjsev.ngj; j++) {
-          if (genJets[j].flav==5) continue;
+          if (genJets[i].p4.DeltaR(genJets[j].p4) < 0.8) {
+            genJets[i].overlap = 1;
+            genJets[j].overlap = 1;
+          }
+          if (genJets[i].flavor==5 or genJets[j].flavor==5) continue;
           TLorentzVector wCand = genJets[i].p4 + genJets[j].p4;
           if (abs(wCand.M()-80.4) < 15.) {
-            genJets[i].flav = 1;
-            genJets[j].flav = 1;
+            genJets[i].flavor = 1;
+            genJets[j].flavor = 1;
             sel_ngwcand++;
           }
         }
@@ -253,7 +277,7 @@ void RunTopJetShape(TString filename,
       for(int il=0; il<ev.nl; il++)
         {
           bool passTightKin(ev.l_pt[il]>30 && fabs(ev.l_eta[il])<2.1);
-          bool passLooseKin(ev.l_pt[il]>10 && fabs(ev.l_eta[il])<2.5);
+          bool passLooseKin(ev.l_pt[il]>15 && fabs(ev.l_eta[il])<2.5);
           bool passTightId(ev.l_id[il]==13 ? (ev.l_pid[il]>>1)&0x1  : (ev.l_pid[il]>>2)&0x1);
           float relIso(ev.l_relIso[il]);
           bool passTightIso( ev.l_id[il]==13 ? relIso<0.15 : (ev.l_pid[il]>>1)&0x1);
@@ -360,27 +384,30 @@ void RunTopJetShape(TString filename,
             }
 
           //flavor based on b tagging
-          int flav = 0;
+          int flavor = 0;
           if (isBTagged) {
-            flav = 5;
+            flavor = 5;
             sel_nbjets++;
           }
           
           //store to jet analysis objects
-          jets.push_back(Jet(jp4, flav, k));
+          jets.push_back(Jet(jp4, flavor, k));
         }
       
       tjsev.nj=jets.size();
       
-      //flag non-b jets as part of W boson candidates: flav 0->1
+      //flag non-b jets as part of W boson candidates: flavor 0->1
       for (int i = 0; i < tjsev.nj; i++) {
-        if (jets[i].flav==5) continue;
         for (int j = i+1; j < tjsev.nj; j++) {
-          if (jets[j].flav==5) continue;
+          if (jets[i].p4.DeltaR(jets[j].p4) < 0.8) {
+            jets[i].overlap = 1;
+            jets[j].overlap = 1;
+          }
+          if (jets[i].flavor==5 or jets[j].flavor==5) continue;
           TLorentzVector wCand = jets[i].p4 + jets[j].p4;
           if (abs(wCand.M()-80.4) < 15.) {
-            jets[i].flav = 1;
-            jets[j].flav = 1;
+            jets[i].flavor = 1;
+            jets[j].flavor = 1;
             sel_nwcand++;
           }
         }
@@ -414,7 +441,8 @@ void RunTopJetShape(TString filename,
         tjsev.gj_eta [i] = genJets[i].p4.Eta();
         tjsev.gj_phi [i] = genJets[i].p4.Phi();
         tjsev.gj_m   [i] = genJets[i].p4.M();
-        tjsev.gj_flav[i] = genJets[i].flav;
+        tjsev.gj_flavor[i] = genJets[i].flavor;
+        tjsev.gj_overlap[i] = genJets[i].overlap;
         for (int i1 = 0; i1 < 3; ++i1) for (int i2 = 0; i2 < 3; ++i2) for (int i3 = 0; i3 < 3; ++i3) for (int i4 = 0; i4 < 3; ++i4)
         tjsev.gj_ga[i][i1][i2][i3][i4] = calcGA(genJets[i], i1, i2, i3, i4);
       }
@@ -488,7 +516,8 @@ void RunTopJetShape(TString filename,
           tjsev.j_eta[ij]  = jets[ij].p4.Eta();
           tjsev.j_phi[ij]  = jets[ij].p4.Phi();
           tjsev.j_m[ij]    = jets[ij].p4.M(); 
-          tjsev.j_flav[ij] = jets[ij].flav;
+          tjsev.j_flavor[ij] = jets[ij].flavor;
+          tjsev.j_overlap[ij] = jets[ij].overlap;
           for (int i1 = 0; i1 < 3; ++i1) for (int i2 = 0; i2 < 3; ++i2) for (int i3 = 0; i3 < 3; ++i3) for (int i4 = 0; i4 < 3; ++i4)
           tjsev.j_ga[ij][i1][i2][i3][i4] = calcGA(jets[ij], i1, i2, i3, i4);
           //matching to gen jet
@@ -553,7 +582,117 @@ double calcGA(Jet jet, int beta, int kappa, int iptcut, int icharge) {
   }
   
   //std::cout << "ga" << beta << kappa << iptcut << icharge << ": " << ga << std::endl;
+  
+  /*
+  if (ga > 1. && beta == 1 && kappa == 1 && iptcut == 0 && icharge == 0) {
+    std::cout << "ga(1,1) = " << ga << std::endl;
+    std::cout << "pt/sum(pt) deltaR" << std::endl;
+    double sumpt_test = 0;
+    for (auto p : jet.particles) {
+      if (p.p4.Pt() < (iptcut+1)*0.500) continue;
+      if(p.charge==0) continue;
+      std::cout << p.p4.Pt()/sumpt << " " << jet.p4.DeltaR(p.p4) << std::endl;
+      sumpt_test += p.p4.Pt()/sumpt;
+    }
+    std::cout << "sumpt_test = " << sumpt_test << "\n" << std::endl;
+  }
+  */
+  
   return ga;
+}
+
+//TODO: integrate code properly
+//TODO: switches for charged/all particles
+double getMult(Jet jet) {
+  //std::cout << "getMult()" << std::endl;
+  int mult = 0;
+  for (auto p : jet.particles) {
+    if (p.charge == 0) continue;
+    ++mult;
+  }
+  return mult;
+}
+
+double getPtD(Jet jet) {
+  //std::cout << "getPtD()" << std::endl;
+  int mult = 0;
+  double sumpt  = 0.;
+  double sumpt2 = 0.;
+  for (auto p : jet.particles) {
+    if (p.charge == 0) continue;
+    ++mult;
+    sumpt  += p.pt();
+    sumpt2 += pow(p.pt(), 2);
+  }
+  if (mult < 1) return -1.;
+  double ptd = sqrt(sumpt2)/sumpt;
+  return ptd;
+}
+
+double getWidth(Jet jet) {
+  //std::cout << "getWidth()" << std::endl;
+  int mult = 0;
+  double sumpt   = 0.;
+  double sumptdr = 0.;
+  for (auto p : jet.particles) {
+    if (p.charge == 0) continue;
+    ++mult;
+    sumpt   += p.pt();
+    sumptdr += p.pt() * deltaR(jet.momentum(), p.momentum());
+  }
+  if (mult < 1) return -1.;
+  double width = sumptdr/sumpt;
+  return width;
+}
+
+double getEcc(Jet jet) {
+  //std::cout << "getEcc()" << std::endl;
+  // Get mean axis
+  int mult = 0;
+  Particle axis(TLorentzVector(), 0., 0.);
+  for (auto p : jet.particles) {
+    if (p.charge == 0) continue;
+    ++mult;
+    axis.p4 += p.momentum();
+  }
+  if (mult < 3) return -1.;
+  // Covariance matrix
+  double norm = 1. / (mult - 1.);
+  Matrix<2> M;
+  for (auto p : jet.particles) {
+    if (p.charge == 0) continue;
+    Matrix<2> MPart;
+    MPart.set(0, 0, (p.eta() - axis.eta()) * (p.eta() - axis.eta()));
+    MPart.set(0, 1, (p.eta() - axis.eta()) * mapAngleMPiToPi(p.phi() - axis.phi()));
+    MPart.set(1, 0, mapAngleMPiToPi(p.phi() - axis.phi()) * (p.eta() - axis.eta()));
+    MPart.set(1, 1, mapAngleMPiToPi(p.phi() - axis.phi()) * mapAngleMPiToPi(p.phi() - axis.phi()));
+    M += MPart * p.energy() * norm;
+  }
+  // Calculate eccentricity from eigenvalues
+  const EigenSystem<2> eigen = diagonalize(M);
+  double ecc = 1. - eigen.getEigenValues()[1]/eigen.getEigenValues()[0];
+  return ecc;
+}
+
+std::vector<double> getZg(Jet jet) {
+  //std::cout << "getZg()" << std::endl;
+  // Recluster constituents with CA
+  PseudoJet akjet;
+  
+  fastjet::Recluster recluster(fastjet::cambridge_algorithm);
+  PseudoJet cajet = recluster.result(akjet);
+  PseudoJet cajetp1, cajetp2;
+  double zg = 0.;
+  while (zg < 0.1 and cajet.has_parents(cajetp1, cajetp2)) {
+    ////std::cout << "jetp1 pt = " << cajetp1.pt() << ", jetp2 pt = " << cajetp2.pt() << std::endl;
+    zg    = cajetp2.pt()/cajet.pt();
+    cajet = cajetp1;
+  }
+  ////std::cout << "zg = " << zg << std::endl;
+  std::vector<double> results;
+  results.push_back(zg);
+  results.push_back(zg*cajetp1.delta_R(cajetp2));
+  return results;
 }
 
 //
@@ -589,7 +728,8 @@ void createTopJetShapeEventTree(TTree *t,TopJetShapeEvent_t &tjsev)
   t->Branch("j_eta", tjsev.j_eta , "j_eta[nj]/F");
   t->Branch("j_phi", tjsev.j_phi , "j_phi[nj]/F");
   t->Branch("j_m",   tjsev.j_m ,   "j_m[nj]/F");
-  t->Branch("j_flav",  tjsev.j_flav ,  "j_flav[nj]/I");
+  t->Branch("j_flavor",  tjsev.j_flavor ,  "j_flavor[nj]/I");
+  t->Branch("j_overlap",  tjsev.j_overlap ,  "j_overlap[nj]/I");
   t->Branch("j_gj",  tjsev.j_gj ,  "j_gj[nj]/I");
   t->Branch("j_ga",  tjsev.j_ga ,  "j_ga[nj][3][3][3][3]/F");
   
@@ -599,7 +739,8 @@ void createTopJetShapeEventTree(TTree *t,TopJetShapeEvent_t &tjsev)
   t->Branch("gj_eta", tjsev.gj_eta , "gj_eta[ngj]/F");
   t->Branch("gj_phi", tjsev.gj_phi , "gj_phi[ngj]/F");
   t->Branch("gj_m",   tjsev.gj_m ,   "gj_m[ngj]/F");
-  t->Branch("gj_flav",  tjsev.gj_flav ,  "gj_flav[ngj]/I");
+  t->Branch("gj_flavor",  tjsev.gj_flavor ,  "gj_flavor[ngj]/I");
+  t->Branch("gj_overlap",  tjsev.gj_overlap ,  "gj_overlap[ngj]/I");
   t->Branch("gj_j",  tjsev.gj_j ,  "gj_j[ngj]/I");
   t->Branch("gj_ga",  tjsev.gj_ga ,  "gj_ga[ngj][3][3][3][3]/F");
   
@@ -614,8 +755,8 @@ void resetTopJetShapeEvent(TopJetShapeEvent_t &tjsev)
   for(int i=0; i<10; i++) tjsev.weight[i]=0;
   for(int i=0; i<5; i++) { tjsev.l_pt[i]=0;   tjsev.l_eta[i]=0;   tjsev.l_phi[i]=0;   tjsev.l_m[i]=0; tjsev.l_id[i]=0; tjsev.gl_pt[i]=0;   tjsev.gl_eta[i]=0;   tjsev.gl_phi[i]=0;   tjsev.gl_m[i]=0; tjsev.gl_id[i]=0; }
   for(int i=0; i<50; i++) {
-    tjsev.j_pt[i]=0;   tjsev.j_eta[i]=0;   tjsev.j_phi[i]=0;   tjsev.j_m[i]=0; tjsev.j_flav[i]=0; tjsev.j_gj[i]=-1;
-    tjsev.gj_pt[i]=0;   tjsev.gj_eta[i]=0;   tjsev.gj_phi[i]=0;   tjsev.gj_m[i]=0; tjsev.gj_flav[i]=0; tjsev.gj_j[i]=-1;
+    tjsev.j_pt[i]=0;   tjsev.j_eta[i]=0;   tjsev.j_phi[i]=0;   tjsev.j_m[i]=0; tjsev.j_flavor[i]=0; tjsev.j_overlap[i]=0; tjsev.j_gj[i]=-1;
+    tjsev.gj_pt[i]=0;   tjsev.gj_eta[i]=0;   tjsev.gj_phi[i]=0;   tjsev.gj_m[i]=0; tjsev.gj_flavor[i]=0; tjsev.gj_overlap[i]=0; tjsev.gj_j[i]=-1;
     for (int i1 = 0; i1 < 3; ++i1) for (int i2 = 0; i2 < 3; ++i2) for (int i3 = 0; i3 < 3; ++i3) for (int i4 = 0; i4 < 3; ++i4) { tjsev.j_ga[i][i1][i2][i3][i4] = 0; tjsev.gj_ga[i][i1][i2][i3][i4] = 0; }
   } 
   
