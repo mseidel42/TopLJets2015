@@ -13,13 +13,13 @@ POItitles={'r':'#mu=#sigma/#sigma_{th}',
 """
 common CMS label
 """
-def drawCMSlabel():        
+def drawCMSlabel(startY=0.97):        
     cmsLabel=ROOT.TLatex()
     cmsLabel.SetTextFont(42)
     cmsLabel.SetTextSize(0.035)
     cmsLabel.SetNDC()
-    cmsLabel.DrawLatex(0.12,0.97,'#bf{CMS} #it{preliminary}')
-    cmsLabel.DrawLatex(0.70,0.97,'#scale[0.8]{2.2 fb^{-1} (13 TeV)}')
+    cmsLabel.DrawLatex(0.12,startY,'#bf{CMS} #it{preliminary}')
+    cmsLabel.DrawLatex(0.75,startY,'#scale[0.8]{2.2 fb^{-1} (13 TeV)}')
     cmsLabel.Draw()
 
 """
@@ -48,7 +48,7 @@ def prepareFitScript(datacard,POIs,unblind=False):
         if parameter=='r':
             fitScript.write('\n## max likelihood fit\n')
             fitScript.write('echo \"Running MaxLikelihoodFit for r\"\n')
-            fitScript.write('combine workspace.root -M MaxLikelihoodFit -t -1 --expectSignal=1 -m 0\n')
+            fitScript.write('combine workspace.root -M MaxLikelihoodFit -t -1 --expectSignal=1 -m 0 --minimizerTolerance 0.001\n')
             fitScript.write('mv mlfit.root mlfit_exp.root\n')
             
             fitScript.write('\n## impacts\n')
@@ -61,24 +61,31 @@ def prepareFitScript(datacard,POIs,unblind=False):
             fitScript.write('echo \n"To run toys  re-run runCombine.sh uncommenting the appropriate lines\n')
             fitScript.write('#rscan=(0.9 1.0 1.1)\n')
             fitScript.write('#for r in ${rscan[@]}; do\n')
-            fitScript.write('#\t combine workspace.root -M MaxLikelihoodFit -t 100 --expectSignal=${r} -m ${r} --toysFrequentist --noErrors --minos none;\n')
+            fitScript.write('#\t combine workspace.root -M MaxLikelihoodFit -t 100 --expectSignal=${r} -m ${r} --toysFrequentist --noErrors --minos none --robustFit=1;\n')
             fitScript.write('#done\n\n')
 
             if unblind:
-                fitScript.write('combine workspace.root -M MaxLikelihoodFit -m 0\n')
+                fitScript.write('combine workspace.root -M MaxLikelihoodFit -m 0 --setPhysicsModelParameters r=1 --minimizerTolerance 0.001\n')
                 fitScript.write('mv mlfit.root mlfit_obs.root\n')
                             
         fitScript.write('\n## function of %s\n'%parameter)
         fitScript.write('echo \"Running likelihood scan for %s\"\n'%parameter)
-        fitScript.write('combine workspace.root -M MultiDimFit -P %s -t -1 --expectSignal=1 --algo=grid --points=50 %s %s -m 0\n'%(parameter,rangeOpt,poiOpt))
+        fitScript.write('combine workspace.root -M MultiDimFit -P %s -t -1 --expectSignal=1 --algo=grid --points=100 %s %s -m 0\n'%(parameter,rangeOpt,poiOpt))
         fitScript.write('mv higgsCombineTest.MultiDimFit.mH0.root exp_plr_scan_%s.root\n'%parameter)
-        fitScript.write('combine workspace.root -M MultiDimFit -P %s -t -1 --expectSignal=1 --algo=grid --points=50 %s %s -m 0 -S 0\n'%(parameter,rangeOpt,poiOpt))
+        fitScript.write('combine workspace.root -M MultiDimFit -P %s -t -1 --expectSignal=1 --algo=grid --points=100 %s %s -m 0 -S 0\n'%(parameter,rangeOpt,poiOpt))
         fitScript.write('mv higgsCombineTest.MultiDimFit.mH0.root exp_plr_scan_stat_%s.root\n'%parameter)
         if unblind:
-            fitScript.write('combine workspace.root -M MultiDimFit -P %s --algo=grid --points=50 %s %s -m 0\n'%(parameter,rangeOpt,poiOpt))
+            fitScript.write('combine workspace.root -M MultiDimFit -P %s --algo=grid --points=100 %s %s -m 0 --saveWorkspace --setPhysicsModelParameters r=1 --minimizerTolerance 0.001\n'%(parameter,rangeOpt,poiOpt))
             fitScript.write('mv higgsCombineTest.MultiDimFit.mH0.root obs_plr_scan_%s.root\n'%parameter)
-            fitScript.write('combine workspace.root -M MultiDimFit -P %s --algo=grid --points=50 %s %s -m 0 -S 0\n'%(parameter,rangeOpt,poiOpt))
+            fitScript.write('combine obs_plr_scan_%s.root -M MultiDimFit -P %s --algo=grid --points=100 %s %s -m 0 --freezeNuisances all --snapshotName "MultiDimFit"\n'%(parameter,parameter,rangeOpt,poiOpt))
             fitScript.write('mv higgsCombineTest.MultiDimFit.mH0.root obs_plr_scan_stat_%s.root\n'%parameter)
+
+        fitScript.write('echo \"To run pole mass fit uncomment the appropriate lines\n')
+        fitScript.write('#text2workspace.py datacard.dat -P TopLJets2015.TopAnalysis.TopPoleMass:topPoleMass -m 172.5 --PO verbose --PO param=${CMSSW_BASE}/src/HiggsAnalysis/CombinedLimit/python/xsecvsmpole.dat -o workspace_mpole.root\n')
+        fitScript.write('#combine workspace_mpole.root -M MultiDimFit -P mpole -t -1 --algo=grid --points=100 --setPhysicsModelParameters mpole=172.5  -m 0 --setPhysicsModelParameterRanges mpole=165,185\n')
+        fitScript.write('#mv higgsCombineTest.MultiDimFit.mH0.root exp_plr_scan_mpole.root\n')
+        fitScript.write('#combine workspace_mpole.root -M MultiDimFit -P mpole --algo=grid --points=100 --setPhysicsModelParameters mpole=172.5  -m 0 --setPhysicsModelParameterRanges mpole=165,185\n')
+        fitScript.write('#mv higgsCombineTest.MultiDimFit.mH0.root obs_plr_scan_mpole.root\n')
 
     fitScript.write('\n# 2D likelihood scans\n')
     for i in xrange(0,len(POIs)):
@@ -109,7 +116,7 @@ def show1DLikelihoodScan(resultsSet,parameter='r',output='./'):
    
     #likelihood scans
     nllGrs={}
-    colors=[1, ROOT.kOrange-1,  ROOT.kRed+1, ROOT.kMagenta-9, ROOT.kBlue-7]
+    colors=[1, ROOT.kOrange,  ROOT.kRed+1, ROOT.kMagenta-9, ROOT.kBlue-7]
     ires=0
     for title,datacard in resultsSet:
         ires+=1
@@ -273,74 +280,102 @@ def show2DLikelihoodScan(resultsSet,parameters):
    
     c.Modified()
     c.Update()
-    raw_input()
 
 """
 compare prefit and postfit nuisances
 """
 def compareNuisances(resultsSet,output):
    
-    colors=[1, ROOT.kOrange,  ROOT.kRed+1, ROOT.kMagenta-9, ROOT.kBlue-7]
-    ires=0
-    frame=None
-    gr1s,gr2s=ROOT.TGraph(),ROOT.TGraph()
+    colors=[{'exp':ROOT.kGray,'obs':1}, 
+            {'exp':ROOT.kOrange,'obs':ROOT.kOrange-1}]
     postFitNuisGr={}
-    dx=1./(len(resultsSet)+2.)
-    fitResSummary=[]
+    nuisCorrelationH={}
+    nuisanceList=[]
+    dy=1./(len(resultsSet)+2.)
+    resCtr=0
     for title,datacard in resultsSet:
+        resCtr+=1
+        dir=os.path.dirname(datacard)        
+        for fit in ['exp','obs']:
+
+            key=(title,fit)
+            
+            #open file if it exists
+            fname='%s/mlfit_%s.root'%(dir,fit)
+            inF=ROOT.TFile.Open(fname)
+            if inF is None or inF.IsZombie() : continue
+
+            #get (S+B) fit results and store in graph
+            fit_s=inF.Get('fit_s')            
+            postFitNuisGr[key]=ROOT.TGraphErrors()
+            postFitNuisGr[key].SetName('postfitgr_%s'%''.join(key))
+            postFitNuisGr[key].SetTitle(title)
+            marker=20 if fit=='obs' else 24
+            postFitNuisGr[key].SetMarkerStyle(marker)
+            postFitNuisGr[key].SetMarkerColor(colors[resCtr-1][fit])
+            postFitNuisGr[key].SetLineColor(colors[resCtr-1][fit])
+            postFitNuisGr[key].SetLineWidth(2)
+            postFitNuisGr[key].SetFillStyle(0)
+            npars=fit_s.floatParsFinal().getSize()
+            nuisCorrelationH[key]=ROOT.TH1F('nuiscorrelationgr_%s'%''.join(key),';Nuisance;Correlation with #mu=#sigma/#sigma_{th}',npars,0,npars)
+            nuisCorrelationH[key].SetLineColor(colors[resCtr-1][fit])
+            nuisCorrelationH[key].SetFillColor(colors[resCtr-1][fit])
+            fillStyle=1001 if fit=='obs' else 3002
+            nuisCorrelationH[key].SetFillStyle(fillStyle)
+            nuisCorrelationH[key].SetDirectory(0)
+            
+            #iterate over nuisances
+            for ipar in range(0,npars):
+                var=fit_s.floatParsFinal().at(ipar)                
+                pname=var.GetName()
+                if pname=='r' : continue
+                np=postFitNuisGr[key].GetN()
+                postFitNuisGr[key].SetPoint(np,var.getVal(),ipar+0.2+resCtr*dy)
+                postFitNuisGr[key].SetPointError(np,var.getError(),0)
+
+                nuislabel='#color[%d]{%s}'%((ipar%2)*10+1,pname)
+                nuisCorrelationH[key].GetXaxis().SetBinLabel(ipar+1,nuislabel)
+                nuisCorrelationH[key].SetBinContent(ipar+1,fit_s.correlation(pname,'r'))
+                nuisCorrelationH[key].SetBinError(ipar+1,0)
+
+                #first time around save also the label to display
+                if resCtr==1 and fit=='exp':
+                    nuisanceList.append( nuislabel )
+
+            #all done with the file
+            inF.Close()
+
+
+    #show correlations
+    c=ROOT.TCanvas('c','c',1500,500)
+    c.SetLeftMargin(0.1)
+    c.SetTopMargin(0.3)
+    c.SetRightMargin(0.05)
+    c.SetBottomMargin(0.05)
+    c.SetGridx(True)
+    ires=0
+    for title,_ in resultsSet:
         ires+=1
-        dir=os.path.dirname(datacard)
-        inF=ROOT.TFile.Open('%s/mlfit_exp.root'%dir)
-        fit_s=inF.Get('fit_s')
-        npars=fit_s.floatParsFinal().getSize()-1
-
-        #init frames if not yet available
-        if frame is None:
-            frame=ROOT.TH2F('frame',';N x #sigma_{pre-fit}',1,-3,3,npars,0,npars)
-            frame.SetDirectory(0)
-            
-            gr1s.SetMarkerStyle(1)
-            gr1s.SetMarkerColor(19) #ROOT.kGreen-8)
-            gr1s.SetLineColor(19) #ROOT.kGreen-8)
-            gr1s.SetFillStyle(1001)
-            gr1s.SetFillColor(19) #ROOT.kGreen-8)
-            gr1s.SetPoint(0,-1,0)
-            gr1s.SetPoint(1,-1,npars)
-            gr1s.SetPoint(2,1,npars)
-            gr1s.SetPoint(3,1,0)
-            gr1s.SetPoint(4,-1,0)
-            
-            gr2s.SetMarkerStyle(1)
-            gr2s.SetMarkerColor(18) #ROOT.kYellow-10)
-            gr2s.SetLineColor(18) #ROOT.kYellow-10)
-            gr2s.SetFillStyle(1001)
-            gr2s.SetFillColor(18) #ROOT.kYellow-10)
-            gr2s.SetPoint(0,-2,0)
-            gr2s.SetPoint(1,-2,npars)
-            gr2s.SetPoint(2,2,npars)
-            gr2s.SetPoint(3,2,0)
-            gr2s.SetPoint(4,-2,0)
-
-        #save post fit parameter values
-        postFitNuisGr[title]=ROOT.TGraphErrors()
-        postFitNuisGr[title].SetTitle(title)
-        postFitNuisGr[title].SetMarkerStyle(19+ires)
-        postFitNuisGr[title].SetMarkerColor(colors[ires-1])
-        postFitNuisGr[title].SetLineColor(colors[ires-1])
-        postFitNuisGr[title].SetLineWidth(2)
-        postFitNuisGr[title].SetFillStyle(0)
-        for ipar in range(npars):
-            var=fit_s.floatParsFinal().at(ipar)
-            pname=var.GetName()
-            if pname=='r': 
-                fitResSummary.append( (title,var.getVal(),var.getErrorHi(),var.getErrorLo()) )
-                continue
-            np=postFitNuisGr[title].GetN()
-            postFitNuisGr[title].SetPoint(np,var.getVal(),ipar+0.2+ires*dx)
-            postFitNuisGr[title].SetPointError(np,var.getError(),0)
-            if ires==1:
-                frame.GetYaxis().SetBinLabel(ipar+1,'#color[%d]{%s}'%((ipar%2)*10+1,pname))
-        inF.Close()
+        c.Clear()
+        leg=ROOT.TLegend(0.12,0.65,0.3,0.6)
+        leg.SetBorderSize(0)
+        leg.SetFillStyle(0)
+        leg.SetTextFont(42)
+        leg.SetTextSize(0.035)
+        leg.AddEntry(nuisCorrelationH[(title,'exp')],nuisCorrelationH[(title,'exp')].GetTitle()+'(exp)','f')
+        leg.AddEntry(nuisCorrelationH[(title,'obs')],nuisCorrelationH[(title,'obs')].GetTitle()+'(obs)','f')
+        leg.SetNColumns(2)
+        nuisCorrelationH[(title,'obs')].Draw('histX+')
+        nuisCorrelationH[(title,'obs')].GetXaxis().SetLabelOffset(+0.15)
+        nuisCorrelationH[(title,'obs')].GetYaxis().SetRangeUser(-1,1)
+        nuisCorrelationH[(title,'exp')].Draw('histX+same')        
+        leg.Draw()
+        drawCMSlabel(startY=0.65)
+        c.RedrawAxis()
+        c.Modified()
+        c.Update()
+        for ext in ['png','pdf','C']:
+            c.SaveAs('%s/correlations_%d.%s'%(output,ires,ext))
 
     #show nuisances
     c=ROOT.TCanvas('c','c',500,1500)
@@ -349,22 +384,62 @@ def compareNuisances(resultsSet,output):
     c.SetBottomMargin(0.1)
     c.SetRightMargin(0.05)
     c.SetGridy(True)
-    frame.Draw()
+    npars=len(nuisanceList)
+    frame=ROOT.TH2F('frame',';N x #sigma_{pre-fit}',1,-3,3,npars,0,npars)
+    frame.SetDirectory(0)
+    for ipar in xrange(0,npars): frame.GetYaxis().SetBinLabel(ipar+1,nuisanceList[ipar])
     frame.GetXaxis().SetRangeUser(-3,3)
     frame.GetYaxis().SetLabelSize(0.025)
+    frame.Draw()
+
+    gr1s=ROOT.TGraph()
+    gr1s.SetName('gr1s')
+    gr1s.SetMarkerStyle(1)
+    gr1s.SetMarkerColor(19)
+    gr1s.SetLineColor(19) 
+    gr1s.SetFillStyle(1001)
+    gr1s.SetFillColor(19) 
+    gr1s.SetPoint(0,-1,0)
+    gr1s.SetPoint(1,-1,npars)
+    gr1s.SetPoint(2,1,npars)
+    gr1s.SetPoint(3,1,0)
+    gr1s.SetPoint(4,-1,0)
+    gr2s=gr1s.Clone('gr2s')
+    gr2s.SetMarkerColor(18) 
+    gr2s.SetLineColor(18)
+    gr2s.SetFillStyle(1001)
+    gr2s.SetFillColor(18) 
+    gr2s.SetPoint(0,-2,0)
+    gr2s.SetPoint(1,-2,npars)
+    gr2s.SetPoint(2,2,npars)
+    gr2s.SetPoint(3,2,0)
+    gr2s.SetPoint(4,-2,0)
     gr2s.Draw('f')
     gr1s.Draw('f')
-    leg=ROOT.TLegend(0.12,0.92,0.6,0.95)
-    leg.SetNColumns(len(postFitNuisGr))
+    
+    leg=ROOT.TLegend(0.1,0.93,0.6,0.96)
+    leg.SetNColumns(resCtr)
     leg.SetTextFont(42)
-    leg.SetTextSize(0.035)
+    leg.SetTextSize(0.03)
     leg.SetBorderSize(0)
     leg.SetFillStyle(1001)
     leg.SetFillColor(0)
-    for ftitle in postFitNuisGr:
-        postFitNuisGr[ftitle].Draw('p')
-        leg.AddEntry(postFitNuisGr[ftitle],postFitNuisGr[ftitle].GetTitle(),'p')
+    leg2=ROOT.TLegend(0.1,0.90,0.6,0.93)
+    leg2.SetNColumns(resCtr)
+    leg2.SetTextFont(42)
+    leg2.SetTextSize(0.03)
+    leg2.SetBorderSize(0)
+    leg2.SetFillStyle(1001)
+    leg2.SetFillColor(0)
+    for key in postFitNuisGr:
+        postFitNuisGr[key].Draw('p')
+        title=postFitNuisGr[key].GetTitle()
+        if key[1]=='exp':
+            leg.AddEntry(postFitNuisGr[key],'%s (exp)'%title,'p')
+        else:
+            leg2.AddEntry(postFitNuisGr[key],'%s (obs)'%title,'p')
     leg.Draw()
+    leg2.Draw()
     
     txt=ROOT.TLatex()
     txt.SetTextFont(42)
@@ -380,14 +455,6 @@ def compareNuisances(resultsSet,output):
     for ext in ['png','pdf','C']:
         c.SaveAs('%s/nuisances.%s'%(output,ext))
 
-
-    from python.rounding import toLatexRounded
-    print '-'*50
-    print 'Fit results'
-    print '-'*50
-    for res in fitResSummary:
-        print '%15s %3.3f +%3.3f/-%3.3f'% res
-    print '-'*50
         
 """
 main
@@ -411,7 +478,7 @@ def main():
     ROOT.gStyle.SetOptStat(0)
     ROOT.gStyle.SetOptTitle(0)
     ROOT.gROOT.SetBatch(True) #False)
-       
+    
     resultsSet=[]
     for newCat in args:
         cat,datacard=newCat.split('=')

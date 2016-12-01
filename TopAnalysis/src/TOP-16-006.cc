@@ -262,7 +262,7 @@ void RunTop16006(TString filename,
 	  allPlots["metphi_"+tag]     = new TH1F("metphi_" + tag,";MET #phi [rad];Events" ,50,-3.2,3.2);
 	  allPlots["mttbar_"+tag]     = new TH1F("mttbar_"+tag,";#sqrt{#hat{s}} [GeV];Events" ,50,0.,1000.);
 	  allPlots["mt_"+tag]         = new TH1F("mt_"+tag,";Transverse Mass [GeV];Events" ,20,0.,200.);
-	  allPlots["minmlb_"+tag]     = new TH1F("minmlb_"+tag,";Mass(lepton,b) [GeV];Events" ,25,0.,250.);
+	  allPlots["minmlb_"+tag]     = new TH1F("minmlb_"+tag,";Mass(lepton,b) [GeV];Events" ,20,0.,300.);
 	  allPlots["drlb_"+tag]       = new TH1F("drlb_"+tag,";#DeltaR(lepton,b);Events" ,25,0.,6.);
 	  allPlots["passSIP3d_"+tag]  = new TH1F("passSIP3d_"+tag,";Pass SIP3d requirement;Events" ,2,0.,2.);
 	  allPlots["RMPF_"+tag]       = new TH1F("RMPF_"+tag,";R_{MPF};Events" ,20,0.,2.);
@@ -284,7 +284,7 @@ void RunTop16006(TString filename,
 		  all2dPlots["metptshapes_"+tag+"_gen"]                   
 		    = new TH2F("metptshapes_"+tag+"_gen", ";Missing transverse energy [GeV];Events" ,    10,0.,200., nGenSysts,0,nGenSysts);
 		  all2dPlots["minmlbshapes_"+tag+"_gen"]               
-		    = new TH2F("minmlbshapes_"+tag+"_gen", ";Mass(lepton,b) [GeV];Events" , 25,0.,250., nGenSysts,0,nGenSysts);
+		    = new TH2F("minmlbshapes_"+tag+"_gen", ";Mass(lepton,b) [GeV];Events" , 20,0.,300., nGenSysts,0,nGenSysts);
 		  all2dPlots["RMPFshapes_"+tag+"_gen"]               
 		    = new TH2F("RMPFshapes_"+tag+"_gen", ";R_{MPF};Events" , 20,0.,2., nGenSysts,0,nGenSysts);
 		  if(itag==-1) 
@@ -308,7 +308,7 @@ void RunTop16006(TString filename,
 		  all2dPlots["metptshapes_"+tag+"_exp"]                  
 		    = new TH2F("metptshapes_"+tag+"_exp",  ";Missing transverse energy [GeV];Events" ,   10,0.,200., 2*nExpSysts,0,2*nExpSysts);
 		  all2dPlots["minmlbshapes_"+tag+"_exp"]              
-		    = new TH2F("minmlbshapes_"+tag+"_exp", ";Mass(lepton,b) [GeV];Events" ,25,0.,250., 2*nExpSysts,0,2*nExpSysts);
+		    = new TH2F("minmlbshapes_"+tag+"_exp", ";Mass(lepton,b) [GeV];Events" ,20,0.,300., 2*nExpSysts,0,2*nExpSysts);
 		  all2dPlots["RMPFshapes_"+tag+"_exp"]               
 		    = new TH2F("RMPFshapes_"+tag+"_exp", ";R_{MPF};Events" , 20,0.,2., 2*nExpSysts,0,2*nExpSysts);
 		  if(itag==-1) 
@@ -349,13 +349,20 @@ void RunTop16006(TString filename,
 	  bool passTightId(ev.l_id[il]==13 ? (ev.l_pid[il]>>1)&0x1  : (ev.l_pid[il]>>2)&0x1);
 	  float relIso(ev.l_relIso[il]);
 	  bool passIso( ev.l_id[il]==13 ? relIso<0.15 : (ev.l_pid[il]>>1)&0x1 );
-	  bool passNonIso(relIso>0.4);
-	  if( ev.l_id[il]==11 && (passIso || relIso<0.4) ) passNonIso=false;
+	  bool passNonIso(false);
+	  if( ev.l_id[il]==11 )
+	    {
+	      if(!passIso && passTightId && relIso>0.2) passNonIso=true;
+	    }
+	  else if(ev.l_id[il]==13)
+	    {
+	      if(relIso>0.4) passNonIso=true;
+	    }
 	  bool passVetoIso(  ev.l_id[il]==13 ? relIso<0.25 : true); 
 	  bool passSIP3d(ev.l_ip3dsig[il]<4);
 	  if(channelSelection==21) passSIP3d=true;
 
-	  if(passTightKin && passTightId && passSIP3d)
+	  if(passTightKin && passSIP3d && passTightId)
 	    {
 	      if(passIso)         tightLeptonsIso.push_back(il);
 	      else if(passNonIso) tightLeptonsNonIso.push_back(il);
@@ -566,6 +573,11 @@ void RunTop16006(TString filename,
 		    {
 		      trigSF=(lepEffH[prefix+"_trig"]->GetBinContent(etaBinForEff,ptBinForEff));
 		      trigSFUnc=(lepEffH[prefix+"_trig"]->GetBinError(etaBinForEff,ptBinForEff));
+		    }
+		  else
+		    {
+		      trigSF=0.96;
+		      trigSFUnc=0.03;
 		    }
 
 		  lepTriggerSF[0]*=trigSF; lepTriggerSF[1]*=(trigSF-trigSFUnc); lepTriggerSF[2]*=(trigSF+trigSFUnc);

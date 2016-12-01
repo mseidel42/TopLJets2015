@@ -48,6 +48,7 @@ void createMiniEventTree(TTree *t,MiniEvent_t &ev)
 
   //reco level event
   t->Branch("nvtx",      &ev.nvtx,      "nvtx/I");
+  t->Branch("rho",      &ev.rho,      "rho/F")
   t->Branch("muTrigger",        &ev.muTrigger,        "muTrigger/I");
   t->Branch("elTrigger",        &ev.elTrigger,        "elTrigger/I");
 
@@ -161,6 +162,7 @@ void attachToMiniEventTree(TTree *t,MiniEvent_t &ev,bool full)
 
   //reco level event
   t->SetBranchAddress("nvtx",      &ev.nvtx);
+  t->SetBranchAddress("rho",       &ev.rho);
   t->SetBranchAddress("muTrigger",        &ev.muTrigger);
   t->SetBranchAddress("elTrigger",        &ev.elTrigger);
 

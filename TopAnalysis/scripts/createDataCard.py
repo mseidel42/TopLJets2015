@@ -45,7 +45,7 @@ def getDistsFrom(directory,keyFilter=''):
     for key in directory.GetListOfKeys():
         if len(keyFilter)>0 and key.GetName()!='%s_%s'%(dirName,keyFilter) : continue
         obj=directory.Get(key.GetName())
-        if not obj.InheritsFrom('TH1') : continue
+        if not obj.InheritsFrom('TH1') : continue        
         if obj.GetName()==dirName : 
             obs=obj.Clone('data_obs')
             obs.SetDirectory(0)
@@ -75,7 +75,7 @@ def getDistsFrom(directory,keyFilter=''):
 """
 save distributions to file
 """
-def saveToShapesFile(outFile,shapeColl,directory=''):
+def saveToShapesFile(outFile,shapeColl,directory='',rebin=0):
     fOut=ROOT.TFile.Open(outFile,'UPDATE')
     if len(directory)==0:
         fOut.cd()     
@@ -92,6 +92,10 @@ def saveToShapesFile(outFile,shapeColl,directory=''):
             shapeColl[key].Copy(h)
             shapeColl[key]=h
 
+        #rebin final shape, if required
+        if rebin!=0: shapeColl[key].Rebin(rebin)
+
+        #write
         shapeColl[key].Write(key,ROOT.TObject.kOverwrite)
     fOut.Close()
 
@@ -113,6 +117,7 @@ def main():
     parser.add_option('-q', '--qcd',            dest='qcd',         help='qcd normalization file',                             default=None,          type='string')
     parser.add_option('-w', '--wjets',          dest='wjets',       help='wjets normalization file',                           default=None,          type='string')
     parser.add_option('-o', '--output',         dest='output',      help='output directory',                                   default='datacards',   type='string')
+    parser.add_option(      '--rebin',          dest='rebin',       help='histogram rebin factor',                             default=0,             type=int)
     (opt, args) = parser.parse_args()
 
     rawSignalList=opt.signal.split(',')
@@ -155,7 +160,7 @@ def main():
 
         print 'Initiating %s datacard for %s'%(opt.dist,cat)
 
-        #nomimal expectations
+        #nominal expectations
         obs,exp=getDistsFrom(directory=fIn.Get('%s_%s'%(opt.dist,cat)))
         exp=filterShapeList(exp,signalList,rawSignalList)
 
@@ -210,12 +215,13 @@ def main():
 
         nomShapes=exp.copy()
         nomShapes['data_obs']=obs
-        saveToShapesFile(outFile,nomShapes,'nom')
+        saveToShapesFile(outFile,nomShapes,'nom',rebin=opt.rebin)
 
         #experimental systematics
         _,expVarShapes=getDistsFrom(directory=fIn.Get('%sshapes_%s_exp'%(opt.dist,cat)))
         expVarShapes=filterShapeList(expVarShapes,signalList,rawSignalList)
         nExpSysts=expVarShapes[signalList[0]].GetNbinsY()/2
+        shapeOnlyExpSysts=['Pileup']
         for isyst in xrange(1,nExpSysts+1):
             
             #test which variations are significant
@@ -234,6 +240,11 @@ def main():
                     downShapeH  = expVarShapes[proc].ProjectionX('%s%dDown'%(proc,isyst), ybin,   ybin)
                     upShapeH    = expVarShapes[proc].ProjectionX('%s%dUp'%(proc,isyst),   ybin+1, ybin+1)
 
+                    #set as shape only if in the list
+                    if systVar in shapeOnlyExpSysts : 
+                        downShapeH.Scale(exp[proc].Integral()/downShapeH.Integral())
+                        upShapeH.Scale(exp[proc].Integral()/upShapeH.Integral())
+
                     bwList[proc]     = acceptVariationForDataCard(nomH=exp[proc], upH=upShapeH, downH=downShapeH)
                     if not bwList[proc]: continue
 
@@ -246,8 +257,8 @@ def main():
                 continue
 
             #export to shapes file
-            saveToShapesFile(outFile,downShapes,systVar+'Down')
-            saveToShapesFile(outFile,upShapes,systVar+'Up')
+            saveToShapesFile(outFile,downShapes,systVar+'Down',rebin=opt.rebin)
+            saveToShapesFile(outFile,upShapes,systVar+'Up',rebin=opt.rebin)
 
             #write to datacard
             datacard.write('%32s shape'%systVar)        
@@ -278,7 +289,7 @@ def main():
             ]
         try:
             jetCat=cat[:-2] if cat.endswith('t') else cat
-            rateSysts.append( ('MultiJetsNorm%s%s'%(jetCat,anCat),  1+qcdNorm[jetCat][1],                       'lnN',    ['Multijetsdata']    ,[]) )
+            rateSysts.append( ('MultiJetsNorm%s%s'%(cat,anCat),  ROOT.TMath.Min(1+2*ROOT.TMath.Abs(qcdNorm[jetCat][1]),1.5),                       'lnN',    ['Multijetsdata']    ,[]) )
             #rateSysts.append( ('Wnorm%s'%jetCat,          1+ROOT.TMath.Abs(1-wjetsNorm[jetCat][0]), 'lnU',    ['Wl','Wc','Wb']     ,[]) )
         except:
             pass
@@ -312,8 +323,8 @@ def main():
             #ttbar modelling
             ('Mtop',            {'tbart'         : ['tbartm=169.5','tbartm=175.5'],  'tW':['tWm=169.5','tWm=175.5'] },                True ,  True, False),
             ('ttPartonShower',  {'tbart'         : ['tbartscaledown','tbartscaleup']},                                                False , True, False),            
-            #('NLOgenerator',    {'tbart'         : ['tbartaMCNLO']},                                                                  False,  True, False),
-            ('Hadronizer',      {'tbart'         : ['tbartHerwig']},                                                                 False , True, True),
+            ('NLOgenerator',    {'tbart'         : ['tbartaMCNLO']},                                                                  False,  True, False),
+            ('Hadronizer',      {'tbart'         : ['tbartHerwig']},                                                                  False , True, True),
 
             #tWinterference
             ('tWttinterf',       {'tW'            : ['tWDS']},                                                                        False , True, True),            
@@ -336,10 +347,11 @@ def main():
             ('wFactScale',           { 'W': ['id1003muR0.10000E+01muF0.50000E+00','id1002muR0.10000E+01muF0.20000E+01'] },    False, False, False),
             ('wRenScale',            { 'W': ['id1007muR0.50000E+00muF0.10000E+01','id1004muR0.20000E+01muF0.10000E+01'] },    False, False, False),
             ('wCombScale',           { 'W': ['id1009muR0.50000E+00muF0.50000E+00','id1005muR0.20000E+01muF0.20000E+01'] },  False, False, False),
-
-            ('ttFactScale',          { 'tbart': ['muR1muF0.5hdampmt172.5','muR1muF2hdampmt172.5'] },     False , False, False),
-            ('ttRenScale',           { 'tbart': ['muR0.5muF1hdampmt172.5','muR2muF1hdampmt172.5'] },     False , False, False),
-            ('ttCombScale',          { 'tbart': ['muR0.5muF0.5hdampmt172.5','muR2muF2hdampmt172.5'] },   False , False, False),
+            
+            #ttbar Powheg
+            ('ttFactScale',          { 'tbart': ['muR1muF0.5hdampmt172.5',  'muR1muF2hdampmt172.5'] },     True , False, False),
+            ('ttRenScale',           { 'tbart': ['muR0.5muF1hdampmt172.5',  'muR2muF1hdampmt172.5'] },     True , False, False),
+            ('ttCombScale',          { 'tbart': ['muR0.5muF0.5hdampmt172.5','muR2muF2hdampmt172.5'] },     True , False, False),
             ]
 
         _,genVarShapes = getDistsFrom(directory=fIn.Get('%sshapes_%s_gen'%(opt.dist,cat)))
@@ -408,8 +420,8 @@ def main():
             if len(upShapes)==0 : continue
 
             #export to shapes file
-            saveToShapesFile(outFile,downShapes,systVar+'Down')
-            saveToShapesFile(outFile,upShapes,systVar+'Up')
+            saveToShapesFile(outFile,downShapes,systVar+'Down',rebin=opt.rebin)
+            saveToShapesFile(outFile,upShapes,systVar+'Up',rebin=opt.rebin)
 
             #write to datacard
             datacard.write('%32s shape'%systVar)
@@ -448,11 +460,11 @@ def main():
 
             _,qcdShapesUp = getDistsFrom(directory=fIn.Get('%s_%s_QCD%sUp'%(opt.dist,cat,jetCat)))
             qcdShapesUp['Multijetsdata'].Scale( qcdExp/qcdShapesUp['Multijetsdata'].Integral() ) 
-            saveToShapesFile(outFile,qcdShapesUp,systName+'Up')
+            saveToShapesFile(outFile,qcdShapesUp,systName+'Up',rebin=opt.rebin)
 
             _,qcdShapesDown = getDistsFrom(directory=fIn.Get('%s_%s_QCD%sDown'%(opt.dist,cat,jetCat)))
             qcdShapesDown['Multijetsdata'].Scale( qcdExp/qcdShapesDown['Multijetsdata'].Integral() ) 
-            saveToShapesFile(outFile,qcdShapesDown,systName+'Down')
+            saveToShapesFile(outFile,qcdShapesDown,systName+'Down',rebin=opt.rebin)
 
         #all done
         datacard.close()
