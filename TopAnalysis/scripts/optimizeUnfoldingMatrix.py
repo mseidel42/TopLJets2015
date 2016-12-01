@@ -11,13 +11,14 @@ from math import sqrt
 """
 Analysis loop
 """
-def optimize(fileName, obs):
+def optimize(inputfile, output, obs, reco, ptcut):
     
     ROOT.gStyle.SetOptStat(0)
-    ROOT.gStyle.SetPadTopMargin(0.05);
+    ROOT.gStyle.SetPadTopMargin(0.07);
     ROOT.gStyle.SetPadBottomMargin(0.13);
     ROOT.gStyle.SetPadLeftMargin(0.16)
     ROOT.gStyle.SetPadRightMargin(0.15)
+    ROOT.gStyle.SetTitleSize(0.03, "t")
     ROOT.gStyle.SetTitleXOffset(1.5);
     ROOT.gStyle.SetTitleYOffset(1.75);
     ROOT.gStyle.SetPaintTextFormat("4.2f")
@@ -31,41 +32,113 @@ def optimize(fileName, obs):
     #ROOT.gStyle.SetPalette(53)
     
     tree = ROOT.TChain('tjsev')
-    tree.AddFile(fileName)
+    tree.AddFile(inputfile)
     totalEntries = tree.GetEntries()
     
     print("Observable: " + obs)
     
     #initial histogram
     # jet pt
-    #nbins   = 20
-    #lowbin  = 30
-    #highbin = 230
+    nbins   = 50
+    lowbin  = 0
+    highbin = 1
+    sigmaFactor = 0.5
     
     if (obs == "mult"):
+        label = "N"
         nbins   = 30
-        lowbin  = 0
         highbin = 30
-        label = "N_{ch}"
     if (obs == "width"):
-        nbins   = 40
-        lowbin  = 0
-        highbin = 0.4
         label = "width"
+        highbin = 0.25
     if (obs == "ptd"):
-        nbins   = 50
-        lowbin  = 0
-        highbin = 1
         label = "p_{T}D"
+    if (obs == "ecc"):
+        label = "eccentricity"
+        sigmaFactor = 0.25
+    if (obs == "tau21"):
+        label = "#tau_{21}"
+        #nbins   = 60
+        #lowbin  = 0.2
+        #highbin = 0.8
+    if (obs == "tau32"):
+        label = "#tau_{32}"
+    if (obs == "tau43"):
+        label = "#tau_{43}"
+    if (obs == "zg"):
+        label = "z_{g}"
+        lowbin = 0.1
+        highbin = 0.5
+        nbins = 40
+        sigmaFactor = 0.25
+    if (obs == "zgdr"):
+        label = "z_{g} #DeltaR"
+        highbin = 0.5
+        sigmaFactor = 0.25
+    if (obs == "zgxdr"):
+        label = "z_{g} #times #DeltaR"
+        highbin = 0.25
+    if (obs == "ga_width"):
+        label = "#lambda_{ 1}^{1} (width)"
+    if (obs == "ga_thrust"):
+        label = "#lambda_{ 2}^{1} (thrust)"
+        highbin = 0.5
+    if (obs == "ga_lha"):
+        label = "#lambda_{ 0.5}^{1} (LHA)"
+    if (obs == "c1_02"):
+        label = "C_{ 1}^{ (0.2)}"
+        highbin = 0.5
+    if (obs == "c1_05"):
+        label = "C_{ 1}^{ (0.5)}"
+        highbin = 0.3
+        nbins = 60
+    if (obs == "c1_10"):
+        label = "C_{ 1}^{ (1.0)}"
+        highbin = 0.2
+        nbins = 40
+    if (obs == "c1_20"):
+        label = "C_{ 1}^{ (2.0)}"
+        highbin = 0.1
+    if (obs == "c2_02"):
+        label = "C_{ 2}^{ (0.2)}"
+        highbin = 0.7
+        nbins = 35
+    if (obs == "c2_05"):
+        label = "C_{ 2}^{ (0.5)}"
+        highbin = 0.4
+        nbins = 40
+    if (obs == "c2_10"):
+        label = "C_{ 2}^{ (1.0)}"
+        highbin = 0.25
+        nbins = 50
+    if (obs == "c2_20"):
+        label = "C_{ 2}^{ (2.0)}"
+        highbin = 0.15
+        nbins = 30
+    if (obs == "c3_02"):
+        label = "C_{ 3}^{ (0.2)}"
+        highbin = 0.7
+        nbins = 35
+    if (obs == "c3_05"):
+        label = "C_{ 3}^{ (0.5)}"
+        highbin = 0.4
+        nbins = 40
+    if (obs == "c3_10"):
+        label = "C_{ 3}^{ (1.0)}"
+        highbin = 0.25
+    if (obs == "c3_20"):
+        label = "C_{ 3}^{ (2.0)}"
+        highbin = 0.15
+        nbins = 30
     
-    label1 = ";" + label
-    labels = ";generated " + label + ";reconstructed " + label
+    label1 = reco + " particles, p_{T}>" + ptcut + " GeV;" + label
+    labels = reco + " particles, p_{T}>" + ptcut + " GeV;generated  " + label + ";reconstructed  " + label
     
     print("Starting with bin width " + str((highbin-lowbin)/float(nbins)))
     
     h = ROOT.TH2F("", labels, nbins, lowbin, highbin, nbins, lowbin, highbin)
     
-    fillHist(h, tree, obs)
+    fillHist(h, tree, obs, reco, ptcut)
     
     c = ROOT.TCanvas('c', 'c', 500, 450)
     c.cd()
@@ -73,7 +146,26 @@ def optimize(fileName, obs):
     h.SetMinimum(-1e-10)
     h.Draw("colz")
     #h.Fit("pol1")
-    c.Print("unfolding/" + obs + "_h.eps")
+    c.Print(output + "/" + obs + "_" + reco +"_" + ptcut +"_h.eps")
+    
+    h_gen  = h.ProjectionX()
+    h_reco = h.ProjectionY()
+    #print(h_gen.GetMaximum(), h_reco.GetMaximum())
+    h_gen.GetYaxis().SetRangeUser(0., 1.5*h_reco.GetMaximum())
+    h_gen.GetXaxis().SetTitle(label)
+    h_gen.SetLineColor(ROOT.kRed+1)
+    h_gen.Draw()
+    h_reco.SetLineStyle(7)
+    h_reco.Draw("same")
+    leg = ROOT.TLegend(0.5,0.7,0.85,0.9)
+    leg.SetLineWidth(0)
+    leg.SetFillStyle(0)
+    leg.AddEntry(h_gen, "generated", "l")
+    leg.AddEntry(h_reco, "reconstructed", "l")
+    leg.Draw()
+    c.Print(output + "/" + obs + "_" + reco +"_" + ptcut +"_h1.eps")
+    del h_gen
+    del h_reco
     
     indices  = []
     diagonal = []
@@ -116,7 +208,8 @@ def optimize(fileName, obs):
     
     #splitForEqualPurity(h, gensums, recosums, indices)
     #bins = splitForMinPurity(h, gensums, recosums, indices)
-    bins = splitForMinSigma(h, 1.)
+    
+    bins = splitForMinSigma(h, output, obs, reco, ptcut, sigmaFactor)
     
     c = ROOT.TCanvas('c', 'c', 500, 450)
     c.cd()
@@ -134,7 +227,7 @@ def optimize(fileName, obs):
     #hnorm.SetMaximum(1)
     hnorm.Draw("colz")
     #hnorm.Fit("pol1")
-    c.Print("unfolding/" + obs + "_hnorm.eps")
+    c.Print(output + "/" + obs + "_" + reco +"_" + ptcut +"_hnorm.eps")
     
     # reco bin splitting
     divisor = 1
@@ -157,11 +250,32 @@ def optimize(fileName, obs):
     bin2Array = array('d', bins2) # put bins2 for reco bin split
     
     hopt = ROOT.TH2F("", labels, len(binArray)-1, binArray, len(bin2Array)-1, bin2Array)
-    fillHist(hopt, tree, obs)
+    fillHist(hopt, tree, obs, reco, ptcut)
     
     hopt.SetMinimum(-1e-10)
     hopt.Draw("colz")
-    c.Print("unfolding/" + obs + "_hopt.eps")
+    c.Print(output + "/" + obs + "_" + reco +"_" + ptcut +"_hopt.eps")
+    
+    h_gen  = hopt.ProjectionX()
+    h_reco = hopt.ProjectionY()
+    for i in range(1, h_gen.GetNbinsX()+1):
+        h_gen.SetBinContent(i, h_gen.GetBinContent(i)/h_gen.GetBinWidth(i))
+        h_reco.SetBinContent(i, h_reco.GetBinContent(i)/h_reco.GetBinWidth(i))
+    h_gen.GetYaxis().SetRangeUser(0., 1.5*h_reco.GetMaximum())
+    h_gen.GetXaxis().SetTitle(label)
+    h_gen.SetLineColor(ROOT.kRed+1)
+    h_gen.Draw()
+    h_reco.SetLineStyle(7)
+    h_reco.Draw("same")
+    leg = ROOT.TLegend(0.5,0.7,0.85,0.9)
+    leg.SetLineWidth(0)
+    leg.SetFillStyle(0)
+    leg.AddEntry(h_gen, "generated", "l")
+    leg.AddEntry(h_reco, "reconstructed", "l")
+    leg.Draw()
+    c.Print(output + "/" + obs + "_" + reco +"_" + ptcut +"_hopt1.eps")
+    del h_gen
+    del h_reco
     
     optgensums = []
     for g in range(1, hopt.GetNbinsX()+1):
@@ -198,21 +312,32 @@ def optimize(fileName, obs):
     hoptnorm.SetMarkerColor(ROOT.kWhite)
     hoptnorm.SetMarkerSize(1.5)
     hoptnorm.Draw("colz,text")
-    c.Print("unfolding/" + obs + "_hoptnorm.eps")
+    c.Print(output + "/" + obs + "_" + reco +"_" + ptcut +"_hoptnorm.eps")
     
     hoptpur.GetYaxis().SetRangeUser(0., 1.)
     hoptpur.SetLineColor(ROOT.kRed+1)
     hoptpur.Draw()
     hoptsta.SetLineStyle(7)
     hoptsta.Draw("same")
-    c.Print("unfolding/" + obs + "_hoptpursta.eps")
+    leg = ROOT.TLegend(0.5,0.75,0.85,0.9)
+    leg.SetLineWidth(0)
+    leg.SetFillStyle(0)
+    leg.AddEntry(hoptpur, "purity", "l")
+    leg.AddEntry(hoptsta, "stability", "l")
+    leg.Draw()
+    c.Print(output + "/" + obs + "_" + reco +"_" + ptcut +"_hoptpursta.eps")
+    
+    del h
+    del hopt
 
 
-def fillHist(h, tree, obs):
+def fillHist(h, tree, obs, reco, ptcut):
     for event in tree:
         if event.gen_sel*event.reco_sel == -1: continue
         for j in range(event.nj):
             if event.j_gj[j] >= 0:
+                #TODO jet criteria: no overlap, eta<2
+                
                 #j_p4 = ROOT.TLorentzVector()
                 #j_p4.SetPtEtaPhiM(event.j_pt[j], event.j_eta[j], event.j_phi[j], event.j_m[j])
                 #
@@ -229,13 +354,27 @@ def fillHist(h, tree, obs):
                 #for i in range(len(event.gj_ga)): ga.append(event.gj_ga[i])
                 #print ga
                 
-                c = 0 #0=charged, 1=charged+neutral, 2=puppi
+                #o = 0 #mult
+                #if (obs == "width"): o = 36
+                #if (obs == "ptd"):   o = 18
+                #if (obs == "mass"):  o = 63
+                #
+                #c = 0 #charged
+                #if (reco == "all")   : c = 1
+                #if (reco == "puppi") : c = 2
+                #
+                #p = 0 #pt>0.5
+                #if (ptcut == "1.0") : p = 3
+                #if (ptcut == "1.5") : p = 6
+                #
+                #i = event.j_gj[j]
+                #if (obs == "ptd"): h.Fill(sqrt(event.gj_ga[i*81+o+c+p]), sqrt(event.j_ga[j*81+o+c+p]))
+                #else :             h.Fill(event.gj_ga[i*81+o+c+p], event.j_ga[j*81+o+c+p])
                 
                 i = event.j_gj[j]
-                if (obs == "mult"):  h.Fill(event.gj_ga[i*81 + 0+c],  event.j_ga[j*81 + 0+c]) # charged mult
-                #if (obs == "mult2"):  h.Fill(event.gj_ga[i*81 + 0+c],  (event.j_ga[j*81 + 0+c] - 1.01747)/1.14334) # charged mult
-                if (obs == "width"): h.Fill(event.gj_ga[i*81 + 36+c] * 0.4, event.j_ga[j*81 + 36+c] * 0.4) # charged width
-                if (obs == "ptd"):   h.Fill(sqrt(event.gj_ga[i*81 + 18+c]), sqrt(event.j_ga[j*81 + 18+c])) # charged ptd
+                valReco = eval('event.j_'+obs+'_'+reco)[j]
+                valGen  = eval('event.gj_'+obs+'_'+reco)[i]
+                h.Fill(valGen, valReco)
 
 
 
@@ -266,34 +405,42 @@ def splitForMinPurity(h, gensums, recosums, indices):
             
             #return True
 
-def splitForMinSigma(h, factor = 1):   
+def splitForMinSigma(h, output, obs, reco, ptcut, factor = 0.5):
+    f1 = ROOT.TF1("f1", "gaus", h.GetXaxis().GetXmin(), h.GetXaxis().GetXmax());
+    f1.SetParameters(100, (h.GetXaxis().GetXmax()-h.GetXaxis().GetXmin())/2., 0.01);
     slices = ROOT.TObjArray()
-    h.FitSlicesX(0, 0, -1, 0, "QNR", slices)
+    h.FitSlicesX(f1, 1, h.GetNbinsX(), 0, "QNRLM", slices)
     
     c2 = ROOT.TCanvas('c', 'c', 500, 450)
     c2.cd()
     
     slices[0].Draw()
-    c2.Print("unfolding/slices0.eps")
-    slices[1].GetYaxis().SetRangeUser(0, 30)
+    c2.Print(output + "/" + obs + "_" + reco +"_" + ptcut +"_slices_N.eps")
+    slices[1].GetYaxis().SetRangeUser(h.GetXaxis().GetXmin(), h.GetXaxis().GetXmax())
     slices[1].Draw()
-    c2.Print("unfolding/slices1.eps")
-    slices[2].GetYaxis().SetRangeUser(0, 10)
+    c2.Print(output + "/" + obs + "_" + reco +"_" + ptcut +"_slices_mean.eps")
+    slices[2].GetYaxis().SetRangeUser(0., h.GetXaxis().GetXmax())
     slices[2].Draw()
-    c2.Print("unfolding/slices2.eps")
+    c2.Print(output + "/" + obs + "_" + reco +"_" + ptcut +"_slices_sigma.eps")
     
-    bins  = [0]
-    exact = [0]
+    bins  = [h.GetXaxis().GetXmin()]
+    exact = [h.GetXaxis().GetXmin()]
     
     for i in range(1, h.GetNbinsX()+1):
       mean  = slices[1].GetBinContent(i)
       sigma = slices[2].GetBinContent(i) * factor
-      #print(bins[:-1])
+      #print(bins)
+      #print(exact)
       #print(mean)
       #print(sigma)
       if (mean - sigma) > exact[-1]:
-        exact.append(mean+sigma)
-        bins.append(h.GetXaxis().GetBinUpEdge((h.GetXaxis().FindBin(mean+sigma))))
+        #if (mean + sigma > h.GetXaxis().GetXmax()):
+        #  bins.append(h.GetXaxis().GetXmax())
+        #  break
+        if (mean + sigma < h.GetXaxis().GetXmax()):
+          exact.append(mean+sigma)
+          newbinedge = h.GetXaxis().GetBinUpEdge((h.GetXaxis().FindBin(mean+sigma)))
+          if (newbinedge > bins[-1]): bins.append(newbinedge)
     
     bins[-1] = h.GetXaxis().GetXmax()
     
@@ -355,30 +502,36 @@ def main():
                             dest='obs',   
                             default='mult',
                             help='observable [default: %default]')
-    parser.add_option('--jobs',
-                            dest='jobs', 
-                            default=1,
-                            type=int,
-                            help='# of jobs to process in parallel the trees [default: %default]')
-    parser.add_option('--only',
-                            dest='only', 
-                            default='',
-                            type='string',
-                            help='csv list of tags to process')
     parser.add_option('-o', '--output',
                             dest='output', 
-                            default='analysis',
+                            default='unfolding',
                             help='Output directory [default: %default]')
-    parser.add_option('-q', '--queue',
-                            dest='queue',
-                            default='local',
-                            help='Batch queue to use [default: %default]')
+    parser.add_option('-r', '--reco',
+                            dest='reco',
+                            default='charged',
+                            help='Use charged/puppi/all particles [default: %default]')
+    parser.add_option('-p', '--ptcut',
+                            dest='ptcut',
+                            default='1.0',
+                            help='Use particles with pt>0.5/1.0/1.5 GeV [default: %default]')
+    parser.add_option('-a', '--all',
+                            dest='all',
+                            action="store_true",default=False,
+                            help='Run all plots [default: %default]')
     (opt, args) = parser.parse_args()
 
-          #ROOT.FWLiteEnabler.enable() 
     os.system('mkdir -p %s' % opt.output)
 
-    optimize(opt.input, opt.obs)
+    if (not opt.all): optimize(opt.input, opt.output, opt.obs, opt.reco, opt.ptcut)
+    else:
+        observables = ["mult", "width", "ptd", "ecc", "tau21", "tau32", "tau43", "zg", "zgxdr", "zgdr", "ga_width", "ga_lha", "ga_thrust", "c1_02", "c1_05", "c1_10", "c1_20", "c2_02", "c2_05", "c2_10", "c2_20", "c3_02", "c3_05", "c3_10", "c3_20"]
+        reco        = ["charged", "puppi", "all"]
+        #ptcuts      = {"0.5", "1.0", "1.5"}
+        
+        for o in observables:
+            for r in reco:
+                #for p in ptcuts:
+                optimize(opt.input, opt.output, o, r, opt.ptcut)
         
 
 if __name__ == "__main__":
