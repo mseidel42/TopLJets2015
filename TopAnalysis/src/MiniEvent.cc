@@ -48,7 +48,7 @@ void createMiniEventTree(TTree *t,MiniEvent_t &ev)
 
   //reco level event
   t->Branch("nvtx",      &ev.nvtx,      "nvtx/I");
-  t->Branch("rho",      &ev.rho,      "rho/F")
+  t->Branch("rho",      &ev.rho,      "rho/F");
   t->Branch("muTrigger",        &ev.muTrigger,        "muTrigger/I");
   t->Branch("elTrigger",        &ev.elTrigger,        "elTrigger/I");
 
