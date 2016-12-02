@@ -35,7 +35,8 @@ def optimize(inputfile, output, obs, reco, ptcut):
     tree.AddFile(inputfile)
     totalEntries = tree.GetEntries()
     
-    print("Observable: " + obs)
+    print("\nObservable: " + obs)
+    print("Reco method: " + reco)
     
     #initial histogram
     # jet pt
@@ -152,7 +153,7 @@ def optimize(inputfile, output, obs, reco, ptcut):
     h_reco = h.ProjectionY()
     #print(h_gen.GetMaximum(), h_reco.GetMaximum())
     h_gen.GetYaxis().SetRangeUser(0., 1.5*h_reco.GetMaximum())
-    h_gen.GetXaxis().SetTitle(label)
+    h_gen.SetTitle(label1)
     h_gen.SetLineColor(ROOT.kRed+1)
     h_gen.Draw()
     h_reco.SetLineStyle(7)
@@ -215,6 +216,7 @@ def optimize(inputfile, output, obs, reco, ptcut):
     c.cd()
     
     print(bins)
+    print("Number of bins = " + str(len(bins)-1))
     
     hnorm = ROOT.TH2F("", labels, nbins, lowbin, highbin, nbins, lowbin, highbin)
     for g in range(1, h.GetNbinsX()+1):
@@ -411,7 +413,7 @@ def splitForMinSigma(h, output, obs, reco, ptcut, factor = 0.5):
     slices = ROOT.TObjArray()
     h.FitSlicesX(f1, 1, h.GetNbinsX(), 0, "QNRLM", slices)
     
-    c2 = ROOT.TCanvas('c', 'c', 500, 450)
+    c2 = ROOT.TCanvas('c2', 'c2', 500, 450)
     c2.cd()
     
     slices[0].Draw()
