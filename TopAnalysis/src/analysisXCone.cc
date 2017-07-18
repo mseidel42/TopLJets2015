@@ -475,7 +475,7 @@ cout<<"Njettiness"<<endl;
 	      tue.phill[ivar]  = dil.Phi();
 	      tue.sumpt[ivar]  = l1.Pt()+l2.Pt();
 	      tue.dphill[ivar] = TMath::Abs(l1.DeltaPhi(l2));
-		  tue.NJettiness = int( N_temp_C);
+		  tue.NJettiness= int( N_temp_C);
 		  tue.NJettSlope = int (N_temp_S);
 	      
 	      //histogram filling for the nominal selection
@@ -511,8 +511,8 @@ cout<<"Njettiness"<<endl;
 	      ht.fill("chsumpt_"+chTag,chSumPt,plotwgts);
 	      ht.fill("chavgpz_"+chTag,nch>0 ? chSumPz/nch : -1,plotwgts);
 	      ht.fill("chsumpz_"+chTag,chSumPz,plotwgts);
-	      //ht.fill("XConeCut_"+chTag,int(N_temp_C));
-	      //ht.fill("XConeDiff_"+chTag,int(N_temp_S));
+	      ht.fill("XConeCut_"+chTag,int(N_temp_C),plotwgts);
+	      ht.fill("XConeDiff_"+chTag,int(N_temp_S),plotwgts);
 	    
 	    }
 	}
