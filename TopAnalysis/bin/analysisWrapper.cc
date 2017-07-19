@@ -11,6 +11,8 @@
 #include "TopLJets2015/TopAnalysis/interface/ExclusiveTop.h"
 #include "TopLJets2015/TopAnalysis/interface/MttbarAnalyzer.h"
 #include "TopLJets2015/TopAnalysis/interface/TOPSynchExercise.h"
+#include "TopLJets2015/TopAnalysis/interface/analysisXCone.h"
+
 
 #include "TH1F.h"
 #include "TFile.h"
@@ -100,6 +102,7 @@ int main(int argc, char* argv[])
   else if(method=="ExclusiveTop::RunExclusiveTop")           RunExclusiveTop(in,out,channel,charge,normH,era,debug);
   else if(method=="MttbarAnalyzer::RunMttbarAnalyzer")       RunMttbarAnalyzer(in,out,channel,charge,normH,era,debug);
   else if(method=="BjetChargeTreeProducer::RunBjetChargeTreeProducer") RunBjetChargeTreeProducer(in,out,debug);
+  else if(method=="analysisXCone::RunanalysisXCone") RunanalysisXCone(in,out,channel,charge,SelectionTool::FlavourSplitting(flav),normH,runSysts,era,debug);
   else
     {
       cout << "Check method=" << method <<endl;
