@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
   else if(method=="ExclusiveTop::RunExclusiveTop")           RunExclusiveTop(in,out,channel,charge,normH,era,debug);
   else if(method=="MttbarAnalyzer::RunMttbarAnalyzer")       RunMttbarAnalyzer(in,out,channel,charge,normH,era,debug);
   else if(method=="BjetChargeTreeProducer::RunBjetChargeTreeProducer") RunBjetChargeTreeProducer(in,out,debug);
-  else if(method=="analysisXCone::RunanalysisXCone") RunanalysisXCone(in,out,channel,charge,SelectionTool::FlavourSplitting(flav),normH,runSysts,era,debug);
+  else if(method=="analysisXCone::RunanalysisXCone") RunanalysisXCone(in,out,channel,charge,SelectionTool::FlavourSplitting(flav),normH,runSysts,systVar,era,debug);
   else
     {
       cout << "Check method=" << method <<endl;
