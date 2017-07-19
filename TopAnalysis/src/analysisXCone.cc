@@ -135,10 +135,12 @@ cout<<"book histograms"<<endl;
       ht.addHist("chsumpt_"+tag   , new TH1F("chsumpt_"+tag,";Charged particle sum p_{T} [GeV];Events",50,0,400) );
       ht.addHist("chavgpz_"+tag   , new TH1F("chavgpz_"+tag,";Charged particle average p_{z} [GeV];Events",50,0,15) );      
       ht.addHist("chsumpz_"+tag   , new TH1F("chsumpz_"+tag,";Charged particle sum p_{z} [GeV];Events",50,0,400) );
-	  ht.addHist("XConeCut_"+tag, new TH1F("XConeCut_"+tag,";Extra Jet XConeCut; Events",10,0,10));
-	  ht.addHist("XConeDiff_"+tag, new TH1F("XConeDiff_"+tag,";Extra Jet XConeDiff; Events",10,0,10));
-	  
-      
+	ht.addHist("XConeCut_"+tag, new TH1F("XConeCut_"+tag,"; Jet XConeCut; Events",10,0,10));
+	ht.addHist("XConeDiff_"+tag, new TH1F("XConeDiff_"+tag,"; Jet XConeDiff; Events",10,0,10));
+	for (Int_t ii = 2;  ii<10; ii++){
+		ht.addHist(ii+"_Jettiness"+tag, new TH1F(ii+"_Jettiness"+tag,";tau ;Events",50,0,200));
+		ht.addHist(ii+"_Jettiness_slope"+tag, new TH1F(ii+"_Jettiness_slope"+tag,";d tau/d N ;Events",20,-0.1,0));
+      }
     }
   for (auto& it : ht.getPlots() )     { it.second->Sumw2(); it.second->SetDirectory(0); }
   for (auto& it : ht.get2dPlots() )   { it.second->Sumw2(); it.second->SetDirectory(0); }
@@ -148,7 +150,6 @@ cout<<"Njettiness"<<endl;
   double beta = 2.;
   double R = 0.4;
  
-  int NofParticlesInJets =0;
 
   //LOOP OVER EVENTS
   for (Int_t iev=0;iev<nentries;iev++)
@@ -193,7 +194,7 @@ cout<<"Njettiness"<<endl;
       //selection
       //evsel.setDebug(true);
       TString chTag = evsel.flagFinalState(ev);
-      if(chTag=="EM" || chTag=="EE" || chTag=="MM")
+      if(chTag=="EM" )
 	{
 	  //leptons
 	  std::vector<Particle> &leptons=evsel.getSelLeptons();
@@ -232,7 +233,6 @@ cout<<"Njettiness"<<endl;
 		}
 	      bool matchedToLepton(relDpt2lep<0.05);
 		  if (matchedToLepton) continue;
-		 NofParticlesInJets += 1;
 			fj_particles.push_back( fastjet::PseudoJet( tkP4.Px(),tkP4.Py(), tkP4.Pz(), tkP4.E() ) );
 			
 	      //matching to leading CSV jet candidates
@@ -256,33 +256,7 @@ cout<<"Njettiness"<<endl;
 					     1) 
 				    );
 	    }
-	    cout<<NofParticlesInJets<<endl;
-	    NofParticlesInJets=0;
-	  Njettiness* tauN = new fastjet::contrib::Njettiness(OnePass_WTA_KT_Axes(), XConeMeasure(beta,R));	
-			for (int N = 2; N < 10; ++N) {
-				double tau_C = tauN->getTau(N, fj_particles);
-				double tau_S = 0;
-				if (tauN->getTau(N-1,fj_particles) > 0.) {
-					tau_S = (tauN->getTau(N,fj_particles) - tauN->getTau(N-1,fj_particles))/(tauN->getTau(N-1,fj_particles));
-				if (tau_S == -1.0){
-					tau_S = 0.0;
-					}
-				}
-				
 
-				if (tau_C < tau_temp_C and tau_C > tau_cut){
-					tau_temp_C = tau_C;
-					N_temp_C = N;
-				}
-				if (tau_S < tau_temp_S and tau_S !=-1.0){
-					tau_temp_S = tau_S;
-					N_temp_S = N;
-
-}
-				
-			}
-			cout<<"N_s = "<< N_temp_S << " N_c = "<< N_temp_C << endl;
-	delete tauN;
 	
 	  //save PF cands
 	  tue.n=0;
@@ -452,6 +426,7 @@ cout<<"Njettiness"<<endl;
 		  if(bJets[0].second==0) nb++;
 		  if(bJets.size()>1) if(bJets[1].second==1) nb++;
 		}
+
 	      nj-=nb;
 	      	      
 	      bool passPresel = passLepPresel && nb==2;
@@ -475,15 +450,46 @@ cout<<"Njettiness"<<endl;
 	      tue.phill[ivar]  = dil.Phi();
 	      tue.sumpt[ivar]  = l1.Pt()+l2.Pt();
 	      tue.dphill[ivar] = TMath::Abs(l1.DeltaPhi(l2));
-		  tue.NJettiness= int( N_temp_C);
-		  tue.NJettSlope = int (N_temp_S);
-	      
+
+		
+	      cout << N_temp_C << ", " << int(N_temp_C) << ", " << tue.NJettiness << std::endl;
 	      //histogram filling for the nominal selection
 	      if(ivar!=0) continue;
 	      if(!passLepPresel) continue;
+	      
+	  Njettiness* tauN = new fastjet::contrib::Njettiness(OnePass_WTA_KT_Axes(), XConeMeasure(beta,R));	
+			for (int N = 2; N < 10; ++N) {
+				double tau_C = tauN->getTau(N, fj_particles);
+				double tau_S = 0;
+				if (tauN->getTau(N-1,fj_particles) > 0.) {
+					tau_S = (tauN->getTau(N,fj_particles) - tauN->getTau(N-1,fj_particles))/(tauN->getTau(N-1,fj_particles));
+				if (tau_S == -1.0){
+					tau_S = 0.0;
+					}
+						
+				}
+				ht.fill(N+"_Jettiness"+chTag,tau_C,plotwgts);
+				ht.fill(N+"_Jettiness_slope"+chTag,tau_S,plotwgts);
+	    
+
+				if (tau_C < tau_temp_C and tau_C > tau_cut){
+					tau_temp_C = tau_C;
+					N_temp_C = N;
+				}
+				if (tau_S < tau_temp_S and tau_S !=-1.0){
+					tau_temp_S = tau_S;
+					N_temp_S = N;
+
+}
+				
+			}
+			
+	delete tauN;
 
 	      ht.fill("nvtx_"+chTag,ev.nvtx,plotwgts);
 	      ht.fill("rho_"+chTag,ev.rho,plotwgts);
+	      tue.NJettiness= int( N_temp_C);
+		tue.NJettSlope = int (N_temp_S);
               if(nb<2)
                 {
                   TString subTag(chTag);
@@ -492,7 +498,7 @@ cout<<"Njettiness"<<endl;
                   ht.fill("mll_"+subTag,mll,plotwgts);
                   ht.fill("met_"+subTag,evsel.getMET().Pt(),plotwgts);	      
                 }
-
+		
 	      ht.fill("nbtags_"+chTag,nb,plotwgts);
               if(nb>=2) ht.fill("mll_"+chTag,mll,plotwgts);
 	      if(!passPresel) continue;
@@ -511,7 +517,7 @@ cout<<"Njettiness"<<endl;
 	      ht.fill("chsumpt_"+chTag,chSumPt,plotwgts);
 	      ht.fill("chavgpz_"+chTag,nch>0 ? chSumPz/nch : -1,plotwgts);
 	      ht.fill("chsumpz_"+chTag,chSumPz,plotwgts);
-	      ht.fill("XConeCut_"+chTag,int(N_temp_C),plotwgts);
+		ht.fill("XConeCut_"+chTag,int(N_temp_C),plotwgts);
 	      ht.fill("XConeDiff_"+chTag,int(N_temp_S),plotwgts);
 	    
 	    }
@@ -707,8 +713,8 @@ void createanalysisXConeTree(TTree *t,analysisXCone_t &tue)
   t->Branch("nj",           tue.nj,          "nj[11]/I");
   t->Branch("nb",           tue.nb,          "nb[11]/I");
   t->Branch("nvtx",        &tue.nvtx,        "nvtx/I");
-  t->Branch("N_cut",	 tue.NJettiness,     "N_cut/I");
-  t->Branch("N_slope",		  tue.NJettSlope, "N_slope/I");
+  t->Branch("N_cut",	 &tue.NJettiness,     "N_cut/I");
+  t->Branch("N_slope",		 &tue.NJettSlope, "N_slope/I");
 
   //event weights
   t->Branch("nw",     &tue.nw, "nw/I");
