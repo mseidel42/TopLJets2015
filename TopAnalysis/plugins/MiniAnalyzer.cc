@@ -44,8 +44,6 @@
 #include "FWCore/Framework/interface/TriggerNamesService.h"
 #include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
 #include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
-#include "DataFormats/CTPPSReco/interface/CTPPSLocalTrackLite.h"
-#include "DataFormats/CTPPSDetId/interface/CTPPSDetId.h"
 
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "TopLJets2015/TopAnalysis/interface/MiniEvent.h"
@@ -126,7 +124,6 @@ private:
   edm::EDGetTokenT<edm::View<pat::Jet> > jetToken_;
   edm::EDGetTokenT<pat::METCollection> metToken_, puppiMetToken_;
   edm::EDGetTokenT<pat::PackedCandidateCollection> pfToken_;
-  edm::EDGetTokenT<std::vector<CTPPSLocalTrackLite> > ctppsToken_;
   
   //Electron Decisions
   edm::EDGetTokenT<edm::ValueMap<float> > eleMvaIdMapToken_;
@@ -184,7 +181,6 @@ MiniAnalyzer::MiniAnalyzer(const edm::ParameterSet& iConfig) :
   metToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("mets"))),
   puppiMetToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("puppimets"))),
   pfToken_(consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("pfCands"))),
-  ctppsToken_(consumes<std::vector<CTPPSLocalTrackLite> >(iConfig.getParameter<edm::InputTag>("ctppsLocalTracks"))),
   eleMvaIdMapToken_(consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("eleMvaIdMap"))),
   eleVetoIdMapToken_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("eleVetoIdMap"))),
   eleLooseIdMapToken_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("eleLooseIdMap"))),
