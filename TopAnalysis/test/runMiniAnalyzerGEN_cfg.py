@@ -27,6 +27,7 @@ options.register('asfsr', 0.1365, VarParsing.multiplicity.singleton, VarParsing.
 options.register('me', 'on', VarParsing.multiplicity.singleton, VarParsing.varType.string, "ME corrections")
 options.register('generator', 'pythia8', VarParsing.multiplicity.singleton, VarParsing.varType.string, "PS generator")
 options.register('cr', 'default', VarParsing.multiplicity.singleton, VarParsing.varType.string, "color reconnection mode")
+options.setDefault('maxEvents', 100)
 options.parseArguments()
 
 process = cms.Process("MiniAnalysisGEN")
@@ -74,158 +75,63 @@ process.options   = cms.untracked.PSet(
 #)
 
 process.source = cms.Source("EmptySource")
-process.externalLHEProducer = cms.EDProducer("ExternalLHEProducer",
-    nEvents = cms.untracked.uint32(options.maxEvents),
-    outputFile = cms.string('cmsgrid_final.lhe'),
-    scriptName = cms.FileInPath('GeneratorInterface/LHEInterface/data/run_generic_tarball_cvmfs.sh'),
-    numberOfParameters = cms.uint32(1),
-    args = cms.vstring('/afs/cern.ch/work/m/mseidel/generator/CMSSW_7_1_20/src/TT_hdamp_TuneT4_noweights_NNPDF30_13TeV_powheg_hvq.tgz')
-)
 
-if (options.generator == "pythia8"):
-    from Configuration.Generator.Pythia8CommonSettings_cfi import *
-    from Configuration.Generator.Pythia8CUEP8M1Settings_cfi import *
-    from Configuration.Generator.Pythia8PowhegEmissionVetoSettings_cfi import *
-    process.generator = cms.EDFilter("Pythia8HadronizerFilter",
-        maxEventsToPrint = cms.untracked.int32(0),
-        pythiaPylistVerbosity = cms.untracked.int32(0),
-        filterEfficiency = cms.untracked.double(1.0),
-        pythiaHepMCVerbosity = cms.untracked.bool(False),
-        comEnergy = cms.double(13000.),
-        PythiaParameters = cms.PSet(
-            pythia8CommonSettingsBlock,
-            pythia8CUEP8M1SettingsBlock,
-            pythia8PowhegEmissionVetoSettingsBlock,
-            processParameters = cms.vstring(
-                'POWHEG:nFinal = 2',
-                'TimeShower:mMaxGamma = 1.0',
-                'Tune:pp 14',
-                'Tune:ee 7',
-                'MultipartonInteractions:ecmPow=0.25208',
-                'SpaceShower:alphaSvalue=0.1108',
-                'PDF:pSet=LHAPDF6:NNPDF30_lo_as_0130',
-                'MultipartonInteractions:pT0Ref=2.197139e+00',
-                'MultipartonInteractions:expPow=1.608572e+00',
-                'ColourReconnection:range=6.593269e+00',
-            ),
-            fsrParameters = cms.vstring(
-                'TimeShower:renormMultFac   = ' + str(options.scale**2),
-                'TimeShower:factorMultFac   = ' + str(options.scale**2),
-                'TimeShower:alphaSvalue     = ' + str(options.asfsr),
-                'TimeShower:MEcorrections   = ' + options.me,
-            ),
-            parameterSets = cms.vstring('pythia8CommonSettings',
-                #'pythia8CUEP8M1Settings',
-                'pythia8PowhegEmissionVetoSettings',
-                'processParameters',
-                'fsrParameters'
-            )
-        )
-    )
-
-    if (options.cr == "off"):
-        process.generator.PythiaParameters.processParameters.append('ColourReconnection:reconnect = off')
-
-    # Tune from TOP-RunIISummer15wmLHEGS-00176
-    if ('qcd' in options.cr):
-        process.generator.PythiaParameters.processParameters = cms.vstring(
-            'POWHEG:nFinal = 2', ## Number of final state particles
-            ## (BEFORE THE DECAYS) in the LHE
-            ## other than emitted extra parton
-            'TimeShower:mMaxGamma = 1.0',#cutting off lepton-pair production
-            ##in the electromagnetic shower
-            ##to not overlap with ttZ/gamma* samples
-            'Tune:pp 14',
-            'Tune:ee 7',
-            'MultipartonInteractions:ecmPow=0.25208',
-            'SpaceShower:alphaSvalue=0.1108',
-            'PDF:pSet=LHAPDF6:NNPDF30_lo_as_0130',
-            #'MultipartonInteractions:pT0Ref=2.197139e+00',
-            #'MultipartonInteractions:expPow=1.608572e+00',
-            #'ColourReconnection:range=6.593269e+00',
-            'ColourReconnection:mode = 1',
-            'BeamRemnants:remnantMode=1',
-            'StringZ:aLund = 0.38',
-            'StringZ:bLund = 0.64',
-            'StringFlav:probQQtoQ = 0.078',
-            'StringFlav:probStoUD = 0.2',
-            'StringFlav:probQQ1toQQ0join=0.0275,0.0275,0.0275',
-            'ColourReconnection:allowDoubleJunRem = on', #TODO Not recommended?
-            'ColourReconnection:timeDilationPar=15.86',
-            'ColourReconnection:m0=1.204',
-            'ColourReconnection:junctionCorrection=0.1222',
-            'MultipartonInteractions:pT0Ref=2.174',
-            'MultipartonInteractions:expPow=1.312',
-        )
-    
-    # Tune from TOP-RunIISummer15wmLHEGS-00223
-    if ('move' in options.cr):
-        process.generator.PythiaParameters.processParameters = cms.vstring(
-            'POWHEG:nFinal = 2', ## Number of final state particles
-            ## (BEFORE THE DECAYS) in the LHE
-            ## other than emitted extra parton
-            'TimeShower:mMaxGamma = 1.0',#cutting off lepton-pair production
-            ##in the electromagnetic shower
-            ##to not overlap with ttZ/gamma* samples
-            'Tune:pp 14',
-            'Tune:ee 7',
-            'MultipartonInteractions:ecmPow=0.25208',
-            'SpaceShower:alphaSvalue=0.1108',
-            'PDF:pSet=LHAPDF6:NNPDF30_lo_as_0130',
-            'MultipartonInteractions:pT0Ref=2.30e+00',
-            'MultipartonInteractions:expPow=1.346e+00',
-            'ColourReconnection:mode=2',
-            'ColourReconnection:m2Lambda=1.89',
-          )
-    
-    if ('erd' in options.cr):
-        process.generator.PythiaParameters.processParameters.append('PartonLevel:earlyResDec = on')
-
-
-if (options.generator == "herwigpp"):
-    from Configuration.Generator.HerwigppDefaults_cfi import *
-    from Configuration.Generator.HerwigppUE_EE_5C_cfi import *
-    from Configuration.Generator.HerwigppPDF_CTEQ6_LO_cfi import * # Import CTEQ6L PDF as shower pdf
-    from Configuration.Generator.HerwigppPDF_NNPDF30_NLO_cfi import herwigppPDFSettingsBlock as herwigppHardPDFSettingsBlock 	# Import NNPDF30 NLO as PDF of the hard subprocess
-    from Configuration.Generator.HerwigppEnergy_13TeV_cfi import *
-    from Configuration.Generator.HerwigppLHEFile_cfi import *
-    from Configuration.Generator.HerwigppMECorrections_cfi import *
-
-    process.generator = cms.EDFilter("ThePEGHadronizerFilter",
-	      herwigDefaultsBlock,
-	      herwigppUESettingsBlock,
-	      herwigppPDFSettingsBlock,
-	      herwigppHardPDFSettingsBlock,			# Implementing renamed NNPDF30 config block
-	      herwigppEnergySettingsBlock,
-	      herwigppLHEFileSettingsBlock,
-	      herwigppMECorrectionsSettingsBlock,
-
-	      configFiles = cms.vstring(),
-	      parameterSets = cms.vstring(
-		        'hwpp_cmsDefaults',
-		        'hwpp_ue_EE5C',
-		        'hwpp_cm_13TeV',
-		        'hwpp_pdf_CTEQ6L1',			# Shower PDF matching with the tune
-		        'hwpp_pdf_NNPDF30NLO_Hard',		# PDF of hard subprocess
-		        'hwpp_LHE_Powheg_DifferentPDFs',
-		        'hwpp_MECorr_' + options.me.capitalize(),
-		        'productionParameters',
-	      ),
-	      productionParameters = cms.vstring(
-		        'set /Herwig/Shower/AlphaQCD:RenormalizationScaleFactor ' + str(options.scale),
-		        'set /Herwig/Shower/AlphaQCD:AlphaMZ ' + str(options.asfsr)
+if options.generator == 'sherpa':
+    process.generator = cms.EDFilter("SherpaGeneratorFilter",
+        FetchSherpack = cms.bool(True),
+        SherpaDefaultWeight = cms.double(1.0),
+        SherpaParameters = cms.PSet(
+            MPI_Cross_Sections = cms.vstring(' MPIs in Sherpa, Model = Amisic:', 
+                ' semihard xsec = 39.8027 mb,', 
+                ' non-diffractive xsec = 17.0318 mb with nd factor = 0.3142.'),
+            Run = cms.vstring(' (run){', 
+                ' EVENTS 1M; ERROR 0.99;', 
+                ' EVENT_OUTPUT=HepMC_GenEvent[sample]', 
+                ' FSF:=1.; RSF:=1.; QSF:=1.;', 
+                ' SCALES METS{FSF*MU_F2}{RSF*MU_R2}{QSF*MU_Q2};', 
+                ' CORE_SCALE QCD;', 
+                ' METS_BBAR_MODE 5;', 
+                ' NJET:=0; LJET:=2; QCUT:=20.;', 
+                ' ME_SIGNAL_GENERATOR Comix Amegic LOOPGEN;', 
+                ' OL_PREFIX=/cvmfs/cms.cern.ch/slc6_amd64_gcc630/external/openloops/1.3.1-mlhled2', 
+                ' EVENT_GENERATION_MODE Weighted;', 
+                ' LOOPGEN:=OpenLoops;', 
+                ' BEAM_1 2212; BEAM_ENERGY_1 = 6500.;', 
+                ' BEAM_2 2212; BEAM_ENERGY_2 = 6500.;', 
+                ' HARD_DECAYS On;', 
+                ' STABLE[24] 0; STABLE[6] 0; WIDTH[6] 0;', 
+                ' NLO_SMEAR_THRESHOLD 1;', 
+                ' NLO_SMEAR_POWER 2;', 
+                '}(run)', 
+                ' (processes){', 
+                ' Process : 93 93 ->  6 -6 93{NJET};', 
+                ' Order (*,0); CKKW sqr(QCUT/E_CMS);', 
+                ' NLO_QCD_Mode MC@NLO {LJET};', 
+                ' ME_Generator Amegic {LJET};', 
+                ' RS_ME_Generator Comix {LJET};', 
+                ' Loop_Generator LOOPGEN {LJET};', 
+                ' Max_N_Quarks 6 {5,6,7,8};', 
+                ' Integration_Error 0.05 {5,6,7,8};', 
+                ' Scales LOOSE_METS{FSF*MU_F2}{RSF*MU_R2}{QSF*MU_Q2} {5,6,7,8};', 
+                ' End process', 
+                '}(processes)'),
+            parameterSets = cms.vstring('MPI_Cross_Sections', 
+                'Run')
         ),
+        SherpaPath = cms.string('./'),
+        SherpaPathPiece = cms.string('./'),
+        SherpaProcess = cms.string('Tops'),
+        SherpaResultDir = cms.string('Result'),
+        SherpackChecksum = cms.string('a43f22edc29e0bbbf1716e438e999ff0'),
+        SherpackLocation = cms.string('/afs/cern.ch/work/m/mseidel/TopAnalysis/CMSSW_9_3_1/src/Sherpack/Tops/test/'),
         crossSection = cms.untracked.double(-1),
         filterEfficiency = cms.untracked.double(1.0),
-        #dumpConfig  = cms.untracked.string("dump_me_" + options.me + ".config"),
+        maxEventsToPrint = cms.int32(0)
     )
 
 #pseudo-top
-process.load("TopQuarkAnalysis.TopEventProducers.producers.pseudoTop_cfi")
-process.pseudoTop.src = 'generator:unsmeared'
-process.pseudoTop.runTopReconstruction = False
-
-process.load('TopQuarkAnalysis.BFragmentationAnalyzer.bfragWgtProducer_cfi')
+process.load("GeneratorInterface.RivetInterface.particleLevel_cfi")
+process.particleLevel.src = 'generator:unsmeared'
 
 #tfile service
 process.TFileService = cms.Service("TFileService",
@@ -249,9 +155,11 @@ if not process.analysis.saveTree :
 if not process.analysis.savePF :
     print 'Summary PF info won\'t be saved'
 
+process.ProductionFilterSequence = cms.Sequence(process.generator)
+
 # Path and EndPath definitions
-#process.lhe_step = cms.Path(process.externalLHEProducer)
-process.generation_step = cms.Path(process.generator*process.pseudoTop*process.bfragWgtProducer*process.analysis)
+process.generation_step = cms.Path(process.pgen)
+process.analysis_step = cms.Path(process.particleLevel*process.analysis)
 process.genfiltersummary_step = cms.EndPath(process.genFilterSummary)
 process.endjob_step = cms.EndPath(process.endOfProcess)
 #process.RECOSIMoutput_step = cms.EndPath(process.RECOSIMoutput)
@@ -265,7 +173,7 @@ process.genParticleCandidates = cms.EDProducer("GenParticleProducer",
 )
 
 # Schedule definition
-process.schedule = cms.Schedule(process.generation_step,process.genfiltersummary_step,process.endjob_step)
+process.schedule = cms.Schedule(process.generation_step,process.analysis_step,process.genfiltersummary_step,process.endjob_step)
 # filter all path with the production filter sequence
 for path in process.paths:
 	  if path in ['lhe_step']: continue
