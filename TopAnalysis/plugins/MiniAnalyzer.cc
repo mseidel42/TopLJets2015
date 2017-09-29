@@ -269,6 +269,11 @@ int MiniAnalyzer::genAnalysis(const edm::Event& iEvent, const edm::EventSetup& i
       ev_.g_x2     = evt->pdf()->x.second;
       ev_.g_id1    = evt->pdf()->id.first;
       ev_.g_id2    = evt->pdf()->id.second;
+      
+      for (unsigned int i = 1; i<evt->weights().size(); i++){
+        ev_.g_w[ev_.g_nw]=evt->weights()[i];
+        ev_.g_nw++;
+      }
     }
   histContainer_["counter"]->Fill(1,ev_.g_w[0]);
   
@@ -284,7 +289,7 @@ int MiniAnalyzer::genAnalysis(const edm::Event& iEvent, const edm::EventSetup& i
 	ev_.g_nw++;
       }
     }
-     
+  
   //
   // GENERATOR LEVEL EVENT
   //
