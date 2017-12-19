@@ -36,8 +36,8 @@ def optimize(inputfile, output, obs, reco, ptcut, rootoutput):
         tree.Add('/home/mseidel/Projects/unfolding/MC13TeV_TTJets_0.root')
         tree.Add('/home/mseidel/Projects/unfolding/MC13TeV_TTJets_1.root')
     elif inputfile == 'eos':
-        tree.Add('/eos/user/m/mseidel/analysis/TopJetShapes/b312177/Chunks/MC13TeV_TTJets_0.root')
-        tree.Add('/eos/user/m/mseidel/analysis/TopJetShapes/b312177/Chunks/MC13TeV_TTJets_1.root')
+        tree.Add('/eos/user/m/mseidel/analysis/TopJetShapes/b312177_new/Chunks/MC13TeV_TTJets_0.root')
+        tree.Add('/eos/user/m/mseidel/analysis/TopJetShapes/b312177_new/Chunks/MC13TeV_TTJets_1.root')
         #tree.Add('/eos/user/m/mseidel/analysis/TopJetShapes/b312177/Chunks/MC13TeV_TTJets_2.root')
         #tree.Add('/eos/user/m/mseidel/analysis/TopJetShapes/b312177/Chunks/MC13TeV_TTJets_3.root')
         #tree.Add('/eos/user/m/mseidel/analysis/TopJetShapes/b312177/Chunks/MC13TeV_TTJets_4.root')
@@ -60,143 +60,112 @@ def optimize(inputfile, output, obs, reco, ptcut, rootoutput):
     highbin = 1
     sigmaFactor = 0.5
     
+    nice_observables_root = {"mult": "#lambda_{0}^{0} (N)", "width": "#lambda_{1}^{1} (width)", "ptd": "#lambda_{0}^{2} (p_{T}D)", "ptds": "#lambda_{0}^{2}* (p_{T}D*)", "ecc": "#varepsilon", "tau21": "#tau_{21}", "tau32": "#tau_{32}", "tau43": "#tau_{43}", "zg": "z_{g}", "zgxdr": "z_{g} #times #DeltaR", "zgdr": "#DeltaR_{g}", "ga_width": "#lambda_{1}^{1} (width)", "ga_lha": "#lambda_{0.5}^{1} (LHA)", "ga_thrust": "#lambda_{2}^{1} (thrust)", "c1_00": "C_{1} (#beta = 0.0)", "c1_02": "C_{1} (#beta = 0.2)", "c1_05": "C_{1} (#beta = 0.5)", "c1_10": "C_{1} (#beta = 1.0)", "c1_20": "C_{1} (#beta = 2.0)", "c2_00": "C_{2}^{(0.0)}", "c2_02": "C_{2}^{(0.2)}", "c2_05": "C_{2}^{(0.5)}", "c2_10": "C_{2}^{(1.0)}", "c2_20":  "C_{2}^{(2.0)}", "c3_00": "C_{3}^{(0.0)}", "c3_02": "C_{3}^{(0.2)}", "c3_05": "C_{3}^{(0.5)}", "c3_10": "C_{3}^{(1.0)}", "c3_20": "C_{3}^{(2.0)}", "m2_b1": "M_{ 2}^{ (1)}", "n2_b1": "N_{ 2}^{ (1)}", "n3_b1": "N_{ 3}^{ (1)}", "m2_b2": "M_{ 2}^{ (2)}", "n2_b2": "N_{ 2}^{ (2)}", "n3_b2": "N_{ 3}^{ (2)}", "nsd": "n_{SD}"}
+    
+    label = nice_observables_root[obs]
+    
     if (obs == "mult"):
-        label = "N"
         nbins   = 30
         highbin = 30
     if (obs == "width"):
-        label = "width"
         highbin = 0.25
-    if (obs == "ptd"):
-        label = "p_{T}D"
-    if (obs == "ptds"):
-        label = "scaled p_{T}D"
+    #if (obs == "ptd"):
+    #if (obs == "ptds"):
     if (obs == "ecc"):
-        label = "eccentricity"
         sigmaFactor = 0.25
     if (obs == "nsd"):
-        label = "n_{SD}"
         nbins   = 15
         highbin = 15
         sigmaFactor = 0.25
-    if (obs == "tau21"):
-        label = "#tau_{21}"
+    #if (obs == "tau21"):
         #nbins   = 60
         #lowbin  = 0.2
         #highbin = 0.8
-    if (obs == "tau32"):
-        label = "#tau_{32}"
+    #if (obs == "tau32"):
     if (obs == "tau43"):
-        label = "#tau_{43}"
         lowbin = 0.1
         highbin = 0.9
         nbins = 40
         #sigmaFactor = 0.33
     if (obs == "zg"):
-        label = "z_{g}"
         lowbin = 0.1
         highbin = 0.5
         nbins = 40
         sigmaFactor = 0.25
     if (obs == "zgdr"):
-        label = "#DeltaR_{g}"
         highbin = 0.5
         sigmaFactor = 0.25
     if (obs == "zgxdr"):
-        label = "z_{g} #times #DeltaR_{g}"
         highbin = 0.25
     if (obs == "ga_width"):
-        label = "#lambda_{ 1}^{1} (width)"
+        nbins = 100
     if (obs == "ga_thrust"):
-        label = "#lambda_{ 2}^{1} (thrust)"
         highbin = 0.5
-    if (obs == "ga_lha"):
-        label = "#lambda_{ 0.5}^{1} (LHA)"
+    #if (obs == "ga_lha"):
     if (obs == "c1_00"):
-        label = "C_{ 1}^{ (0.0)}"
         lowbin= 0.2
         highbin = 0.5
         nbins = 30
     if (obs == "c1_02"):
-        label = "C_{ 1}^{ (0.2)}"
         highbin = 0.5
     if (obs == "c1_05"):
-        label = "C_{ 1}^{ (0.5)}"
         highbin = 0.3
         nbins = 60
     if (obs == "c1_10"):
-        label = "C_{ 1}^{ (1.0)}"
         highbin = 0.2
         nbins = 40
     if (obs == "c1_20"):
-        label = "C_{ 1}^{ (2.0)}"
         highbin = 0.1
     if (obs == "c2_00"):
-        label = "C_{ 2}^{ (0.0)}"
         lowbin = 0.2
         highbin = 0.7
         nbins = 50
     if (obs == "c2_02"):
-        label = "C_{ 2}^{ (0.2)}"
         highbin = 0.7
         nbins = 35
     if (obs == "c2_05"):
-        label = "C_{ 2}^{ (0.5)}"
         highbin = 0.4
         nbins = 40
     if (obs == "c2_10"):
-        label = "C_{ 2}^{ (1.0)}"
         highbin = 0.25
         nbins = 50
     if (obs == "c2_20"):
-        label = "C_{ 2}^{ (2.0)}"
         highbin = 0.1
         nbins = 50
     if (obs == "c3_00"):
-        label = "C_{ 3}^{ (0.0)}"
         lowbin = 0.4
         highbin = 0.75
         nbins = 35
     if (obs == "c3_02"):
-        label = "C_{ 3}^{ (0.2)}"
         lowbin = 0.1
         highbin = 0.6
         nbins = 50
     if (obs == "c3_05"):
-        label = "C_{ 3}^{ (0.5)}"
         highbin = 0.4
         nbins = 40
     if (obs == "c3_10"):
-        label = "C_{ 3}^{ (1.0)}"
         highbin = 0.25
     if (obs == "c3_20"):
-        label = "C_{ 3}^{ (2.0)}"
         highbin = 0.15
         nbins = 30
     if (obs == "m2_b1"):
-        label = "M_{ 2}^{ (1)}"
         highbin = 0.18
         nbins = 36
     if (obs == "n2_b1"):
-        label = "N_{ 2}^{ (1)}"
         highbin = 0.45
         nbins = 45
     if (obs == "n3_b1"):
-        label = "N_{ 3}^{ (1)}"
         lowbin = 0.2
         highbin = 2.5
         nbins = 46
         sigmaFactor = 0.4
     if (obs == "m2_b2"):
-        label = "M_{ 2}^{ (2)}"
         highbin = 0.12
         nbins = 48
     if (obs == "n2_b2"):
-        label = "N_{ 2}^{ (2)}"
         highbin = 0.36
         nbins = 36
     if (obs == "n3_b2"):
-        label = "N_{ 3}^{ (2)}"
         highbin = 3.5
         nbins = 35
     
@@ -286,6 +255,8 @@ def optimize(inputfile, output, obs, reco, ptcut, rootoutput):
     #bins = splitForMinPurity(h, gensums, recosums, indices)
     
     bins = splitForMinSigma(h, output, obs, reco, ptcut, sigmaFactor)
+    if len(bins) <= 4:
+        bins = splitForMinSigma(h, output, obs, reco, ptcut, sigmaFactor*0.5)
     
     c = ROOT.TCanvas('c', 'c', 500, 450)
     c.cd()
@@ -655,10 +626,13 @@ def splitForMinSigma(h, output, obs, reco, ptcut, factor = 0.5):
     print('integral', integral)
     binfraction = 0.
     for i in range(1, h.GetNbinsX()+1):
+      if not (obs in ['mult', 'nsd']) and (i < 5): continue
       binfraction += h.ProjectionX('px', i, i).Integral()/integral
       mean  = slices[1].GetBinContent(i)
       meanError = slices[1].GetBinError(i)
-      if (mean == 0 or meanError/mean > 0.1): continue
+      if (mean == 0 or meanError/mean > 0.25): continue
+      #print(obs, h.GetXaxis().GetBinCenter(i))
+      if (obs == 'ga_lha' and h.GetXaxis().GetBinCenter(i) < 0.1): continue
       if (obs == 'tau21' and h.GetXaxis().GetBinCenter(i) < 0.1): continue
       if (obs == 'tau32' and h.GetXaxis().GetBinCenter(i) < 0.2): continue
       sigma = slices[2].GetBinContent(i) * factor

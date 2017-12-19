@@ -19,17 +19,14 @@
             display: block;
             float: left;
             background-color: white;
-            border: 1px solid #ccc;
+            border: 2px solid #ccc;
             padding: 2px;
             text-align: center;
             margin: 2px 10px 10px 2px;
-            -moz-box-shadow: 7px 5px 5px rgb(80,80,80);    /* Firefox 3.5 */
-            -webkit-box-shadow: 7px 5px 5px rgb(80,80,80); /* Chrome, Safari */
-            box-shadow: 7px 5px 5px rgb(80,80,80);         /* New browsers */
         }
-        a { text-decoration: none; color: rgb(80,0,0); }
-        a:hover { text-decoration: underline; color: rgb(255,80,80); }
-        div.dirlinks h2 {  margin-bottom: 4pt; margin-left: -24pt; color: rgb(80,0,0);  }
+        a { text-decoration: none; color: #0053A1; }
+        a:hover { text-decoration: underline; color: #4d94cc; }
+        div.dirlinks h2 {  margin-bottom: 4pt; margin-left: -24pt; color: #0053A1;  }
         div.dirlinks {  margin: 0 24pt; }
         div.dirlinks a {
             font-size: 11pt; font-weight: bold;

@@ -159,7 +159,7 @@ int testUnfold0Toys(TString observable = "mult", TString reco = "charged", TStri
   Double_t Length[Number] = { 0.0, 0.05, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 };
   TColor::CreateGradientColorTable(Number,Length,Red,Green,Blue, 255);
     
-  TString basepath = "/afs/cern.ch/work/m/mseidel/TopAnalysis/CMSSW_8_0_26_patch1/src/TopLJets2015/TopAnalysis/unfolding/fill/";
+  TString basepath = "unfolding/fill/";
   
   //============================================
   // generate MC distribution
@@ -178,7 +178,7 @@ int testUnfold0Toys(TString observable = "mult", TString reco = "charged", TStri
   TH1D* histMdetMCsig = histMdetGenMC->ProjectionY("histMdetNonGenMC", 1, -1);
   TH2D* histMdetGenMCSig = (TH2D*) histMdetGenMC->Clone("histMdetGenMCSig");
   
-  double lumi = 16551.;
+  double lumi = 35922.;
   
   double dataMCSF = lumi*832.;
   histMgenMC->Scale(dataMCSF);

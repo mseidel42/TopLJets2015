@@ -15,14 +15,13 @@ export LSB_JOB_REPORT_MAIL=N
 
 queue=longlunch
 githash=b312177
-lumi=16551
+lumi=35922
 lumiSpecs="" #--lumiSpecs EE:11391"
 lumiUnc=0.027
 whoami=`whoami`
 myletter=${whoami:0:1}
 eosdir=/store/cmst3/group/top/ReReco2016/${githash}
-summaryeosdir=/eos/user/${myletter}/${whoami}/analysis/TopJetShapes/${githash}
-outdir=${summaryeosdir}
+summaryeosdir=/eos/user/${myletter}/${whoami}/analysis/TopJetShapes/${githash}_new
 wwwdir=/eos/user/${myletter}/${whoami}/www/cms/TopJS/
 
 
@@ -45,6 +44,8 @@ case $WHAT in
         python scripts/runLocalAnalysis.py -i ${eosdir}_qcd -q ${queue} -o ${summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --farmappendix qcd;
         #Experimental uncertainties
         python scripts/runLocalAnalysis.py -i ${eosdir} -q ${queue} -o ${summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --only MC13TeV_TTJets --systVar all --exactonly --farmappendix expsyst;
+        #ttbar GEN samples
+        python scripts/runLocalAnalysis.py -i /eos/user/m/mseidel/ReReco2016/b312177_merged -q ${queue} -o ${summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --farmappendix samplesGEN;
         ;;
 
     FULLSELCENTRAL )
@@ -96,8 +97,8 @@ case $WHAT in
 
     FILL )
         cd batch;
-        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i /eos/user/m/mseidel/analysis/TopJetShapes/b312177/Chunks/ --skip MC13TeV_TTJets --skipexisting;
-        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i /eos/user/m/mseidel/analysis/TopJetShapes/b312177/Chunks/ --only MC13TeV_TTJets --skipexisting --nweights 20;
+        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --skip MC13TeV_TTJets --skipexisting;
+        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --only MC13TeV_TTJets --skipexisting --nweights 20;
         cd -;
         ;;
     
@@ -106,9 +107,9 @@ case $WHAT in
         ;;
         
     TOYUNFOLDING )
+        mkdir unfolding/toys;
         # mult width ptd ptds ecc tau21 tau32 tau43 zg zgxdr zgdr ga_width ga_lha ga_thrust c1_02 c1_05 c1_10 c1_20 c2_02 c2_05 c2_10 c2_20 c3_02 c3_05 c3_10 c3_20 m2_b1 n2_b1 n3_b1 m2_b2 n2_b2 n3_b2
-        #for OBS in mult width ptd ptds ecc tau21 tau32 tau43 zg zgxdr zgdr ga_width ga_lha ga_thrust c1_00 c1_02 c1_05 c1_10 c1_20 c2_00 c2_02 c2_05 c2_10 c2_20 c3_00 c3_02 c3_05 c3_10 c3_20 m2_b1 n2_b1 n3_b1 m2_b2 n2_b2 n3_b2 nsd
-        for OBS in c1_00 c2_00 c3_00 nsd
+        for OBS in mult width ptd ptds ecc tau21 tau32 tau43 zg zgxdr zgdr ga_width ga_lha ga_thrust c1_00 c1_02 c1_05 c1_10 c1_20 c2_00 c2_02 c2_05 c2_10 c2_20 c3_00 c3_02 c3_05 c3_10 c3_20 m2_b1 n2_b1 n3_b1 m2_b2 n2_b2 n3_b2 nsd
         do
           for RECO in charged all
           do
@@ -136,18 +137,59 @@ case $WHAT in
           done
         done
         python test/TopJSAnalysis/plotMeanTau.py
-        for FLAVOR in all bottom light gluon
+        for FLAVOR in incl bottom light gluon
         do
           python test/TopJSAnalysis/plotMeanCvsBeta.py --flavor ${FLAVOR}
         done
         python test/TopJSAnalysis/doCovarianceAndChi2.py
+        python test/TopJSAnalysis/doCovarianceAndChi2.py --reco all
+        ;;
+    
+    WWWUNFOLDING )
+        rm -r ${wwwdir}/result
+        mkdir -p ${wwwdir}/result
+        cp unfolding/result/*.{png,pdf} ${wwwdir}/result
+        cp test/index.php ${wwwdir}/result
         ;;
     
     FLAVORPLOTS )
-        for OBS in mult width ptd ptds ecc tau21 tau32 tau43 zg zgxdr zgdr ga_width ga_lha ga_thrust c1_02 c1_05 c1_10 c1_20 c2_02 c2_05 c2_10 c2_20 c3_02 c3_05 c3_10 c3_20 m2_b1 n2_b1 n3_b1 m2_b2 n2_b2 n3_b2
-        do
-          python test/TopJSAnalysis/compareFlavors.py --obs ${OBS}
+        for RECO in charged all
+          do
+          for OBS in mult width ptd ptds ecc tau21 tau32 tau43 zg zgxdr zgdr ga_width ga_lha ga_thrust c1_00 c1_02 c1_05 c1_10 c1_20 c2_00 c2_02 c2_05 c2_10 c2_20 c3_00 c3_02 c3_05 c3_10 c3_20 m2_b1 n2_b1 n3_b1 m2_b2 n2_b2 n3_b2 nsd
+          do
+            python test/TopJSAnalysis/compareFlavors.py --obs ${OBS} --reco ${RECO}
+          done
         done
+        ;;
+    
+    TUNING )
+        for OBS in lowcornew c1all lambda #lowcor c1pert
+        do
+          for GENERATOR in pythia8 #herwigpp
+          do
+            for FLAVOR in incl bottom light gluon
+            do
+              for RECO in charged all
+              do
+                python test/TopJSAnalysis/fitAlphaS.py --generator ${GENERATOR} --flavor ${FLAVOR} --obs ${OBS} --reco ${RECO}
+              done
+            done
+          done
+        done
+        ;;
+    
+    SENSITIVITY )
+        for OBS in mult width ptd ptds ecc tau21 tau32 tau43 zg zgxdr zgdr ga_width ga_lha ga_thrust c1_00 c1_02 c1_05 c1_10 c1_20 c2_00 c2_02 c2_05 c2_10 c2_20 c3_00 c3_02 c3_05 c3_10 c3_20 m2_b1 n2_b1 n3_b1 m2_b2 n2_b2 n3_b2 nsd
+        do
+          python test/TopJSAnalysis/fitAlphaS.py --generator pythia8 --flavor incl --obs ${OBS}
+        done
+        ;;
+    
+    WWWTUNING )
+        rm -r ${wwwdir}/fit
+        mkdir -p ${wwwdir}/fit
+        cp fit/*.{png,pdf} ${wwwdir}/fit
+        cp test/index.php ${wwwdir}/fit
         ;;
 
 esac

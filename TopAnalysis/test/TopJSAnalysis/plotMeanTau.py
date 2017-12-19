@@ -14,7 +14,7 @@ steer the script
 """
 def main():
     
-    cmsLabel='#bf{CMS} #it{preliminary}'
+    cmsLabel='#bf{CMS}'
     
     #configuration
     usage = 'usage: %prog [options]'
@@ -28,7 +28,7 @@ def main():
     parser.add_option('-o', '--outName',     dest='outName' ,    help='name of the output file',        default='plotter.root',    type='string')
     parser.add_option(      '--silent',      dest='silent' ,     help='only dump to ROOT file',         default=False,             action='store_true')
     parser.add_option(      '--saveTeX',     dest='saveTeX' ,    help='save as tex file as well',       default=False,             action='store_true')
-    parser.add_option('-l', '--lumi',        dest='lumi' ,       help='lumi [/pb]',              default=16551.,              type=float)
+    parser.add_option('-l', '--lumi',        dest='lumi' ,       help='lumi [/pb]',              default=35922.,              type=float)
     parser.add_option('--obs', dest='obs',  default='mult', help='observable [default: %default]')
     parser.add_option('--flavor', dest='flavor',  default='all', help='flavor [default: %default]')
     (opt, args) = parser.parse_args()
@@ -49,6 +49,7 @@ def main():
     FSRUpGen = ROOT.TH1F('FSRUpGen', 'FSRUpGen',       12, 0, 12)
     FSRDownGen = ROOT.TH1F('FSRDownGen', 'FSRDownGen', 12, 0, 12)
     herwigGen = ROOT.TH1F('herwigGen', 'herwigGen',    12, 0, 12)
+    sherpaGen = ROOT.TH1F('sherpaGen', 'sherpaGen',    12, 0, 12)
     
     counter = 0
     for flavor in flavors:
@@ -80,6 +81,10 @@ def main():
             inHerwigGen = infile.Get('herwigGen')
             herwigGen.SetBinContent(counter, inHerwigGen.GetMean())
             herwigGen.SetBinError(counter, inHerwigGen.GetMeanError())
+            
+            inSherpaGen = infile.Get('sherpaGen')
+            sherpaGen.SetBinContent(counter, inSherpaGen.GetMean())
+            sherpaGen.SetBinError(counter, inSherpaGen.GetMeanError())
     
     #plot
     ROOT.gStyle.SetOptStat(0)
@@ -146,6 +151,13 @@ def main():
     herwigGen.SetMarkerStyle(25)
     herwigGen.Draw('SAME H')
     
+    sherpaGen.SetLineColor(ROOT.kGreen+2)
+    sherpaGen.SetLineStyle(5)
+    sherpaGen.SetLineWidth(2)
+    sherpaGen.SetMarkerColor(ROOT.kGreen+2)
+    sherpaGen.SetMarkerStyle(27)
+    sherpaGen.Draw('SAME H')
+    
     inix = 0.5
     if (nominalGen.GetMaximumBin() > nominalGen.GetNbinsX()/2.): inix = 0.15
     legend = ROOT.TLegend(inix,0.55,inix+0.45,0.9)
@@ -161,10 +173,14 @@ def main():
     legend.AddEntry(FSRUpGen, "#minus FSR up  #scale[0.65]{(#alpha_{s}^{FSR}(m_{Z})=0.1543)}", "p")
     legend.AddEntry(FSRDownGen, "#minus FSR down  #scale[0.65]{(#alpha_{s}^{FSR}(m_{Z})=0.1224)}", "p")
     #legend.AddEntry(qcdBasedGen, "#minus QCD-based CR", "p")
-    legend.AddEntry(herwigGen, "Powheg+Herwig++", "pl")
-    dummy2 = legend.AddEntry(dummy, "(#alpha_{s}^{FSR}(m_{Z})=0.12, no MEC)", "p")
+    legend.AddEntry(herwigGen, "Powheg+Herwig 7", "pl")
+    dummy2 = legend.AddEntry(dummy, "(#alpha_{s}^{FSR}(m_{Z}) = 0.126234, with MEC)", "p")
     dummy2.SetTextSize(0.0225)
     dummy2.SetTextAlign(13)
+    legend.AddEntry(sherpaGen, "Sherpa", "pl")
+    dummy3 = legend.AddEntry(dummy, "(#alpha_{s}^{FSR}(m_{Z}) = 0.118, no MEC)", "p")
+    dummy3.SetTextSize(0.0225)
+    dummy3.SetTextAlign(13)
     legend.Draw()
     txt=ROOT.TLatex()
     txt.SetNDC(True)
@@ -172,12 +188,12 @@ def main():
     txt.SetTextSize(0.05)
     txt.SetTextAlign(12)
     inix = 0.15
-    if (nominalGen.GetMaximumBin() > nominalGen.GetNbinsX()/2.): inix = 0.64
+    if (nominalGen.GetMaximumBin() > nominalGen.GetNbinsX()/2.): inix = 0.83
     txt.DrawLatex(inix,0.88,cmsLabel)
     txt.DrawLatex(0.7,0.97,'#scale[0.8]{%3.1f fb^{-1} (%s)}' % (opt.lumi/1000.,opt.com) )
     
     lineHeight = 0.63
-    txt.DrawLatex(0.175,0.05,'all jets')
+    txt.DrawLatex(0.175,0.05,'incl jets')
     divider1 = ROOT.TLine(3, 0., 3, lineHeight)
     divider1.SetLineColor(ROOT.kBlack)
     divider1.Draw()
@@ -231,6 +247,8 @@ def main():
     FSRDownGenRatio.Divide(dataUnfolded)
     herwigGenRatio=herwigGen.Clone('herwigGenRatio')
     herwigGenRatio.Divide(dataUnfolded)
+    sherpaGenRatio=sherpaGen.Clone('sherpaGenRatio')
+    sherpaGenRatio.Divide(dataUnfolded)
     
     dataUnfoldedSysRatio.SetMarkerStyle(0)
     dataUnfoldedSysRatio.Draw('e2')
@@ -246,6 +264,7 @@ def main():
     FSRUpGenRatio.Draw  ('SAME P X0 E1')
     FSRDownGenRatio.Draw('SAME P X0 E1')
     herwigGenRatio.Draw ('SAME H')
+    sherpaGenRatio.Draw ('SAME H')
     
     lineStart = 0.94
     lineHeight = 2.

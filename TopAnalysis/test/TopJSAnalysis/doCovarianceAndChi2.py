@@ -19,7 +19,7 @@ steer the script
 """
 def main():
     
-    cmsLabel='#bf{CMS} #it{preliminary}'
+    cmsLabel='#bf{CMS} #it{Simulation}'
     
     #configuration
     usage = 'usage: %prog [options]'
@@ -34,18 +34,18 @@ def main():
     parser.add_option('-o', '--outName',     dest='outName' ,    help='name of the output file',        default='plotter.root',    type='string')
     parser.add_option(      '--silent',      dest='silent' ,     help='only dump to ROOT file',         default=False,             action='store_true')
     parser.add_option(      '--saveTeX',     dest='saveTeX' ,    help='save as tex file as well',       default=False,             action='store_true')
-    parser.add_option('-l', '--lumi',        dest='lumi' ,       help='lumi [/pb]',              default=16551.,              type=float)
+    parser.add_option('-l', '--lumi',        dest='lumi' ,       help='lumi [/pb]',              default=35922.,              type=float)
     parser.add_option('--obs', dest='obs',  default='mult', help='observable [default: %default]')
     parser.add_option('--flavor', dest='flavor',  default='incl', help='flavor [default: %default]')
     parser.add_option('-r', '--reco', dest='reco', default='charged', help='Use charged/puppi/all particles [default: %default]')
     (opt, args) = parser.parse_args()
     
-    observables = ["mult", "width", "ptd", "ptds", "ecc", "tau21", "tau32", "tau43", "zg", "zgxdr", "zgdr", "ga_width", "ga_lha", "ga_thrust", "c1_02", "c1_05", "c1_10", "c1_20", "c2_02", "c2_05", "c2_10", "c2_20", "c3_02", "c3_05", "c3_10", "c3_20", "m2_b1", "n2_b1", "n3_b1", "m2_b2", "n2_b2", "n3_b2"]
+    observables = ["mult", "ptds", "ga_lha", "ga_width", "ga_thrust", "ecc", "zg", "zgdr", "nsd", "tau21", "tau32", "tau43", "c1_00", "c1_02", "c1_05", "c1_10", "c1_20", "c2_00", "c2_02", "c2_05", "c2_10", "c2_20", "c3_00", "c3_02", "c3_05", "c3_10", "c3_20", "m2_b1", "n2_b1", "n3_b1", "m2_b2", "n2_b2", "n3_b2"]
     
-    nice_observables_tex = {"mult": "N", "width": "width", "ptd": "$p_{T}D$", "ptds": "$p_{T}D^{s}$", "ecc": "$\\varepsilon$", "tau21": "$\\tau_{21}$", "tau32": "$\\tau_{32}$", "tau43": "$\\tau_{43}$", "zg": "$z_{g}$", "zgxdr": "$z_{g} \\times \\Delta R$", "zgdr": "$z_{g} \\Delta R$", "ga_width": "$\\lambda_{1}^{1}$ (width)", "ga_lha": "$\\lambda_{0.5}^{1}$ (LHA)", "ga_thrust": "$\\lambda_{2}^{1}$ (thrust)", "c1_02": "$C_{1}^{(0.2)}$", "c1_05": "$C_{1}^{(0.5)}$", "c1_10": "$C_{1}^{(1.0)}$", "c1_20": "$C_{1}^{(2.0)}$", "c2_02": "$C_{2}^{(0.2)}$", "c2_05": "$C_{2}^{(0.5)}$", "c2_10": "$C_{2}^{(1.0)}$", "c2_20":  "$C_{2}^{(2.0)}$", "c3_02": "$C_{3}^{(0.2)}$", "c3_05": "$C_{3}^{(0.5)}$", "c3_10": "$C_{3}^{(1.0)}$", "c3_20": "$C_{3}^{(2.0)}$", "m2_b1": "$M_{2}^{(1)}$", "n2_b1": "$N_{2}^{(1)}$", "n3_b1": "$N_{3}^{(1)}$", "m2_b2": "$M_{2}^{(2)}$", "n2_b2": "$N_{2}^{(2)}$", "n3_b2": "$N_{3}^{(2)}$"}
+    nice_observables_tex = {"mult": "$\\lambda_{0}^{0}$ (N)", "ptds": "$\\lambda_{0}^{2}$ ($p_{T}D^{*})$", "ecc": "$\\varepsilon$", "tau21": "$\\tau_{21}$", "tau32": "$\\tau_{32}$", "tau43": "$\\tau_{43}$", "zg": "$z_{g}$", "zgdr": "$\\Delta R_{g}$", "ga_width": "$\\lambda_{1}^{1}$ (width)", "ga_lha": "$\\lambda_{0.5}^{1}$ (LHA)", "ga_thrust": "$\\lambda_{2}^{1}$ (thrust)", "c1_00": "$C_{1}^{(0.0)}$", "c1_02": "$C_{1}^{(0.2)}$", "c1_05": "$C_{1}^{(0.5)}$", "c1_10": "$C_{1}^{(1.0)}$", "c1_20": "$C_{1}^{(2.0)}$", "c2_00": "$C_{2}^{(0.0)}$", "c2_02": "$C_{2}^{(0.2)}$", "c2_05": "$C_{2}^{(0.5)}$", "c2_10": "$C_{2}^{(1.0)}$", "c2_20":  "$C_{2}^{(2.0)}$", "c3_00": "$C_{3}^{(0.0)}$", "c3_02": "$C_{3}^{(0.2)}$", "c3_05": "$C_{3}^{(0.5)}$", "c3_10": "$C_{3}^{(1.0)}$", "c3_20": "$C_{3}^{(2.0)}$", "m2_b1": "$M_{2}^{(1)}$", "n2_b1": "$N_{2}^{(1)}$", "n3_b1": "$N_{3}^{(1)}$", "m2_b2": "$M_{2}^{(2)}$", "n2_b2": "$N_{2}^{(2)}$", "n3_b2": "$N_{3}^{(2)}$", "nsd": "$n_{SD}$"}
     
     observables_low = ["ptds", "ecc", "tau43", "zg", "zgdr"]
-    #observables_low = ["n3_b1", "ecc", "tau43", "zg", "zgdr"]
+    observables_low = ["ga_width", "ecc", "zg", "tau43"]
     
     flavors = ['incl', 'bottom', 'light', 'gluon']
 
@@ -96,6 +96,9 @@ def main():
     varList += varExpWgt
 
     modelsToTest = varModel + [['cflip'], ['nominalGen']]
+    modelsToTest.append(['pythia8_asfsr0.1365_meoff_crdefault'])
+    modelsToTest.append(['herwig7'])
+    modelsToTest.append(['sherpa'])
     #FSR scan
     modelsToTest.append(['herwigpp_asfsr0.100_meon_crdefault'])
     modelsToTest.append(['herwigpp_asfsr0.110_meon_crdefault'])
@@ -103,24 +106,27 @@ def main():
     modelsToTest.append(['herwigpp_asfsr0.120_meon_crdefault'])
     modelsToTest.append(['herwigpp_asfsr0.125_meon_crdefault'])
     modelsToTest.append(['herwigpp_asfsr0.130_meon_crdefault'])
+    modelsToTest.append(['pythia8_asfsr0.070_meon_crdefault'])
+    modelsToTest.append(['pythia8_asfsr0.080_meon_crdefault'])
+    modelsToTest.append(['pythia8_asfsr0.090_meon_crdefault'])
     modelsToTest.append(['pythia8_asfsr0.100_meon_crdefault'])
+    modelsToTest.append(['pythia8_asfsr0.105_meon_crdefault'])
     modelsToTest.append(['pythia8_asfsr0.110_meon_crdefault'])
     modelsToTest.append(['pythia8_asfsr0.115_meon_crdefault'])
     modelsToTest.append(['pythia8_asfsr0.120_meon_crdefault'])
     modelsToTest.append(['pythia8_asfsr0.125_meon_crdefault'])
     modelsToTest.append(['pythia8_asfsr0.130_meon_crdefault'])
+    modelsToTest.append(['pythia8_asfsr0.135_meon_crdefault'])
     modelsToTest.append(['pythia8_asfsr0.140_meon_crdefault'])
-    modelsToTest.append(['pythia8_asfsr0.1365_meoff_crdefault'])
+    modelsToTest.append(['pythia8_asfsr0.150_meon_crdefault'])
+    modelsToTest.append(['pythia8_asfsr0.160_meon_crdefault'])
     
-    allVars_lowCorChi2 = OrderedDict()
-    for var in modelsToTest:
-        for vardir in var:
-            allVars_lowCorChi2[vardir] = {}
-            for flavor in flavors:
-                allVars_lowCorChi2[vardir][flavor] = 0.
+    modelsToTex = ['fsrdn', 'nominalGen', 'fsrup', 'herwig7', 'sherpa']
+    
+    obsgroups = ['all', 'low']
     
     unsummedChi2 = OrderedDict()
-    for obs in observables:
+    for obs in observables + obsgroups:
         unsummedChi2[obs] = {}
         for var in modelsToTest:
             for vardir in var:
@@ -132,6 +138,8 @@ def main():
                     'm171v5': 'mt down',
                     'm173v5': 'mt up',
                     'herwig': 'Herwig++',
+                    'herwig7': 'Herwig7',
+                    'sherpa': 'Sherpa',
                     'isrup': 'ISR up',
                     'isrdn': 'ISR down',
                     'fsrup': 'FSR up',
@@ -163,13 +171,20 @@ def main():
                     'herwigpp_asfsr0.120_meon_crdefault' : 'H++ asfsr=0.120',
                     'herwigpp_asfsr0.125_meon_crdefault' : 'H++ asfsr=0.125',
                     'herwigpp_asfsr0.130_meon_crdefault' : 'H++ asfsr=0.130',
+                    'pythia8_asfsr0.070_meon_crdefault' : 'P8 asfsr=0.070',
+                    'pythia8_asfsr0.080_meon_crdefault' : 'P8 asfsr=0.080',
+                    'pythia8_asfsr0.090_meon_crdefault' : 'P8 asfsr=0.090',
                     'pythia8_asfsr0.100_meon_crdefault' : 'P8 asfsr=0.100',
+                    'pythia8_asfsr0.105_meon_crdefault' : 'P8 asfsr=0.105',
                     'pythia8_asfsr0.110_meon_crdefault' : 'P8 asfsr=0.110',
                     'pythia8_asfsr0.115_meon_crdefault' : 'P8 asfsr=0.115',
                     'pythia8_asfsr0.120_meon_crdefault' : 'P8 asfsr=0.120',
                     'pythia8_asfsr0.125_meon_crdefault' : 'P8 asfsr=0.125',
                     'pythia8_asfsr0.130_meon_crdefault' : 'P8 asfsr=0.130',
+                    'pythia8_asfsr0.135_meon_crdefault' : 'P8 asfsr=0.135',
                     'pythia8_asfsr0.140_meon_crdefault' : 'P8 asfsr=0.140',
+                    'pythia8_asfsr0.150_meon_crdefault' : 'P8 asfsr=0.150',
+                    'pythia8_asfsr0.160_meon_crdefault' : 'P8 asfsr=0.160',
                     'pythia8_asfsr0.1365_meoff_crdefault' : 'ME corr. off',
                     }
     
@@ -177,20 +192,24 @@ def main():
     sumFSRUp = 0.
     sumFSRDown = 0.
     sumHerwig = 0.
+    sumSherpa = 0.
     
     sumLowNominal = {}
     sumLowFSRUp   = {}
     sumLowFSRDown = {}
     sumLowHerwig  = {}
+    sumLowSherpa  = {}
     sumLowNominal['total'] = 0.
     sumLowFSRUp  ['total'] = 0.
     sumLowFSRDown['total'] = 0.
     sumLowHerwig ['total'] = 0.
+    sumLowSherpa ['total'] = 0.
     for flavor in flavors:
         sumLowNominal[flavor] = 0.
         sumLowFSRUp  [flavor] = 0.
         sumLowFSRDown[flavor] = 0.
         sumLowHerwig [flavor] = 0.
+        sumLowSherpa [flavor] = 0.
     
     # 11-class RdBu http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=11
     stops = array('d', [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
@@ -240,7 +259,7 @@ def main():
                     pseudoresults.append(pseudoresult)
                     counter += 1
                 
-                print('Imported', counter, 'toy experiments')
+                print(obs, flavor, 'imported', counter, 'toy experiments')
                 
                 x = numpy.array(pseudoresults).T
                 #print(x)
@@ -418,16 +437,6 @@ def main():
                 #print(numpy.linalg.det(cov_reduced))
                 #print(numpy.linalg.inv(cov_reduced))
                 
-                chi2Nominal = returnChi2(fIn, cov_reduced, data, 'nominalGen')
-                chi2FSRUp   = returnChi2(fIn, cov_reduced, data, 'FSRUpGen')
-                chi2FSRDown = returnChi2(fIn, cov_reduced, data, 'FSRDownGen')
-                chi2Herwig  = returnChi2(fIn, cov_reduced, data, 'herwigGen')
-                
-                sumNominal += chi2Nominal
-                sumFSRUp   += chi2FSRUp
-                sumFSRDown += chi2FSRDown
-                sumHerwig  += chi2Herwig
-                
                 for var in modelsToTest:
                     for vardir in var:
                         if vardir in ['nominalGen']:
@@ -435,45 +444,48 @@ def main():
                         else:
                             prediction = 'MC13TeV_TTJets_'+vardir+'_gen'
                         unsummedChi2[obs][vardir][flavor] = returnChi2(fIn, cov_reduced, data, prediction)
+                        unsummedChi2['all'][vardir][flavor] += unsummedChi2[obs][vardir][flavor]
+                        if obs in observables_low:
+                            unsummedChi2['low'][vardir][flavor] += unsummedChi2[obs][vardir][flavor]
                 
-                if obs in observables_low:
-                    sumLowNominal['total']  += chi2Nominal
-                    sumLowFSRUp  ['total']  += chi2FSRUp
-                    sumLowFSRDown['total']  += chi2FSRDown
-                    sumLowHerwig ['total']  += chi2Herwig
-                    sumLowNominal[flavor] += chi2Nominal
-                    sumLowFSRUp  [flavor] += chi2FSRUp
-                    sumLowFSRDown[flavor] += chi2FSRDown
-                    sumLowHerwig [flavor] += chi2Herwig
-                    
-                    for var in modelsToTest:
-                        for vardir in var:
-                            if vardir in ['nominalGen']:
-                                prediction = vardir
-                            else:
-                                prediction = 'MC13TeV_TTJets_'+vardir+'_gen'
-                            allVars_lowCorChi2[vardir][flavor] += unsummedChi2[obs][vardir][flavor]
+        for obs in observables:
+            tex.write('\\hline\n%s\n'%(nice_observables_tex[obs]))
+            for flavor in flavors:
+                tex.write(' & %s'%(flavor))
+                for model in modelsToTex:
+                    tex.write(' & %.1f'%(unsummedChi2[obs][model][flavor]))
+                tex.write('\\\\\n')
+        
+        nice_groups  = {'all': 'All observables', 'low': 'Low correlation'}
+        for group in obsgroups:
+            tex.write('\\hline\n\\hline\n%s'%(nice_groups[group]))
+            for flavor in flavors:
+                tex.write(' & %s'%(flavor))
+                for model in modelsToTex:
+                    tex.write(' & %.1f'%(unsummedChi2[group][model][flavor]))
+                tex.write('\\\\\n')
                 
-                tex.write('%s & %s & %.1f & %.1f & %.1f & %.1f \\\\\n'%(nice_observables_tex[obs], flavor, chi2Nominal, chi2FSRUp, chi2FSRDown, chi2Herwig))
-                
-        tex.write('\\hline\nTotal &  & %.1f & %.1f & %.1f & %.1f \\\\\n'%(sumNominal, sumFSRUp, sumFSRDown, sumHerwig))
-        tex.write('\\hline\nTotal low corr. &  & %.1f & %.1f & %.1f & %.1f \\\\\n'%(sumLowNominal['total'], sumLowFSRUp['total'], sumLowFSRDown['total'], sumLowHerwig['total']))
-        for flavor in flavors:
-            tex.write('-- %s &  & %.1f & %.1f & %.1f & %.1f \\\\\n'%(flavor, sumLowNominal[flavor], sumLowFSRUp[flavor], sumLowFSRDown[flavor], sumLowHerwig[flavor]))
-            probLowNominal = ROOT.TMath.Prob(sumLowNominal[flavor], len(observables_low))
-            probLowFSRUp   = ROOT.TMath.Prob(sumLowFSRUp[flavor], len(observables_low))
-            probLowFSRDown = ROOT.TMath.Prob(sumLowFSRDown[flavor], len(observables_low))
-            probLowHerwig  = ROOT.TMath.Prob(sumLowHerwig[flavor], len(observables_low))
-            tex.write('$P(\\chi^{2})$ &  & %.3f & %.3f & %.3f & %.3f \\\\\n'%(probLowNominal, probLowFSRUp, probLowFSRDown, probLowHerwig))
-            
-        for var, chi2 in allVars_lowCorChi2.iteritems():
-            print('%s & $\chi^{2}$ & %.1f & %.1f & %.1f & %.1f'%(varModelDict[var], chi2['incl'], chi2['bottom'], chi2['light'], chi2['gluon']))
-            probIncl = ROOT.TMath.Prob(chi2['incl'], len(observables_low))
-            probBottom = ROOT.TMath.Prob(chi2['bottom'], len(observables_low))
-            probLight = ROOT.TMath.Prob(chi2['light'], len(observables_low))
-            probGluon = ROOT.TMath.Prob(chi2['gluon'], len(observables_low))
-            print(' & $P(\chi^{2})$ & %.3f & %.3f & %.3f & %.3f'%(probIncl, probBottom, probLight, probGluon))
-        pickle.dump(unsummedChi2, open("unsummedChi2.pkl", "wb"))
+        #tex.write('\\hline\nTotal &  & %.1f & %.1f & %.1f & %.1f \\\\\n'%(sumNominal, sumFSRUp, sumFSRDown, sumHerwig))
+        #tex.write('\\hline\nTotal low corr. &  & %.1f & %.1f & %.1f & %.1f \\\\\n'%(sumLowNominal['total'], sumLowFSRUp['total'], sumLowFSRDown['total'], sumLowHerwig['total']))
+        #for flavor in flavors:
+        #    tex.write('-- %s &  & %.1f & %.1f & %.1f & %.1f \\\\\n'%(flavor, sumLowNominal[flavor], sumLowFSRUp[flavor], sumLowFSRDown[flavor], sumLowHerwig[flavor]))
+        #    probLowNominal = ROOT.TMath.Prob(sumLowNominal[flavor], len(observables_low))
+        #    probLowFSRUp   = ROOT.TMath.Prob(sumLowFSRUp[flavor], len(observables_low))
+        #    probLowFSRDown = ROOT.TMath.Prob(sumLowFSRDown[flavor], len(observables_low))
+        #    probLowHerwig  = ROOT.TMath.Prob(sumLowHerwig[flavor], len(observables_low))
+        #    tex.write('$P(\\chi^{2})$ &  & %.3f & %.3f & %.3f & %.3f \\\\\n'%(probLowNominal, probLowFSRUp, probLowFSRDown, probLowHerwig))
+        #    
+        
+        tex.write('\n'*4)
+        
+        for var in modelsToTest:
+            for vardir in var:
+                tex.write('%s & $\chi^{2}$/ndf'%(varModelDict[vardir]))
+                for flavor in flavors:
+                    tex.write(' & %.1f'%(unsummedChi2['low'][vardir][flavor]))
+                tex.write('\\\\\n')
+        
+        pickle.dump(unsummedChi2, open("unsummedChi2_"+opt.reco+".pkl", "wb"))
     
 def returnChi2(fIn, cov_reduced, data, prediction):
     hpred = fIn.Get(prediction)
@@ -486,7 +498,7 @@ def returnChi2(fIn, cov_reduced, data, prediction):
     
     chi2 = numpy.array(diff[1:]).T.dot(numpy.linalg.inv(cov_reduced).dot(numpy.array(diff[1:])))
     ndf  = hpred.GetNbinsX()-1
-    prob = ROOT.TMath.Prob(chi2, ndf)
+    #prob = ROOT.TMath.Prob(chi2, ndf)
     return chi2/ndf
 
 def normalizeAndDivideByBinWidth(hist):

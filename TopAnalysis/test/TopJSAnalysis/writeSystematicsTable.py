@@ -36,16 +36,16 @@ def main():
     parser.add_option('-l', '--lumi',        dest='lumi' ,       help='lumi [/pb]',              default=16551.,              type=float)
     parser.add_option('--obs', dest='obs',  default='mult', help='observable [default: %default]')
     parser.add_option('--flavor', dest='flavor',  default='all', help='flavor [default: %default]')
+    parser.add_option('-r', '--reco', dest='reco', default='charged', help='Use charged/puppi/all particles [default: %default]')
     (opt, args) = parser.parse_args()
     
-    observables = ["mult", "width", "ptd", "ptds", "ecc", "tau21", "tau32", "tau43", "zg", "zgxdr", "zgdr", "ga_width", "ga_lha", "ga_thrust", "c1_02", "c1_05", "c1_10", "c1_20", "c2_02", "c2_05", "c2_10", "c2_20", "c3_02", "c3_05", "c3_10", "c3_20", "m2_b1", "n2_b1", "n3_b1", "m2_b2", "n2_b2", "n3_b2"]
+    observables = ["mult", "ptds", "ga_lha", "ga_width", "ga_thrust", "ecc", "zg", "zgdr", "nsd", "tau21", "tau32", "tau43", "c1_00", "c1_02", "c1_05", "c1_10", "c1_20", "c2_00", "c2_02", "c2_05", "c2_10", "c2_20", "c3_00", "c3_02", "c3_05", "c3_10", "c3_20", "m2_b1", "n2_b1", "n3_b1", "m2_b2", "n2_b2", "n3_b2"]
     
-    nice_observables_tex = {"mult": "N", "width": "width", "ptd": "$p_{T}D$", "ptds": "$p_{T}D^{s}$", "ecc": "$\\varepsilon$", "tau21": "$\\tau_{21}$", "tau32": "$\\tau_{32}$", "tau43": "$\\tau_{43}$", "zg": "$z_{g}$", "zgxdr": "$z_{g} \\times \\Delta R$", "zgdr": "$z_{g} \\Delta R$", "ga_width": "$\\lambda_{1}^{1}$ (width)", "ga_lha": "$\\lambda_{0.5}^{1}$ (LHA)", "ga_thrust": "$\\lambda_{2}^{1}$ (thrust)", "c1_02": "$C_{1}^{(0.2)}$", "c1_05": "$C_{1}^{(0.5)}$", "c1_10": "$C_{1}^{(1.0)}$", "c1_20": "$C_{1}^{(2.0)}$", "c2_02": "$C_{2}^{(0.2)}$", "c2_05": "$C_{2}^{(0.5)}$", "c2_10": "$C_{2}^{(1.0)}$", "c2_20":  "$C_{2}^{(2.0)}$", "c3_02": "$C_{3}^{(0.2)}$", "c3_05": "$C_{3}^{(0.5)}$", "c3_10": "$C_{3}^{(1.0)}$", "c3_20": "$C_{3}^{(2.0)}$", "m2_b1": "$M_{2}^{(1)}$", "n2_b1": "$N_{2}^{(1)}$", "n3_b1": "$N_{3}^{(1)}$", "m2_b2": "$M_{2}^{(2)}$", "n2_b2": "$N_{2}^{(2)}$", "n3_b2": "$N_{3}^{(2)}$"}
+    nice_observables_tex = {"mult": "$\\lambda_{0}^{0}$ (N)", "ptds": "$\\lambda_{0}^{2}$ ($p_{T}D^{*})$", "ecc": "$\\varepsilon$", "tau21": "$\\tau_{21}$", "tau32": "$\\tau_{32}$", "tau43": "$\\tau_{43}$", "zg": "$z_{g}$", "zgdr": "$\\Delta R_{g}$", "ga_width": "$\\lambda_{1}^{1}$ (width)", "ga_lha": "$\\lambda_{0.5}^{1}$ (LHA)", "ga_thrust": "$\\lambda_{2}^{1}$ (thrust)", "c1_00": "$C_{1}^{(0.0)}$", "c1_02": "$C_{1}^{(0.2)}$", "c1_05": "$C_{1}^{(0.5)}$", "c1_10": "$C_{1}^{(1.0)}$", "c1_20": "$C_{1}^{(2.0)}$", "c2_00": "$C_{2}^{(0.0)}$", "c2_02": "$C_{2}^{(0.2)}$", "c2_05": "$C_{2}^{(0.5)}$", "c2_10": "$C_{2}^{(1.0)}$", "c2_20":  "$C_{2}^{(2.0)}$", "c3_00": "$C_{3}^{(0.0)}$", "c3_02": "$C_{3}^{(0.2)}$", "c3_05": "$C_{3}^{(0.5)}$", "c3_10": "$C_{3}^{(1.0)}$", "c3_20": "$C_{3}^{(2.0)}$", "m2_b1": "$M_{2}^{(1)}$", "n2_b1": "$N_{2}^{(1)}$", "n3_b1": "$N_{3}^{(1)}$", "m2_b2": "$M_{2}^{(2)}$", "n2_b2": "$N_{2}^{(2)}$", "n3_b2": "$N_{3}^{(2)}$", "nsd": "$n_{SD}$"}
     
-    observables_low = ["ptds", "ecc", "tau43", "zg", "zgdr"]
-    #observables_low = ["n3_b1", "ecc", "tau43", "zg", "zgdr"]
+    observables_low = ["ga_width", "ecc", "zg", "tau43"]
     
-    flavors = ['all', 'bottom', 'light', 'gluon']
+    flavors = ['incl', 'bottom', 'light', 'gluon']
 
     # Read lists of syst samples
     varList = []
@@ -132,7 +132,7 @@ def main():
                     'nominalGen': 'nominal sample'
                     }
 
-    with open('%s/syst.tex'%(opt.outDir), 'w') as tex:
+    with open('%s/syst_%s.tex'%(opt.outDir, opt.reco), 'w') as tex:
         tex.write('Observable & Flavor')
         for vargroup in varList:
             for var in vargroup[1]:
@@ -141,7 +141,7 @@ def main():
         
         for obs in observables:
             for flavor in flavors:                
-                resultfile = '%s/%s_charged_%s_result.root'%(opt.inDir, obs, flavor)
+                resultfile = '%s/%s_%s_%s_result.root'%(opt.inDir, obs, opt.reco, flavor)
                 fIn=ROOT.TFile.Open(resultfile)
                 
                 # reference
@@ -175,21 +175,22 @@ def main():
                         tex.write(' & %.1f'%(syst_max))
                 tex.write(' \\\\\n')
 
-    with open('%s/syst_groups.tex'%(opt.outDir), 'w') as tex:
+    with open('%s/syst_groups_%s.tex'%(opt.outDir, opt.reco), 'w') as tex:
         tex.write('Observable & Flavor')
         for vargroup in varList:
             tex.write(' & %s'%(vargroup[0]))
-        tex.write(' \\\\\n \\hline \n')
+        tex.write(' \\\\\n \\hline \n \\hline \n')
         
         for obs in observables:
+            tex.write('%s\n'%(nice_observables_tex[obs]))
             for flavor in flavors:
-                resultfile = '%s/%s_charged_%s_result.root'%(opt.inDir, obs, flavor)
+                resultfile = '%s/%s_%s_%s_result.root'%(opt.inDir, obs, opt.reco, flavor)
                 fIn=ROOT.TFile.Open(resultfile)
                 
                 # reference
                 hdata = fIn.Get('MC13TeV_TTJets_Unfolded')
                 
-                tex.write('%s & %s'%(nice_observables_tex[obs], flavor))
+                tex.write(' & %s'%(flavor))
                 
                 for vargroup in varList:
                     groupbins = hdata.GetNbinsX()*[0.]
@@ -214,7 +215,9 @@ def main():
                             
                     tex.write(' & %.1f -- %.1f'%(min(groupbins), max(groupbins)))
                 tex.write(' \\\\\n')
+            tex.write('\\hline \n')
 
+    # FIXME: this part does not work yet
     with open('%s/syst_groups_low_incl.tex'%(opt.outDir), 'w') as tex:
         for obs in observables:
             if not obs in observables_low: continue

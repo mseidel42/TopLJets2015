@@ -1111,7 +1111,7 @@ double getTau(int N, int M, Jet jet, bool includeNeutrals, bool usePuppi, double
   
   PseudoJet cajet = jets[0];
   
-  NsubjettinessRatio tau_ratio(N, M, OnePass_WTA_KT_Axes(), UnnormalizedMeasure(1.0));
+  NsubjettinessRatio tau_ratio(N, M, OnePass_KT_Axes(), NormalizedMeasure(1.0, 0.4));
   
   return tau_ratio(cajet);
 }

@@ -56,7 +56,7 @@ steer
 """
 def main():
 
-    cmsLabel='#bf{CMS} #it{preliminary}'
+    cmsLabel='#bf{CMS} #it{Simulation}'
     
     usage = 'usage: %prog [options]'
     parser = optparse.OptionParser(usage)
@@ -77,7 +77,7 @@ def main():
                             default='charged',
                             help='Use charged/puppi/all particles [default: %default]')
     parser.add_option(     '--com',          dest='com'  ,        help='center of mass energy',                            default='13 TeV',       type='string')
-    parser.add_option('-l', '--lumi',        dest='lumi' ,       help='lumi [/pb]',              default=16551.,              type=float)
+    parser.add_option('-l', '--lumi',        dest='lumi' ,       help='lumi [/pb]',              default=35922.,              type=float)
     (opt, args) = parser.parse_args()
     
     tree = ROOT.TChain('tjsev')
@@ -172,6 +172,7 @@ def main():
     
     # actually try to remove some that cannot be measured too well by subjective criteria...
     blacklist = ['n3_b1_charged', 'n3_b1_all']
+    keeplist  = ['ga_width_charged']
     
     # algorithm deleting observables with highest correlation
     observables_low = copy.copy(obsreco)
@@ -199,13 +200,17 @@ def main():
         maxCorrelationObs = max(sumcorr.iterkeys(), key=(lambda key: sumcorr[key]))
         minCorrelationObs = min(sumcorr.iterkeys(), key=(lambda key: sumcorr[key]))
         print('remove', maxCorrelationObs, obsreco[maxCorrelationObs], maxCorrelation, minCorrelationObs, obsreco[minCorrelationObs])
-        observables_low.remove(obsreco[maxCorrelationObs])
+        if obsreco[maxCorrelationObs] in keeplist:
+            observables_low.remove(obsreco[minCorrelationObs])
+        else:
+            observables_low.remove(obsreco[maxCorrelationObs])
     print(observables_low)
     
     # finding set of observables with smallest global correlation now
     bestCombination = None
     bestSumCorr = 9999999.
-    for combination in itertools.combinations(observables_low, 5):
+    for combination in itertools.combinations(observables_low, 4):
+        if not set(keeplist).issubset(combination): continue
         sumcorr = 0.
         for si in combination:
             for sj in combination:

@@ -14,7 +14,7 @@ steer the script
 """
 def main():
     
-    cmsLabel='#bf{CMS} #it{preliminary}'
+    cmsLabel='#bf{CMS}'
     
     #configuration
     usage = 'usage: %prog [options]'
@@ -28,17 +28,17 @@ def main():
     parser.add_option('-o', '--outName',     dest='outName' ,    help='name of the output file',        default='plotter.root',    type='string')
     parser.add_option(      '--silent',      dest='silent' ,     help='only dump to ROOT file',         default=False,             action='store_true')
     parser.add_option(      '--saveTeX',     dest='saveTeX' ,    help='save as tex file as well',       default=False,             action='store_true')
-    parser.add_option('-l', '--lumi',        dest='lumi' ,       help='lumi [/pb]',              default=16551.,              type=float)
+    parser.add_option('-l', '--lumi',        dest='lumi' ,       help='lumi [/pb]',              default=35922.,              type=float)
     parser.add_option('--obs', dest='obs',  default='mult', help='observable [default: %default]')
-    parser.add_option('--flavor', dest='flavor',  default='all', help='flavor [default: %default]')
+    parser.add_option('--flavor', dest='flavor',  default='incl', help='flavor [default: %default]')
     (opt, args) = parser.parse_args()
 
     #read lists of samples
     betas = [0.2, 0.5, 1., 2.]
     sbetas = ['02', '05', '10', '20']
-    colors = {'all': ROOT.kBlack, 'bottom': ROOT.kRed+1, 'light': ROOT.kBlue+1, 'gluon': ROOT.kGreen+1}
-    markers = {'all': 20, 'bottom': 21, 'light': 22, 'gluon': 23}
-    fills = {'all': 1001, 'bottom': 3254, 'light': 3245, 'gluon': 3390}
+    colors = {'incl': ROOT.kBlack, 'bottom': ROOT.kRed+1, 'light': ROOT.kBlue+1, 'gluon': ROOT.kGreen+1}
+    markers = {'incl': 20, 'bottom': 21, 'light': 22, 'gluon': 23}
+    fills = {'incl': 1001, 'bottom': 3254, 'light': 3245, 'gluon': 3390}
     infiles = {}
     hists = {}
     unchists = {}
@@ -49,6 +49,7 @@ def main():
     FSRUpGen = ROOT.TH1F('FSRUpGen', 'FSRUpGen',       12, 0, 12)
     FSRDownGen = ROOT.TH1F('FSRDownGen', 'FSRDownGen', 12, 0, 12)
     herwigGen = ROOT.TH1F('herwigGen', 'herwigGen',    12, 0, 12)
+    sherpaGen = ROOT.TH1F('sherpaGen', 'sherpaGen',    12, 0, 12)
     
     counter = 0
     for c in range(1,4):
@@ -80,6 +81,10 @@ def main():
             inHerwigGen = infile.Get('herwigGen')
             herwigGen.SetBinContent(counter, inHerwigGen.GetMean())
             herwigGen.SetBinError(counter, inHerwigGen.GetMeanError())
+            
+            inSherpaGen = infile.Get('sherpaGen')
+            sherpaGen.SetBinContent(counter, inSherpaGen.GetMean())
+            sherpaGen.SetBinError(counter, inSherpaGen.GetMeanError())
     
     #plot
     ROOT.gStyle.SetOptStat(0)
@@ -105,7 +110,7 @@ def main():
     dataUnfolded.GetXaxis().SetTitleSize(0.045)
     dataUnfolded.GetXaxis().SetLabelSize(0.04)
     dataUnfolded.SetYTitle('<C_{N}^{(#beta)}>')
-    dataUnfolded.GetYaxis().SetRangeUser(0.0001, 1.55*dataUnfolded.GetMaximum())
+    dataUnfolded.GetYaxis().SetRangeUser(0.0001, 1.7*dataUnfolded.GetMaximum())
     dataUnfolded.GetYaxis().SetTitleSize(0.05)
     dataUnfolded.GetYaxis().SetLabelSize(0.045)
     dataUnfolded.GetYaxis().SetTitleOffset(1.1)
@@ -148,6 +153,13 @@ def main():
     herwigGen.SetMarkerStyle(25)
     herwigGen.Draw('SAME H')
     
+    sherpaGen.SetLineColor(ROOT.kGreen+2)
+    sherpaGen.SetLineStyle(5)
+    sherpaGen.SetLineWidth(2)
+    sherpaGen.SetMarkerColor(ROOT.kGreen+2)
+    sherpaGen.SetMarkerStyle(27)
+    sherpaGen.Draw('SAME H')
+    
     inix = 0.5
     if (nominalGen.GetMaximumBin() > nominalGen.GetNbinsX()/2.): inix = 0.15
     legend = ROOT.TLegend(inix,0.55,inix+0.45,0.9)
@@ -163,10 +175,14 @@ def main():
     legend.AddEntry(FSRUpGen, "#minus FSR up  #scale[0.65]{(#alpha_{s}^{FSR}(m_{Z})=0.1543)}", "p")
     legend.AddEntry(FSRDownGen, "#minus FSR down  #scale[0.65]{(#alpha_{s}^{FSR}(m_{Z})=0.1224)}", "p")
     #legend.AddEntry(qcdBasedGen, "#minus QCD-based CR", "p")
-    legend.AddEntry(herwigGen, "Powheg+Herwig++", "pl")
-    dummy2 = legend.AddEntry(dummy, "(#alpha_{s}^{FSR}(m_{Z})=0.12, no MEC)", "p")
+    legend.AddEntry(herwigGen, "Powheg+Herwig 7", "pl")
+    dummy2 = legend.AddEntry(dummy, "(#alpha_{s}^{FSR}(m_{Z}) = 0.126234, with MEC)", "p")
     dummy2.SetTextSize(0.0225)
     dummy2.SetTextAlign(13)
+    legend.AddEntry(sherpaGen, "Sherpa", "pl")
+    dummy3 = legend.AddEntry(dummy, "(#alpha_{s}^{FSR}(m_{Z}) = 0.118, no MEC)", "p")
+    dummy3.SetTextSize(0.0225)
+    dummy3.SetTextAlign(13)
     legend.Draw()
     txt=ROOT.TLatex()
     txt.SetNDC(True)
@@ -174,7 +190,7 @@ def main():
     txt.SetTextSize(0.05)
     txt.SetTextAlign(12)
     inix = 0.15
-    if (nominalGen.GetMaximumBin() > nominalGen.GetNbinsX()/2.): inix = 0.64
+    if (nominalGen.GetMaximumBin() > nominalGen.GetNbinsX()/2.): inix = 0.83
     txt.DrawLatex(inix,0.88,cmsLabel)
     txt.DrawLatex(0.7,0.97,'#scale[0.8]{%3.1f fb^{-1} (%s)}' % (opt.lumi/1000.,opt.com) )
     
@@ -204,7 +220,7 @@ def main():
     dataUnfoldedSysRatio.GetYaxis().SetTitleSize(0.2)
     dataUnfoldedSysRatio.GetYaxis().SetTitleOffset(0.3)
     dataUnfoldedSysRatio.GetYaxis().SetLabelSize(0.18)
-    dataUnfoldedSysRatio.GetYaxis().SetRangeUser(0.95,1.25)
+    dataUnfoldedSysRatio.GetYaxis().SetRangeUser(0.85,1.35)
     dataUnfoldedSysRatio.GetYaxis().SetNdivisions(503)
     
     nominalGenRatio=nominalGen.Clone('nominalGenRatio')
@@ -215,6 +231,8 @@ def main():
     FSRDownGenRatio.Divide(dataUnfolded)
     herwigGenRatio=herwigGen.Clone('herwigGenRatio')
     herwigGenRatio.Divide(dataUnfolded)
+    sherpaGenRatio=sherpaGen.Clone('sherpaGenRatio')
+    sherpaGenRatio.Divide(dataUnfolded)
     
     dataUnfoldedSysRatio.SetMarkerStyle(0)
     dataUnfoldedSysRatio.Draw('e2')
@@ -230,6 +248,7 @@ def main():
     FSRUpGenRatio.Draw  ('SAME P X0 E1')
     FSRDownGenRatio.Draw('SAME P X0 E1')
     herwigGenRatio.Draw ('SAME H')
+    sherpaGenRatio.Draw ('SAME H')
             
     c.Print(opt.outDir+'/meanCvsBeta_'+opt.flavor+'.pdf')
     c.Print(opt.outDir+'/meanCvsBeta_'+opt.flavor+'.png')

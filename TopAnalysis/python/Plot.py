@@ -48,7 +48,7 @@ class Plot(object):
 
     def __init__(self,name,com='13 TeV'):
         self.name = name
-        self.cmsLabel='#bf{CMS} #it{preliminary}'
+        self.cmsLabel='#bf{CMS}'
         self.com=com
         self.wideCanvas = True if 'ratevsrun' in self.name else False
         self.doPoissonErrorBars=True
@@ -299,6 +299,7 @@ class Plot(object):
             # shape
             nominalIntegral = nominalTTbar.Integral()
             for hname,h in self.mcsyst.iteritems():
+                print(hname,h.Integral())
                 if (h.Integral()>0.): h.Scale(nominalIntegral/h.Integral())
             systUpShape=[0.]
             systDownShape=[0.]
@@ -399,11 +400,11 @@ class Plot(object):
         iniy=0.88 if self.wideCanvas else 0.88
         inix=0.15 if noStack else 0.18
         if (totalMC is not None and totalMC.GetMaximumBin() > totalMC.GetNbinsX()/2.):
-            inix = 0.64
+            inix = 0.83
         inixlumi=0.7
         if not self.dataH or noRatio:
             inix=0.56
-            inixlumi=0.65
+            inixlumi=0.83
 
         txt.DrawLatex(inix,iniy,self.cmsLabel)
         if lumi<1:
