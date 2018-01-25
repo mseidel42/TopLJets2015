@@ -21,7 +21,7 @@ lumiUnc=0.027
 whoami=`whoami`
 myletter=${whoami:0:1}
 eosdir=/store/cmst3/group/top/ReReco2016/${githash}
-summaryeosdir=/eos/user/${myletter}/${whoami}/analysis/TopJetShapes/${githash}_new
+summaryeosdir=/eos/user/m/mseidel/analysis/TopJetShapes/b312177_new
 wwwdir=/eos/user/${myletter}/${whoami}/www/cms/TopJS/
 
 
@@ -61,6 +61,11 @@ case $WHAT in
         python scripts/runLocalAnalysis.py -i /eos/user/m/mseidel/ReReco2016/b312177_merged -q ${queue} -o ${summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --farmappendix samplesGEN;
         ;;
 
+    FULLSELGEN2 )
+        #ttbar GEN samples
+        python scripts/runLocalAnalysis.py -i /store/group/cmst3/user/mseidel/ReReco2016/b312177_GEN_merged -q ${queue} -o ${summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --farmappendix samplesGEN;
+        ;;
+    
     MERGE )
         python scripts/mergeOutputs.py ${summaryeosdir} True;
         ;;
@@ -97,13 +102,15 @@ case $WHAT in
 
     FILL )
         cd batch;
-        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --skip MC13TeV_TTJets --skipexisting;
-        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --only MC13TeV_TTJets --skipexisting --nweights 20;
+        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --skip MC13TeV_TTJets,MC13TeV_TTJets_herwigpp_asfsr*,MC13TeV_TTJets_pythia8_asfsr*,MC13TeV_TTJets_jec_* --skipexisting --farmappendix fill;
+        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --only MC13TeV_TTJets --skipexisting --nweights 20 --farmappendix fill_TTJets;
+        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --only MC13TeV_TTJets_herwigpp_asfsr*,MC13TeV_TTJets_pythia8_asfsr* --skipexisting --farmappendix fill_asfsr;
+        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --only MC13TeV_TTJets_jec_* --skipexisting --farmappendix fill_jec;
         cd -;
         ;;
     
     MERGEFILL )
-        ./scripts/mergeOutputs.py unfolding/fill True - False
+        ./scripts/mergeOutputs.py unfolding/fill True - True
         ;;
         
     TOYUNFOLDING )
@@ -152,6 +159,13 @@ case $WHAT in
         cp test/index.php ${wwwdir}/result
         ;;
     
+    GENPTPLOTS )
+        for FLAVOR in incl bottom light gluon
+        do
+          python test/TopJSAnalysis/quickPlotMCGenerators.py -n 100000000 --flavor ${FLAVOR} &
+        done
+        ;;
+    
     FLAVORPLOTS )
         for RECO in charged all
           do
@@ -163,7 +177,7 @@ case $WHAT in
         ;;
     
     TUNING )
-        for OBS in lowcornew c1all lambda #lowcor c1pert
+        for OBS in lowcornew c1all lambda lowcor #c1pert
         do
           for GENERATOR in pythia8 #herwigpp
           do

@@ -945,17 +945,23 @@ void RunTopJetShape(TString filename,
 double calcGA(double beta, double kappa, Jet jet, bool includeNeutrals, bool usePuppi, double ptcut) {
   int mult = 0;
   double sumpt = 0.;
-  TLorentzVector axis(0., 0., 0., 0.);
+  vector<PseudoJet> particles;
   for (auto p : jet.particles()) {
     if (not includeNeutrals and p.charge() == 0) continue;
     if (ptcut > p.pt()) continue;
     double weight = usePuppi ? p.puppi() : 1.;
     if (weight > 0.) ++mult;
     sumpt  += p.pt()*weight;
-    axis += p.momentum()*weight;
+    particles.push_back( PseudoJet(p.px(), p.py(), p.pz(), p.e())*weight );
   }
   if (mult < 2) return -1.;
   //std::cout << "sumpt" << beta << kappa << iptcut << icharge << ": " << sumpt << std::endl;
+  
+  // Calculate WTA axis
+  JetDefinition jet_def(fastjet::antikt_algorithm, fastjet::JetDefinition::max_allowable_R, fastjet::RecombinationScheme::WTA_pt_scheme);
+  ClusterSequence cs(particles, jet_def);
+  PseudoJet wta_jet = cs.exclusive_jets(1)[0];
+  TLorentzVector axis(wta_jet.px(), wta_jet.py(), wta_jet.pz(), wta_jet.e());
   
   double ga = 0.;
   for (auto p : jet.particles()) {
@@ -1036,17 +1042,25 @@ double getPtDs(Jet jet, bool includeNeutrals, bool usePuppi, double ptcut) {
 double getWidth(Jet jet, bool includeNeutrals, bool usePuppi, double ptcut) {
   //std::cout << "getWidth()" << std::endl;
   int mult = 0;
-  double sumpt   = 0.;
-  double sumptdr = 0.;
-  TLorentzVector axis(0., 0., 0., 0.);
+  vector<PseudoJet> particles;
   for (auto p : jet.particles()) {
     if (not includeNeutrals and p.charge() == 0) continue;
     if (ptcut > p.pt()) continue;
     double weight = usePuppi ? p.puppi() : 1.;
     if (weight > 0.) ++mult;
-    axis += p.momentum()*weight;
+    particles.push_back( PseudoJet(p.px(), p.py(), p.pz(), p.e())*weight );
   }
+  
   if (mult < 2) return -1.;
+  
+  // Calculate WTA axis
+  JetDefinition jet_def(fastjet::antikt_algorithm, fastjet::JetDefinition::max_allowable_R, fastjet::RecombinationScheme::WTA_pt_scheme);
+  ClusterSequence cs(particles, jet_def);
+  PseudoJet wta_jet = cs.exclusive_jets(1)[0];
+  TLorentzVector axis(wta_jet.px(), wta_jet.py(), wta_jet.pz(), wta_jet.e());
+  
+  double sumpt   = 0.;
+  double sumptdr = 0.;
   for (auto p : jet.particles()) {
     if (not includeNeutrals and p.charge() == 0) continue;
     if (ptcut > p.pt()) continue;
@@ -1062,15 +1076,23 @@ double getEcc(Jet jet, bool includeNeutrals, bool usePuppi, double ptcut) {
   //std::cout << "getEcc()" << std::endl;
   // Get mean axis
   int mult = 0;
-  TLorentzVector axis(0., 0., 0., 0.);
+  vector<PseudoJet> particles;
   for (auto p : jet.particles()) {
     if (not includeNeutrals and p.charge() == 0) continue;
     if (ptcut > p.pt()) continue;
     double weight = usePuppi ? p.puppi() : 1.;
     if (weight > 0.) ++mult;
-    axis += p.momentum()*weight;
+    particles.push_back( PseudoJet(p.px(), p.py(), p.pz(), p.e())*weight );
   }
+  
   if (mult < 4) return -1.;
+  
+  // Calculate WTA axis
+  JetDefinition jet_def(fastjet::antikt_algorithm, fastjet::JetDefinition::max_allowable_R, fastjet::RecombinationScheme::WTA_pt_scheme);
+  ClusterSequence cs(particles, jet_def);
+  PseudoJet wta_jet = cs.exclusive_jets(1)[0];
+  TLorentzVector axis(wta_jet.px(), wta_jet.py(), wta_jet.pz(), wta_jet.e());
+  
   // Covariance matrix
   Matrix<2> M;
   for (auto p : jet.particles()) {
@@ -1111,7 +1133,7 @@ double getTau(int N, int M, Jet jet, bool includeNeutrals, bool usePuppi, double
   
   PseudoJet cajet = jets[0];
   
-  NsubjettinessRatio tau_ratio(N, M, OnePass_KT_Axes(), NormalizedMeasure(1.0, 0.4));
+  NsubjettinessRatio tau_ratio(N, M, OnePass_WTA_KT_Axes(), NormalizedMeasure(1.0, 0.4));
   
   return tau_ratio(cajet);
 }

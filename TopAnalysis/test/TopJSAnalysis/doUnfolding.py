@@ -41,6 +41,8 @@ def main():
     (opt, args) = parser.parse_args()
     
     nice_observables_root = {"mult": "#lambda_{0}^{0} (N)", "width": "#lambda_{1}^{1} (width)", "ptd": "#lambda_{0}^{2} (p_{T}D)", "ptds": "#lambda_{0}^{2}* (p_{T}D*)", "ecc": "#varepsilon", "tau21": "#tau_{21}", "tau32": "#tau_{32}", "tau43": "#tau_{43}", "zg": "z_{g}", "zgxdr": "z_{g} #times #DeltaR", "zgdr": "#DeltaR_{g}", "ga_width": "#lambda_{1}^{1} (width)", "ga_lha": "#lambda_{0.5}^{1} (LHA)", "ga_thrust": "#lambda_{2}^{1} (thrust)", "c1_00": "C_{1}^{(0.0)}", "c1_02": "C_{1}^{(0.2)}", "c1_05": "C_{1}^{(0.5)}", "c1_10": "C_{1}^{(1.0)}", "c1_20": "C_{1}^{(2.0)}", "c2_00": "C_{2}^{(0.0)}", "c2_02": "C_{2}^{(0.2)}", "c2_05": "C_{2}^{(0.5)}", "c2_10": "C_{2}^{(1.0)}", "c2_20":  "C_{2}^{(2.0)}", "c3_00": "C_{3}^{(0.0)}", "c3_02": "C_{3}^{(0.2)}", "c3_05": "C_{3}^{(0.5)}", "c3_10": "C_{3}^{(1.0)}", "c3_20": "C_{3}^{(2.0)}", "m2_b1": "M_{ 2}^{ (1)}", "n2_b1": "N_{ 2}^{ (1)}", "n3_b1": "N_{ 3}^{ (1)}", "m2_b2": "M_{ 2}^{ (2)}", "n2_b2": "N_{ 2}^{ (2)}", "n3_b2": "N_{ 3}^{ (2)}", "nsd": "n_{SD}"}
+    
+    nice_reco = {'charged': 'charged', 'all': 'charged+neutral'}
 
     #read lists of samples
     samplesList=[]
@@ -98,6 +100,7 @@ def main():
     varList.append('pythia8_asfsr0.160_meon_crdefault')
     varList.append('pythia8_asfsr0.1365_meoff_crdefault')
     varList.append('herwig7')
+    #varList.append('herwig7dipole')
     varList.append('sherpa')
 
     expSystSamplesList = []
@@ -306,7 +309,7 @@ def main():
     p1.cd()
     
     dataUnfolded.SetTitle('')
-    dataUnfolded.SetXTitle(nice_observables_root[opt.obs])
+    dataUnfolded.SetXTitle('%s (%s)'%(nice_observables_root[opt.obs], nice_reco[opt.reco]))
     dataUnfolded.GetXaxis().SetTitleSize(0.045)
     dataUnfolded.GetXaxis().SetLabelSize(0.04)
     dataUnfolded.SetYTitle('1/N_{jet} dN_{jet} / d '+nice_observables_root[opt.obs])
@@ -399,15 +402,17 @@ def main():
     nominalGenFSRRatio=nominalGenFSR.Clone('nominalGenFSRRatio')
     nominalGenFSRRatio.Divide(dataUnfoldedNoErr)
     
-    #qcdBasedGen = normalizeAndDivideByBinWidth(systematics['MC13TeV_TTJets_qcdBased'].ProjectionX("qcdBasedGen"))
-    #qcdBasedGen.SetLineColor(ROOT.kBlue+1)
-    #qcdBasedGen.SetLineStyle(7)
-    #qcdBasedGen.SetLineWidth(2)
-    #qcdBasedGen.SetMarkerColor(ROOT.kOrange+1)
-    #qcdBasedGen.SetMarkerStyle(28)
-    #qcdBasedGen.Draw('SAME P X0 E1')
-    #qcdBasedGenRatio=qcdBasedGen.Clone('qcdBasedGenRatio')
-    #qcdBasedGenRatio.Divide(dataUnfoldedNoErr)
+    tunedGen = normalizeAndDivideByBinWidth(systematics['MC13TeV_TTJets_pythia8_asfsr0.120_meon_crdefault'].ProjectionX("tunedGen"))
+    for i in range(1, tunedGen.GetNbinsX()+1):
+        tunedGen.SetBinError(i, 1e-20)
+    tunedGen.SetLineColor(ROOT.kOrange+1)
+    tunedGen.SetLineStyle(2)
+    tunedGen.SetLineWidth(2)
+    tunedGen.SetMarkerColor(ROOT.kOrange+1)
+    tunedGen.SetMarkerStyle(0)
+    tunedGen.Draw('SAME H')
+    tunedGenRatio=tunedGen.Clone('tunedGenRatio')
+    tunedGenRatio.Divide(dataUnfoldedNoErr)
     
     herwigGen = normalizeAndDivideByBinWidth(systematics['MC13TeV_TTJets_herwig7'].ProjectionX("herwigGen"))
     for i in range(1, herwigGen.GetNbinsX()+1):
@@ -420,6 +425,18 @@ def main():
     herwigGen.Draw('SAME H')
     herwigGenRatio=herwigGen.Clone('herwigGenRatio')
     herwigGenRatio.Divide(dataUnfoldedNoErr)
+    
+    #herwigDipoleGen = normalizeAndDivideByBinWidth(systematics['MC13TeV_TTJets_herwig7dipole'].ProjectionX("herwigDipoleGen"))
+    #for i in range(1, herwigGen.GetNbinsX()+1):
+    #    herwigGen.SetBinError(i, 1e-20)
+    #herwigDipoleGen.SetLineColor(ROOT.kAzure+2)
+    #herwigDipoleGen.SetLineStyle(1)
+    #herwigDipoleGen.SetLineWidth(2)
+    #herwigDipoleGen.SetMarkerColor(ROOT.kAzure+2)
+    #herwigDipoleGen.SetMarkerStyle(25)
+    #herwigDipoleGen.Draw('SAME H')
+    #herwigDipoleGenRatio=herwigGen.Clone('herwigGenRatio')
+    #herwigDipoleGenRatio.Divide(dataUnfoldedNoErr)
     
     sherpaGen = normalizeAndDivideByBinWidth(systematics['MC13TeV_TTJets_sherpa'].ProjectionX("sherpaGen"))
     for i in range(1, sherpaGen.GetNbinsX()+1):
@@ -458,7 +475,7 @@ def main():
     legend.AddEntry(nominalGen, "Powheg+Pythia 8", "pl")
     legend.AddEntry(FSRUpGen, "#minus FSR up", "p")
     legend.AddEntry(FSRDownGen, "#minus FSR down", "p")
-    #legend.AddEntry(qcdBasedGen, "#minus QCD-based CR", "p")
+    legend.AddEntry(tunedGen, "#minus FSR tuned", "pl")
     legend.AddEntry(herwigGen, "Powheg+Herwig 7", "pl")
     legend.AddEntry(sherpaGen, "Sherpa", "pl")
     legend.Draw()
@@ -500,8 +517,9 @@ def main():
     nominalGenRatio.Draw('SAME H')
     FSRUpGenRatio.Draw  ('SAME P X0 E1')
     FSRDownGenRatio.Draw('SAME P X0 E1')
-    #qcdBasedGenRatio.Draw('SAME P X0 E1')
+    tunedGenRatio.Draw('SAME H')
     herwigGenRatio.Draw ('SAME H')
+    #herwigDipoleGenRatio.Draw ('SAME H')
     sherpaGenRatio.Draw ('SAME H')
     
     c.Print(opt.outDir+'/'+opt.obs+'_'+opt.reco+'_'+opt.flavor+'_result.pdf')
@@ -563,6 +581,8 @@ def main():
     legend.SetNColumns(2)
     legend.SetLineWidth(0)
     legend.SetFillStyle(0)
+    
+    
     dataUnfoldedSysRatio.GetYaxis().SetNdivisions()
     dataUnfoldedSysRatio.GetXaxis().SetTitleSize(0.045)
     dataUnfoldedSysRatio.GetXaxis().SetTitleOffset(1.)
@@ -589,8 +609,22 @@ def main():
         hist.SetLineColor(sys[2])
         hist.SetMarkerColor(sys[2])
         hist.SetMarkerStyle(sys[3])
-        legend.AddEntry(hist, sys[1], 'pl')
+        legend.AddEntry(hist, sys[1], 'p')
         hist.Draw('same hist p')
+    
+    legend.AddEntry(ROOT.TH1F(), '', '')
+    
+    FSRUpGenSens = FSRUpGen.Clone('FSRUpGenSens')
+    FSRUpGenSens.Divide(nominalGen)
+    FSRUpGenSens.SetLineWidth(2)
+    FSRUpGenSens.Draw('same h')
+    legend.AddEntry(FSRUpGenSens, 'FSR up (sensitivity)', 'pl')
+    FSRDownGenSens = FSRDownGen.Clone('FSRDownGenSens')
+    FSRDownGenSens.Divide(nominalGen)
+    FSRDownGenSens.SetLineWidth(2)
+    FSRDownGenSens.Draw('same h')
+    legend.AddEntry(FSRDownGenSens, 'FSR down (sensitivity)', 'pl')
+    
     legend.Draw()
     txt=ROOT.TLatex()
     txt.SetNDC(True)

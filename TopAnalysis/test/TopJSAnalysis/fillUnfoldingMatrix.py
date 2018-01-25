@@ -87,6 +87,7 @@ def main():
     parser.add_option(      '--only',  dest='only',   help='csv list of samples to process (exact name, applies only for batch mode) [%default]', default=None, type='string')
     parser.add_option(      '--skip',  dest='skip',   help='csv list of samples to exclude (exact name, applies only for batch mode) [%default]', default=None, type='string')
     parser.add_option('--nw', '--nweights', dest='nweights', help='number of weights to run [%default]', default=0, type='int')
+    parser.add_option(      '--farmappendix',        dest='farmappendix',        help='Appendix to condor FARM directory [%default]',             default='fill',       type='string')
     (opt, args) = parser.parse_args()
 
     if opt.input.endswith('.root'):
@@ -159,18 +160,30 @@ def main():
             pass
         #create the tasklist
         inputlist=[]
+        print('onlyList', onlyList)
+        print('skipList', skipList)
         if os.path.isdir(opt.input):
             for file_path in os.listdir(opt.input):
                 if file_path.endswith('.root'):
+                    skip = False
                     rootoutfilepath = workdir+opt.output+'/Chunks/'+os.path.basename(file_path)
                     if (opt.skipexisting and os.path.isfile(rootoutfilepath)): continue
                     #filter tags
+                    sampletag = os.path.basename(file_path).rsplit('_',1)[0]
                     if len(onlyList)>0:
-                        if (not os.path.basename(file_path).rsplit('_',1)[0] in onlyList): continue
+                        match = False
+                        for onlyEntry in onlyList:
+                            if (sampletag == onlyEntry): match = True
+                            if (onlyEntry[-1] == '*' and onlyEntry[:-1] in sampletag): match = True
+                        if not match: skip = True
                     if len(skipList)>0:
-                        if (os.path.basename(file_path).rsplit('_',1)[0] in skipList): continue
-                    inputlist.append(os.path.join(opt.input,file_path))
-        #print(inputlist)
+                        for skipEntry in skipList:
+                            if (sampletag == skipEntry): skip = True
+                            if (skipEntry[-1] == '*' and skipEntry[:-1] in sampletag): skip = True
+                        
+                    if not skip:
+                        inputlist.append(os.path.join(opt.input,file_path))
+        #print('inputlist', inputlist)
         #FIXME old
         #print 'Running %d jobs to %s'%(len(inputlist),opt.queue)
         #njob = 1
@@ -184,7 +197,8 @@ def main():
         #    os.system(cmd)
             
         #FIXME new
-        FarmDirectory = '%s/FARM%s'%(cmsswBase,os.path.basename(opt.output))
+        FarmDirectory = '%s/FARM%s'%(cmsswBase,os.path.basename(opt.farmappendix))
+        os.system('rm -r %s'%FarmDirectory)
         os.system('mkdir -p %s'%FarmDirectory)
         os.system('mkdir -p '+workdir+opt.output+'/Chunks/')
         
@@ -231,8 +245,11 @@ def main():
 
                 os.system('chmod u+x %s/%s.sh'%(FarmDirectory,cfgFile))
 
-        print 'Submitting jobs to condor, flavour "%s"'%(opt.queue)
-        os.system('condor_submit %s/condor.sub'%FarmDirectory)
+        if jobNb>0:
+            print 'Submitting jobs to condor, flavour "%s"'%(opt.queue)
+            os.system('condor_submit %s/condor.sub'%FarmDirectory)
+        else:
+            print('No Jobs to submit')
 
 if __name__ == "__main__":
 	sys.exit(main())

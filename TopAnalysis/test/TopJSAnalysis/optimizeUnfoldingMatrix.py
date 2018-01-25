@@ -255,8 +255,8 @@ def optimize(inputfile, output, obs, reco, ptcut, rootoutput):
     #bins = splitForMinPurity(h, gensums, recosums, indices)
     
     bins = splitForMinSigma(h, output, obs, reco, ptcut, sigmaFactor)
-    if len(bins) <= 4:
-        bins = splitForMinSigma(h, output, obs, reco, ptcut, sigmaFactor*0.5)
+    #if len(bins) <= 4:
+    #    bins = splitForMinSigma(h, output, obs, reco, ptcut, sigmaFactor*0.5)
     
     c = ROOT.TCanvas('c', 'c', 500, 450)
     c.cd()

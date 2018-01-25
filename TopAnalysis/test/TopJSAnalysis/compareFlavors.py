@@ -6,6 +6,7 @@ import json
 import re
 from collections import OrderedDict
 from math import sqrt
+from array import *
 
 debug = True
 
@@ -37,8 +38,10 @@ def main():
     flavors = ['incl', 'bottom', 'light', 'gluon']
     # ColorBrewer 3-class Set2 (http://colorbrewer2.org/#type=qualitative&scheme=Set2&n=3)
     colors = {'incl': ROOT.kBlack, 'bottom': ROOT.kOrange+8, 'light': ROOT.kBlue-5, 'gluon': ROOT.kTeal-8}
+    lightcolors = {'incl': ROOT.kGray, 'bottom': ROOT.kOrange-9, 'light': ROOT.kBlue-10, 'gluon': ROOT.kCyan-10}
     markers = {'incl': 20, 'bottom': 21, 'light': 22, 'gluon': 23}
     fills = {'incl': 1001, 'bottom': 3254, 'light': 3245, 'gluon': 3002}
+    offsets = {'incl': 0, 'bottom': -1, 'light': 0, 'gluon': 1}
     infiles = {}
     hists = {}
     unchists = {}
@@ -48,6 +51,7 @@ def main():
     pythiaratios = {}
     pythiafsrupratios = {}
     pythiafsrdownratios = {}
+    pythiafsrtuneratios = {}
     herwigratios = {}
     sherparatios = {}
     line = {}
@@ -71,19 +75,26 @@ def main():
         unchists[flavor].SetMarkerStyle(0)
         unchists[flavor].SetFillColor(colors[flavor])
         unchists[flavor].SetFillStyle(fills[flavor])
+        unchists[flavor].SetLineColor(colors[flavor])
         
         pythiaratios[flavor] = infiles[flavor].Get('nominalGenRatio')
         pythiafsrupratios[flavor] = infiles[flavor].Get('FSRUpGenRatio')
         pythiafsrdownratios[flavor] = infiles[flavor].Get('FSRDownGenRatio')
+        pythiafsrtuneratios[flavor] = infiles[flavor].Get('tunedGenRatio')
         herwigratios[flavor] = infiles[flavor].Get('herwigGenRatio')
         sherparatios[flavor] = infiles[flavor].Get('sherpaGenRatio')
         
         pythiauncratios[flavor] = infiles[flavor].Get('dataUnfoldedSysRatio').Clone()
-        pythiauncratios[flavor].SetFillColor(colors[flavor])
-        pythiauncratios[flavor].SetFillStyle(fills[flavor])
+        pythiauncratios[flavor].SetMarkerColor(colors[flavor])
+        pythiauncratios[flavor].SetMarkerStyle(0)
+        pythiauncratios[flavor].SetLineColor(colors[flavor])
+        pythiauncratios[flavor].SetFillColor(lightcolors[flavor])
+        #pythiauncratios[flavor].SetFillStyle(fills[flavor])
         
         line[flavor] = infiles[flavor].Get('line')
         line[flavor].SetLineColor(colors[flavor])
+        line[flavor].SetMarkerColor(colors[flavor])
+        line[flavor].SetMarkerStyle(markers[flavor])
         #for xbin in range(line[flavor].GetNbinsX()+1):
         #    line[flavor].SetBinError(xbin, 0.0001)
         
@@ -101,6 +112,11 @@ def main():
         if opt.obs == 'zg': yrange = [0.75,1.25]
         limitToRange(uncratios[flavor], yrange)
         limitToRange(pythiauncratios[flavor], yrange)
+        if flavor == 'incl': continue
+        shift(hists[flavor], offsets[flavor])
+        shift(unchists[flavor], offsets[flavor])
+        shift(ratios[flavor], offsets[flavor])
+        shift(uncratios[flavor], offsets[flavor])
     
     #plot
     ROOT.gStyle.SetOptStat(0)
@@ -131,13 +147,13 @@ def main():
     m = re.search('(.*) (\(.+\))', hists['incl'].GetXaxis().GetTitle())
     unchists['incl'].GetXaxis().SetTitle('')
     unchists['incl'].Draw('e2')
-    unchists['bottom'].Draw('e2,same')
-    unchists['light' ].Draw('e2,same')
-    unchists['gluon' ].Draw('e2,same')
-    hists['incl'].Draw('same')
-    hists['bottom'].Draw('same')
-    hists['light' ].Draw('same')
-    hists['gluon' ].Draw('same')
+    unchists['bottom'].Draw('x0 e1,same')
+    unchists['light' ].Draw('x0 e1,same')
+    unchists['gluon' ].Draw('x0 e1,same')
+    hists['incl'].Draw  ('e, same')
+    hists['bottom'].Draw('x0 e, same')
+    hists['light' ].Draw('x0 e, same')
+    hists['gluon' ].Draw('x0 e, same')
     
     fliplegend = False
     flip_threshold = 0.4
@@ -148,10 +164,10 @@ def main():
     legend = ROOT.TLegend(inix,0.7/(0.68/0.40),inix+0.35,0.85)
     legend.SetLineWidth(0)
     legend.SetFillStyle(0)
-    legend.AddEntry(hists['incl'], 'Inclusive jets',       'flep')
-    legend.AddEntry(hists['bottom'], 'Bottom jets',   'flep')
-    legend.AddEntry(hists['light'], 'Light-enriched', 'flep')
-    legend.AddEntry(hists['gluon'], 'Gluon-enriched', 'flep')
+    legend.AddEntry(hists['incl'], 'Inclusive jets',  'flp')
+    legend.AddEntry(hists['bottom'], 'Bottom jets',   'ep')
+    legend.AddEntry(hists['light'], 'Light-enriched', 'ep')
+    legend.AddEntry(hists['gluon'], 'Gluon-enriched', 'ep')
     legend.Draw()
     
     txt=ROOT.TLatex()
@@ -175,7 +191,7 @@ def main():
     p2.cd()
     
     uncratios['incl'].SetTitle('')
-    uncratios['incl'].SetYTitle('#frac{flavor}{incl}   ')
+    uncratios['incl'].SetYTitle('#frac{flavor}{incl} ')
     uncratios['incl'].SetFillColor(ROOT.kGray)
     uncratios['incl'].GetYaxis().SetTitleSize(0.2*(0.32/0.2))
     uncratios['incl'].GetYaxis().SetTitleOffset(0.15)
@@ -183,14 +199,14 @@ def main():
     uncratios['incl'].GetYaxis().SetRangeUser(yrange[0], yrange[1])
     uncratios['incl'].GetYaxis().SetNdivisions(503)
     
-    uncratios['incl'].Draw('e2')
-    uncratios['bottom'].Draw('e2,same')
-    uncratios['light' ].Draw('e2,same')
-    uncratios['gluon' ].Draw('e2,same')
-    ratios['gluon' ].Draw('same')
-    ratios['incl'].Draw('same')
-    ratios['bottom'].Draw('same')
-    ratios['light' ].Draw('same')
+    uncratios['incl'].Draw  ('e2')
+    uncratios['bottom'].Draw('x0 e1,same')
+    uncratios['light' ].Draw('x0 e1,same')
+    uncratios['gluon' ].Draw('x0 e1,same')
+    ratios['incl'].Draw  ('e same')
+    ratios['gluon' ].Draw('x0 e1 same')
+    ratios['bottom'].Draw('x0 e1 same')
+    ratios['light' ].Draw('x0 e1 same')
     
     c.cd()
     p3 = ROOT.TPad('p3','p3',0.0,0.32,1.0,0.44)
@@ -201,21 +217,23 @@ def main():
     p3.SetTopMargin(0.00)
     p3.cd()
     
-    pythiauncratios['bottom'].GetYaxis().SetTitleColor(colors['bottom'])
+    #pythiauncratios['bottom'].GetYaxis().SetTitleColor(colors['bottom'])
     pythiauncratios['bottom'].GetYaxis().SetTitle('#splitline{MC/data}{(bottom)}  ')
     pythiauncratios['bottom'].GetYaxis().SetTitleSize(0.23)
     pythiauncratios['bottom'].GetYaxis().SetTitleOffset(0.22)
     pythiauncratios['bottom'].GetYaxis().SetLabelSize(0.18*(0.32/0.2))
     pythiauncratios['bottom'].Draw('e2')
+    line['bottom'].Draw('x0 e1 same')
     line['bottom'].Draw('same')
     pythiaratios['bottom'].Draw('same h')
     pythiafsrupratios['bottom'].Draw('SAME P X0 E1')
     pythiafsrdownratios['bottom'].Draw('SAME P X0 E1')
+    pythiafsrtuneratios['bottom'].Draw('same h')
     herwigratios['bottom'].Draw('same h')
     sherparatios['bottom'].Draw('same h')
     
     c.cd()
-    plegend = ROOT.TPad('p3','p3',0.0,0.4415,1.0,0.48)
+    plegend = ROOT.TPad('plegend','plegend',0.0,0.4415,1.0,0.48)
     plegend.Draw()
     plegend.SetBottomMargin(0.0)
     plegend.SetRightMargin(0.05)
@@ -226,10 +244,11 @@ def main():
     mclegend = ROOT.TLegend(0.12,0,0.95,1)
     mclegend.SetLineWidth(0)
     mclegend.SetFillStyle(0)
-    mclegend.SetNColumns(5)
+    mclegend.SetNColumns(6)
     mclegend.AddEntry(pythiaratios['bottom'], "Powheg+Pythia 8", "pl")
     mclegend.AddEntry(pythiafsrupratios['bottom'], "FSR up", "p")
-    mclegend.AddEntry(pythiafsrdownratios['bottom'], "FSR down", "p")
+    mclegend.AddEntry(pythiafsrdownratios['bottom'], "down", "p")
+    mclegend.AddEntry(pythiafsrtuneratios['bottom'], "tuned", "l")
     mclegend.AddEntry(herwigratios['bottom'], "Powheg+Herwig 7", "pl")
     mclegend.AddEntry(sherparatios['bottom'], "Sherpa", "pl")
     mclegend.Draw()
@@ -243,16 +262,18 @@ def main():
     p4.SetTopMargin(0.00)
     p4.cd()
     
-    pythiauncratios['light'].GetYaxis().SetTitleColor(colors['light'])
+    #pythiauncratios['light'].GetYaxis().SetTitleColor(colors['light'])
     pythiauncratios['light'].GetYaxis().SetTitle('#splitline{MC/data}{  (light)}  ')
     pythiauncratios['light'].GetYaxis().SetTitleSize(0.23)
     pythiauncratios['light'].GetYaxis().SetTitleOffset(0.22)
     pythiauncratios['light'].GetYaxis().SetLabelSize(0.18*(0.32/0.2))
     pythiauncratios['light'].Draw('e2')
+    line['light'].Draw('x0 e1 same')
     line['light'].Draw('same')
     pythiaratios['light'].Draw('same h')
     pythiafsrupratios['light'].Draw('SAME P X0 E1')
     pythiafsrdownratios['light'].Draw('SAME P X0 E1')
+    pythiafsrtuneratios['light'].Draw('same h')
     herwigratios['light'].Draw('same h')
     sherparatios['light'].Draw('same h')
     
@@ -266,15 +287,17 @@ def main():
     p5.cd()
     
     pythiauncratios['gluon'].GetXaxis().SetTitle(nice_observables_root[opt.obs])
-    pythiauncratios['gluon'].GetYaxis().SetTitleColor(colors['gluon'])
+    #pythiauncratios['gluon'].GetYaxis().SetTitleColor(colors['gluon'])
     pythiauncratios['gluon'].GetYaxis().SetTitle('#splitline{MC/data}{ (gluon)}  ')
     pythiauncratios['gluon'].GetYaxis().SetTitleSize(0.15)
     pythiauncratios['gluon'].GetYaxis().SetTitleOffset(0.34)
     pythiauncratios['gluon'].Draw('e2')
+    line['gluon'].Draw('x0 e1 same')
     line['gluon'].Draw('same')
     pythiaratios['gluon'].Draw('same h')
     pythiafsrupratios['gluon'].Draw('SAME P X0 E1')
     pythiafsrdownratios['gluon'].Draw('SAME P X0 E1')
+    pythiafsrtuneratios['gluon'].Draw('same h')
     herwigratios['gluon'].Draw('same h')
     sherparatios['gluon'].Draw('same h')
     
@@ -296,6 +319,13 @@ def limitToRange(h, ratiorange):
             dn = ratiorange[0]
         h.SetBinContent(i, (up + dn)/2.)
         h.SetBinError(i, (up - dn)/2.)
+
+def shift(h, step):
+   axis = h.GetXaxis()
+   width = axis.GetXmax() - axis.GetXmin()
+   shift = width / 200 * step
+   newbins = [x+shift for x in axis.GetXbins()]
+   axis.Set(len(newbins)-1, array('d', newbins))
 
 """
 for execution from another script
