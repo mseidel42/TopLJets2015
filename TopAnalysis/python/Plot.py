@@ -64,7 +64,7 @@ class Plot(object):
         self.doChi2 = False
         self.ratiorange = (0.4,1.6)
         self.frameMin=0.01
-        self.frameMax=1.45
+        self.frameMax=2.
         self.mcUnc=0
 
     def add(self, h, title, color, isData, spImpose, isSyst):
@@ -90,8 +90,8 @@ class Plot(object):
                 self.dataH.SetMarkerColor(color)
                 self.dataH.SetLineColor(ROOT.kBlack)
                 self.dataH.SetLineWidth(2)
-                self.dataH.SetFillColor(0)
-                self.dataH.SetFillStyle(0)
+                self.dataH.SetFillColor(ROOT.kBlack)
+                self.dataH.SetFillStyle(3245)
                 self._garbageList.append(h)
         elif isSyst:
             try:
@@ -207,27 +207,27 @@ class Plot(object):
         p1.cd()
 
         # legend
-        iniy=0.9 if self.wideCanvas else 0.85
-        dy=0.06
+        iniy=0.9
+        dy=0.0775
         ndy= max(len(self.mc),1)
-        inix,dx =0.65,0.4
+        inix,dx =0.55,0.4
         if noRatio: inix=0.6
         if noStack:
             inix,dx=0.6,0.35
             iniy,dy,ndy=0.85,0.03,len(self.mc)
 
-        leg = ROOT.TLegend(inix, iniy-dy*ndy, inix+dx, iniy+0.06)
+        leg = ROOT.TLegend(inix, iniy-dy*ndy, inix+dx, iniy)
 
         leg.SetBorderSize(0)
         leg.SetFillStyle(0)
         leg.SetTextFont(42)
-        leg.SetTextSize(0.045 if self.wideCanvas else 0.04)
+        #leg.SetTextSize(0.045 if self.wideCanvas else 0.04)
         if noRatio : leg.SetTextSize(0.035)
         nlegCols = 0
 
         if self.dataH is not None:
             if self.data is None: self.finalize()
-            leg.AddEntry( self.data, self.data.GetTitle(),'ep')
+            leg.AddEntry( self.data, self.data.GetTitle(),'fepl')
             nlegCols += 1
         for h in self.mc:
 
@@ -282,6 +282,8 @@ class Plot(object):
                 systUp.append(0.)
                 systDown.append(0.)
                 for hname in self.mcsyst:
+                    if any(x in hname for x in ['fsr', 'Herwig']):
+                        continue # these samples should have extra b-tag efficiencies, don't use them to calculate the normalization uncertainty
                     diff = self.mcsyst[hname].GetBinContent(xbin) - nominalTTbar.GetBinContent(xbin)
                     if (diff > 0):
                         systUp[xbin] = math.sqrt(systUp[xbin]**2 + diff**2)
@@ -377,12 +379,12 @@ class Plot(object):
                 if (len(self.mcsyst)>0):
                     totalMCUnc.Draw('e2 same')
                     totalMCUncShape.Draw('e2 same')
-                    leg.AddEntry(totalMCUnc, "Total unc.", 'f')
-                    leg.AddEntry(totalMCUncShape, "Shape unc.", 'f')
+                    leg.AddEntry(totalMCUnc, "MC total unc.", 'f')
+                    leg.AddEntry(totalMCUncShape, "MC shape unc.", 'f')
         for m in self.spimpose:
             self.spimpose[m].Draw('histsame')
             leg.AddEntry(self.spimpose[m],self.spimpose[m].GetTitle(),'l')
-        if self.data is not None : self.data.Draw('p')
+        if self.data is not None : self.data.Draw('P X0 E1')
 
 
         if (totalMC is not None and totalMC.GetMaximumBin() > totalMC.GetNbinsX()/2.):
@@ -398,21 +400,24 @@ class Plot(object):
         txt.SetTextSize(0.05)
         txt.SetTextAlign(12)
         iniy=0.88 if self.wideCanvas else 0.88
-        inix=0.15 if noStack else 0.18
+        inix=0.15
         if (totalMC is not None and totalMC.GetMaximumBin() > totalMC.GetNbinsX()/2.):
-            inix = 0.83
-        inixlumi=0.7
+            inix = 0.92
+        inixlumi=0.66
         if not self.dataH or noRatio:
             inix=0.56
             inixlumi=0.83
 
-        txt.DrawLatex(inix,iniy,self.cmsLabel)
+        txt.DrawLatex(inix,iniy,'#scale[1.2]{%s}'%self.cmsLabel)
         if lumi<1:
-            txt.DrawLatex(inixlumi,0.97,'#scale[0.8]{%3.1f nb^{-1} (%s)}' % (lumi*1000.,self.com) )
+            txt.DrawLatex(inixlumi,0.97,'#scale[1.0]{%3.1f nb^{-1} (%s)}' % (lumi*1000.,self.com) )
         elif lumi<100:
-            txt.DrawLatex(inixlumi,0.97,'#scale[0.8]{%3.1f pb^{-1} (%s)}' % (lumi,self.com) )
+            txt.DrawLatex(inixlumi,0.97,'#scale[1.0]{%3.1f pb^{-1} (%s)}' % (lumi,self.com) )
         else:
-            txt.DrawLatex(inixlumi,0.97,'#scale[0.8]{%3.1f fb^{-1} (%s)}' % (lumi/1000.,self.com) )
+            txt.DrawLatex(inixlumi,0.97,'#scale[1.0]{%3.1f fb^{-1} (%s)}' % (lumi/1000.,self.com) )
+        txt.DrawLatex(inix,0.83,'#scale[1.0]{t#bar{t} #rightarrow lepton+jets}')
+        txt.DrawLatex(inix,0.77,'#scale[1.0]{inclusive jets}')
+        txt.DrawLatex(inix,0.72,'#scale[1.0]{p_{T} > 30 GeV}')
         try:
             extraCtr=1
             for extra in extraText.split('\\'):

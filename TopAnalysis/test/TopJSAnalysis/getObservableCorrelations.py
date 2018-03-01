@@ -78,6 +78,8 @@ def main():
                             help='Use charged/puppi/all particles [default: %default]')
     parser.add_option(     '--com',          dest='com'  ,        help='center of mass energy',                            default='13 TeV',       type='string')
     parser.add_option('-l', '--lumi',        dest='lumi' ,       help='lumi [/pb]',              default=35922.,              type=float)
+    parser.add_option(     '--keep',          dest='keep'  ,        help='observables to keep [default: %default]', default='ga_width_charged',       type='string')
+    parser.add_option('-N', '--nobs',        dest='nobs' ,       help='Target number of observables',              default=4,              type=int)
     (opt, args) = parser.parse_args()
     
     tree = ROOT.TChain('tjsev')
@@ -98,6 +100,8 @@ def main():
             obsreco.append(obs+'_'+reco)
     
     nice_observables_root = {"mult": "#lambda_{0}^{0} (N)", "width": "width", "ptd": "p_{T}D", "ptds": "#lambda_{0}^{2}* (p_{T}D*)", "ecc": "#varepsilon", "tau21": "#tau_{21}", "tau32": "#tau_{32}", "tau43": "#tau_{43}", "zg": "z_{g}", "zgxdr": "z_{g} #times #DeltaR", "zgdr": "#DeltaR_{g}", "ga_width": "#lambda_{1}^{1} (width)", "ga_lha": "#lambda_{0.5}^{1} (LHA)", "ga_thrust": "#lambda_{2}^{1} (thrust)", "c1_00": "C_{1}^{(0.0)}", "c1_02": "C_{1}^{(0.2)}", "c1_05": "C_{1}^{(0.5)}", "c1_10": "C_{1}^{(1.0)}", "c1_20": "C_{1}^{(2.0)}", "c2_00": "C_{2}^{(0.0)}", "c2_02": "C_{2}^{(0.2)}", "c2_05": "C_{2}^{(0.5)}", "c2_10": "C_{2}^{(1.0)}", "c2_20":  "C_{2}^{(2.0)}", "c3_00": "C_{3}^{(0.0)}", "c3_02": "C_{3}^{(0.2)}", "c3_05": "C_{3}^{(0.5)}", "c3_10": "C_{3}^{(1.0)}", "c3_20": "C_{3}^{(2.0)}", "m2_b1": "M_{ 2}^{ (1)}", "n2_b1": "N_{ 2}^{ (1)}", "n3_b1": "N_{ 3}^{ (1)}", "m2_b2": "M_{ 2}^{ (2)}", "n2_b2": "N_{ 2}^{ (2)}", "n3_b2": "N_{ 3}^{ (2)}", "nsd": "n_{SD}"}
+    
+    nice_observables_root_short = {"mult": "#lambda_{0}^{0}", "width": "#lambda_{1}^{1}", "ptd": "#lambda_{0}^{2}", "ptds": "#lambda_{0}^{2}*", "ecc": "#varepsilon", "tau21": "#tau_{21}", "tau32": "#tau_{32}", "tau43": "#tau_{43}", "zg": "z_{g}", "zgxdr": "z_{g} #times #DeltaR", "zgdr": "#DeltaR_{g}", "ga_width": "#lambda_{1}^{1}", "ga_lha": "#lambda_{0.5}^{1}", "ga_thrust": "#lambda_{2}^{1}", "c1_00": "C_{1}^{(0.0)}", "c1_02": "C_{1}^{(0.2)}", "c1_05": "C_{1}^{(0.5)}", "c1_10": "C_{1}^{(1.0)}", "c1_20": "C_{1}^{(2.0)}", "c2_00": "C_{2}^{(0.0)}", "c2_02": "C_{2}^{(0.2)}", "c2_05": "C_{2}^{(0.5)}", "c2_10": "C_{2}^{(1.0)}", "c2_20":  "C_{2}^{(2.0)}", "c3_00": "C_{3}^{(0.0)}", "c3_02": "C_{3}^{(0.2)}", "c3_05": "C_{3}^{(0.5)}", "c3_10": "C_{3}^{(1.0)}", "c3_20": "C_{3}^{(2.0)}", "m2_b1": "M_{ 2}^{ (1)}", "n2_b1": "N_{ 2}^{ (1)}", "n3_b1": "N_{ 3}^{ (1)}", "m2_b2": "M_{ 2}^{ (2)}", "n2_b2": "N_{ 2}^{ (2)}", "n3_b2": "N_{ 3}^{ (2)}", "nsd": "n_{SD}"}
     
     points = getPointsFromTree(tree, observables, recos)
     
@@ -148,6 +152,7 @@ def main():
     h_correlations.GetYaxis().SetLabelSize(0.02)
     h_correlations.GetZaxis().SetRangeUser(-100., 100.)
     h_correlations.GetZaxis().SetTitle('Correlation [%]     ')
+    h_correlations.GetZaxis().SetTitleSize(0.04)
     h_correlations.SetMarkerSize(0.5)
     h_correlations.Draw('colz,text')
     
@@ -164,15 +169,18 @@ def main():
     txt.SetTextFont(42)
     txt.SetTextSize(0.041)
     txt.SetTextAlign(12)
-    txt.DrawLatex(0.16,0.97, cmsLabel)
-    txt.DrawLatex(0.63,0.97, '#scale[0.8]{%3.1f fb^{-1} (%s)}' % (opt.lumi/1000.,opt.com) )
+    txt.DrawLatex(0.14,0.97, '#scale[1.1]{%s}'%cmsLabel)
+    txt.DrawLatex(0.59,0.97, '#scale[1.0]{%3.1f fb^{-1} (%s)}' % (opt.lumi/1000.,opt.com) )
     
     c.Print('correlations.pdf')
     c.Print('correlations.png')
     
     # actually try to remove some that cannot be measured too well by subjective criteria...
     blacklist = ['n3_b1_charged', 'n3_b1_all']
-    keeplist  = ['ga_width_charged']
+    if opt.keep == 'none':
+        keeplist = []
+    else:
+        keeplist  = opt.keep.split(',')
     
     # algorithm deleting observables with highest correlation
     observables_low = copy.copy(obsreco)
@@ -209,7 +217,7 @@ def main():
     # finding set of observables with smallest global correlation now
     bestCombination = None
     bestSumCorr = 9999999.
-    for combination in itertools.combinations(observables_low, 4):
+    for combination in itertools.combinations(observables_low, opt.nobs):
         if not set(keeplist).issubset(combination): continue
         sumcorr = 0.
         for si in combination:
@@ -227,16 +235,19 @@ def main():
     h_correlations_low = ROOT.TH2D('h_correlations_low', '', len(observables_low), 0, len(observables_low), len(observables_low), 0, len(observables_low))
     
     for i in range(len(observables_low)):
-        h_correlations_low.GetXaxis().SetBinLabel(i+1, nice_observables_root[observables_low[i].rsplit('_', 1)[0]])
-        h_correlations_low.GetYaxis().SetBinLabel(i+1, nice_observables_root[observables_low[i].rsplit('_', 1)[0]])
+        h_correlations_low.GetXaxis().SetBinLabel(i+1, nice_observables_root_short[observables_low[i].rsplit('_', 1)[0]])
+        h_correlations_low.GetYaxis().SetBinLabel(i+1, nice_observables_root_short[observables_low[i].rsplit('_', 1)[0]])
         for j in range(len(observables_low)):
             correlation = 100.*getCorrelation(points, observables_low[i], observables_low[j])
             h_correlations_low.SetBinContent(i+1, j+1, correlation)
     
     h_correlations_low.GetXaxis().LabelsOption('h')
+    h_correlations_low.GetXaxis().SetLabelSize(0.07)
+    h_correlations_low.GetYaxis().SetLabelSize(0.07)
     h_correlations_low.GetZaxis().SetRangeUser(-100., 100.)
     h_correlations_low.GetZaxis().SetTitle('Correlation [%]     ')
-    h_correlations_low.SetMarkerSize(1.)
+    h_correlations_low.GetZaxis().SetTitleSize(0.04)
+    h_correlations_low.SetMarkerSize(2.)
     h_correlations_low.Draw('colz,text')
     
     ROOT.gPad.Update()
@@ -252,11 +263,11 @@ def main():
     txt.SetTextFont(42)
     txt.SetTextSize(0.041)
     txt.SetTextAlign(12)
-    txt.DrawLatex(0.16,0.97, cmsLabel)
-    txt.DrawLatex(0.63,0.97, '#scale[0.8]{%3.1f fb^{-1} (%s)}' % (opt.lumi/1000.,opt.com) )
+    txt.DrawLatex(0.14,0.97, '#scale[1.1]{%s}'%cmsLabel)
+    txt.DrawLatex(0.59,0.97, '#scale[1.0]{%3.1f fb^{-1} (%s)}' % (opt.lumi/1000.,opt.com) )
     
-    c.Print('correlations_low.pdf')
-    c.Print('correlations_low.png')
+    c.Print('correlations_low_%s_%s.pdf'%(filter(str.isalnum, opt.keep), opt.nobs))
+    c.Print('correlations_low_%s_%s.png'%(filter(str.isalnum, opt.keep), opt.nobs))
 
 if __name__ == "__main__":
 	sys.exit(main())

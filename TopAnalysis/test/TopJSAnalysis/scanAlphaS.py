@@ -69,23 +69,6 @@ def main():
         observables = ['mult', 'ptds', 'ga_lha', 'ga_width', 'ga_thrust']
         properSet = False
     
-    styles = {'ptds': [ROOT.kGreen+1, 3],
-              'ecc': [ROOT.kGreen+1, 3],
-              'tau43': [ROOT.kAzure+1, 4],
-              'zg': [ROOT.kViolet+1, 8],
-              'zgdr': [ROOT.kMagenta+1, 6],
-              'c1_00': [ROOT.kCyan+1, 2],
-              'c1_02': [ROOT.kGreen+1, 3],
-              'c1_05': [ROOT.kAzure+1, 4],
-              'c1_10': [ROOT.kMagenta+1, 6],
-              'c1_20': [ROOT.kViolet+1, 8],
-              'ga_lha': [ROOT.kAzure+1, 4],
-              'ga_width': [ROOT.kMagenta+1, 6],
-              'ga_thrust': [ROOT.kViolet+1, 8],
-              'mult': [ROOT.kCyan+1, 2],
-             }
-    defaultStyle = [ROOT.kBlack, 1]
-    
     unsummedChi2 = pickle.load(open("unsummedChi2_"+opt.reco+".pkl", "rb"))
 
     modelsToTest = []
@@ -144,10 +127,10 @@ def main():
     gr_sum.GetYaxis().SetTitleSize(0.045)
     gr_sum.GetYaxis().SetLabelSize(0.04)
     gr_sum.GetXaxis().SetRangeUser(x0[0], x0[-1])
-    gr_sum.GetYaxis().SetRangeUser(0., 100)
+    gr_sum.GetYaxis().SetRangeUser(0., 1000)
     if opt.obs == 'ga_width':
         gr_sum.GetXaxis().SetRangeUser(0.115, 0.13)
-        gr_sum.GetYaxis().SetRangeUser(0., 40)
+        gr_sum.GetYaxis().SetRangeUser(0., 20)
     
     c = ROOT.TCanvas('c','c',500,500)
     c.cd()
@@ -168,23 +151,20 @@ def main():
     
     x = []
     y = []
-    for xval in np.arange(x0[0], x0[-1], 0.000001):
+    for xval in np.arange(x0[0], x0[-1], 0.0001):
         yval = gr_sum.Eval(xval, 0, 'S')
         x.append(xval)
         y.append(yval)
     grfine = ROOT.TGraph(len(x), array('d',x) ,array('d',y))
-    if properSet: grfine.Draw('same')
+    #if properSet: grfine.Draw('same')
     grfine.SetLineColor(ROOT.kGray)
-    grfine.SetLineWidth(4)
-    if opt.obs in styles:
-        grfine.SetLineColor(styles[opt.obs][0])
-        grfine.SetLineStyle(styles[opt.obs][1])
+    grfine.SetLineWidth(2)
     
     ymin = min(y)
     
     x2x = []
     y2x = []
-    for xval in np.arange(x0[0], x0[-1], 0.000001):
+    for xval in np.arange(x0[0], x0[-1], 0.0001):
         yval = gr_sum.Eval(xval, 0, 'S')
         if (yval > ymin * 2.0): continue
         x2x.append(xval)
@@ -207,7 +187,7 @@ def main():
         y1.append(yval)
     gr_unc_1 = ROOT.TGraph(len(x1), array('d',x1) ,array('d',y1))
     gr_unc_1.SetLineColor(ROOT.kRed+1)
-    gr_unc_1.SetLineWidth(8)
+    gr_unc_1.SetLineWidth(1)
     gr_unc_1.SetFillColor(ROOT.kRed-9)
     gr_unc_1.SetFillStyle(3254)
     if properSet:
@@ -225,6 +205,22 @@ def main():
         #legend.AddEntry(gr_unc_2x, "#delta #chi^{2} =  #chi^{2}_{min}", "lf")
         legend.AddEntry(dummy, "", "")
     
+    styles = {'ptds': [ROOT.kGreen+1, 3],
+              'ecc': [ROOT.kGreen+1, 3],
+              'tau43': [ROOT.kAzure+1, 4],
+              'zg': [ROOT.kViolet+1, 8],
+              'zgdr': [ROOT.kMagenta+1, 6],
+              'c1_00': [ROOT.kCyan+1, 2],
+              'c1_02': [ROOT.kGreen+1, 3],
+              'c1_05': [ROOT.kAzure+1, 4],
+              'c1_10': [ROOT.kMagenta+1, 6],
+              'c1_20': [ROOT.kViolet+1, 8],
+              'ga_lha': [ROOT.kAzure+1, 4],
+              'ga_width': [ROOT.kMagenta+1, 6],
+              'ga_thrust': [ROOT.kViolet+1, 8],
+              'mult': [ROOT.kCyan+1, 2],
+             }
+    defaultStyle = [ROOT.kBlack, 1]
     
     gr = {}
     for obs in observables:
@@ -232,14 +228,11 @@ def main():
         gr[obs] = ROOT.TGraph(len(x0), array('d',x0) ,array('d',y0[obs]))
         #gr[obs].SetBit(ROOT.TGraph.kIsSortedX)
         gr[obs].SetFillColor(ROOT.kWhite)
-        gr[obs].SetMarkerColor(styles.get(obs, defaultStyle)[0])
-        gr[obs].SetMarkerStyle(5)
-        gr[obs].SetMarkerSize(1.5)
         gr[obs].SetLineColor(styles.get(obs, defaultStyle)[0])
         gr[obs].SetLineStyle(styles.get(obs, defaultStyle)[1])
         gr[obs].SetLineWidth(4)
-        gr[obs].Draw('p,same')
-        legend.AddEntry(gr[obs], nice_observables_root[obs], "pl")
+        gr[obs].Draw('c,same')
+        legend.AddEntry(gr[obs], nice_observables_root[obs], "lf")
     
     legend.Draw()
     txt=ROOT.TLatex()

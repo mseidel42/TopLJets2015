@@ -15,7 +15,7 @@ def fillHist(hmap, tree, nweights):
     for event in tree:
         weights = []
         for i in range(nweights+1):
-            if not isnan(event.weight[i]):
+            if not isnan(event.weight[i]) and abs(event.weight[i])<10000:
                 weights.append(event.weight[i])
             else: weights.append(0.)
         for obs,hmap_reco in hmap.iteritems():

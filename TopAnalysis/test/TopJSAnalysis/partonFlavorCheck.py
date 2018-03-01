@@ -27,11 +27,11 @@ def main():
     #read lists of samples
     flavors = ['bottom', 'light', 'gluon']
     flavormap = {'bottom': 5, 'light': 1, 'gluon': 0}
-    partonflavors = {'bottom': [5], 'light': range(1,5), 'gluon': [0,21]}
+    partonflavors = {'bottom': [5], 'charm': [4], 'light': range(1,4), 'gluon': [0,21]}
     hist = {}
     fraction = {}
     
-    eosdir = '/eos/user/m/mseidel/analysis/TopJetShapes/b312177_new/Chunks/'
+    eosdir = '/eos/cms/store/group/cmst3/user/mseidel/analysis/TopJetShapes/b312177/Chunks/'
 
     t_mc = ROOT.TChain('tjsev')
     if opt.sample == '':
@@ -43,11 +43,11 @@ def main():
     
     for flavor in flavors:
         hist[flavor] = ROOT.TH1F(flavor, '', 21, 1, 22)
-        t_mc.Draw(opt.var+' >> '+flavor, '(gen_sel == 1 & abs(gj_eta) < 2. & gj_overlap == 0 & gj_flavor == '+str(flavormap[flavor])+')*weight[0]', '', opt.nevents)
+        t_mc.Draw(opt.var+' >> '+flavor, '(gen_sel == 1 & abs(gj_eta) < 2. & gj_overlap == 0 & gj_flavor == '+str(flavormap[flavor])+')*weight[0]', 'NORM', opt.nevents)
         
         hist[flavor].Scale(1./hist[flavor].Integral())
         
-        for partonflavor in flavors:
+        for partonflavor in partonflavors:
             fraction[partonflavor] = 0.
             for xbin in partonflavors[partonflavor]:
                 fraction[partonflavor] += hist[flavor].GetBinContent(xbin)
@@ -58,6 +58,7 @@ def main():
         
         print('Parton level')
         print('bottom: %2.2f %%'%(100.*fraction['bottom']))
+        print('charm:  %2.2f %%'%(100.*fraction['charm']))
         print('light:  %2.2f %%'%(100.*fraction['light']))
         print('gluon:  %2.2f %%'%(100.*fraction['gluon']))
 

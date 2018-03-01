@@ -212,7 +212,7 @@ int testUnfold0Toys(TString observable = "mult", TString reco = "charged", TStri
   TFile outfile("unfolding/toys/"+observable+"_"+flavor+"_toys.root", "RECREATE");
   
   for (int t = 0; t < nToys; ++t) {
-    std::cout<<"toy number "<<t<<std::endl;
+    if(t%int(nToys/100)==0) std::cout << observable << " " << flavor << ", toy number " << t << "/" << nToys << std::endl;
     //============================================
     // generate toy distribution
     //

@@ -36,16 +36,8 @@ def optimize(inputfile, output, obs, reco, ptcut, rootoutput):
         tree.Add('/home/mseidel/Projects/unfolding/MC13TeV_TTJets_0.root')
         tree.Add('/home/mseidel/Projects/unfolding/MC13TeV_TTJets_1.root')
     elif inputfile == 'eos':
-        tree.Add('/eos/user/m/mseidel/analysis/TopJetShapes/b312177_new/Chunks/MC13TeV_TTJets_0.root')
-        tree.Add('/eos/user/m/mseidel/analysis/TopJetShapes/b312177_new/Chunks/MC13TeV_TTJets_1.root')
-        #tree.Add('/eos/user/m/mseidel/analysis/TopJetShapes/b312177/Chunks/MC13TeV_TTJets_2.root')
-        #tree.Add('/eos/user/m/mseidel/analysis/TopJetShapes/b312177/Chunks/MC13TeV_TTJets_3.root')
-        #tree.Add('/eos/user/m/mseidel/analysis/TopJetShapes/b312177/Chunks/MC13TeV_TTJets_4.root')
-        #tree.Add('/eos/user/m/mseidel/analysis/TopJetShapes/b312177/Chunks/MC13TeV_TTJets_5.root')
-        #tree.Add('/eos/user/m/mseidel/analysis/TopJetShapes/b312177/Chunks/MC13TeV_TTJets_6.root')
-        #tree.Add('/eos/user/m/mseidel/analysis/TopJetShapes/b312177/Chunks/MC13TeV_TTJets_7.root')
-        #tree.Add('/eos/user/m/mseidel/analysis/TopJetShapes/b312177/Chunks/MC13TeV_TTJets_8.root')
-        #tree.Add('/eos/user/m/mseidel/analysis/TopJetShapes/b312177/Chunks/MC13TeV_TTJets_9.root')
+        for i in range(2):
+            tree.Add('/eos/cms/store/group/cmst3/user/mseidel/analysis/TopJetShapes/b312177/Chunks/MC13TeV_TTJets_%i.root'%(i))
     else: tree.Add(inputfile)
     totalEntries = tree.GetEntries()
     
@@ -152,8 +144,9 @@ def optimize(inputfile, output, obs, reco, ptcut, rootoutput):
         highbin = 0.18
         nbins = 36
     if (obs == "n2_b1"):
+        lowbin = 0.15
         highbin = 0.45
-        nbins = 45
+        nbins = 30
     if (obs == "n3_b1"):
         lowbin = 0.2
         highbin = 2.5

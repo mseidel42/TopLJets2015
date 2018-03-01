@@ -21,7 +21,8 @@ lumiUnc=0.027
 whoami=`whoami`
 myletter=${whoami:0:1}
 eosdir=/store/cmst3/group/top/ReReco2016/${githash}
-summaryeosdir=/eos/user/m/mseidel/analysis/TopJetShapes/b312177_new
+run_summaryeosdir=/store/group/cmst3/user/mseidel/analysis/TopJetShapes/b312177
+summaryeosdir=/eos/cms/store/group/cmst3/user/mseidel/analysis/TopJetShapes/b312177
 wwwdir=/eos/user/${myletter}/${whoami}/www/cms/TopJS/
 
 
@@ -35,35 +36,36 @@ case $WHAT in
 
     NORMCACHE )
         python scripts/produceNormalizationCache.py -i ${eosdir} -o data/era2016/genweights.root;
+        python scripts/produceNormalizationCache.py -i ${eosdir}_qcd -o data/era2016/genweights.root --update;
         ;;
 
     FULLSEL )
         #ttbar, modeling systematics, background samples
-        python scripts/runLocalAnalysis.py -i ${eosdir} -q ${queue} -o ${summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --skip Data13TeV_Double,Data13TeV_MuonEG,TTJets2l2nu,m166,m169,m175,m178,widthx,TTTT --farmappendix samples;
+        python scripts/runLocalAnalysis.py -i ${eosdir} -q ${queue} -o ${run_summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --skip Data13TeV_Double,Data13TeV_MuonEG,TTJets2l2nu,m166,m169,m175,m178,widthx,TTTT --farmappendix samples;
         #QCD samples
-        python scripts/runLocalAnalysis.py -i ${eosdir}_qcd -q ${queue} -o ${summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --farmappendix qcd;
+        python scripts/runLocalAnalysis.py -i ${eosdir}_qcd -q ${queue} -o ${run_summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --farmappendix qcd;
         #Experimental uncertainties
-        python scripts/runLocalAnalysis.py -i ${eosdir} -q ${queue} -o ${summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --only MC13TeV_TTJets --systVar all --exactonly --farmappendix expsyst;
+        python scripts/runLocalAnalysis.py -i ${eosdir} -q ${queue} -o ${run_summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --only MC13TeV_TTJets --systVar all --exactonly --farmappendix expsyst;
         #ttbar GEN samples
-        python scripts/runLocalAnalysis.py -i /eos/user/m/mseidel/ReReco2016/b312177_merged -q ${queue} -o ${summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --farmappendix samplesGEN;
+        python scripts/runLocalAnalysis.py -i /store/group/cmst3/user/mseidel/ReReco2016/b312177_GEN_merged -q ${queue} -o ${run_summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --farmappendix samplesGEN;
         ;;
 
     FULLSELCENTRAL )
-        python scripts/runLocalAnalysis.py -i ${eosdir} -q ${queue} -o ${summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --only MC13TeV_TTJets --exactonly;
+        python scripts/runLocalAnalysis.py -i ${eosdir} -q ${queue} -o ${run_summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --only MC13TeV_TTJets --exactonly;
         ;;
 
     FULLSELSYST )
-        python scripts/runLocalAnalysis.py -i ${eosdir} -q ${queue} -o ${summaryeosdir}_expsyst --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --only MC13TeV_TTJets --systVar all --exactonly;
+        python scripts/runLocalAnalysis.py -i ${eosdir} -q ${queue} -o ${run_summaryeosdir}_expsyst --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --only MC13TeV_TTJets --systVar all --exactonly;
         ;;
     
-    FULLSELGEN )
+    FULLSELGEN_OLD )
         #ttbar GEN samples
-        python scripts/runLocalAnalysis.py -i /eos/user/m/mseidel/ReReco2016/b312177_merged -q ${queue} -o ${summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --farmappendix samplesGEN;
+        python scripts/runLocalAnalysis.py -i /eos/user/m/mseidel/ReReco2016/b312177_merged -q ${queue} -o ${run_summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --farmappendix samplesGEN;
         ;;
 
-    FULLSELGEN2 )
+    FULLSELGEN )
         #ttbar GEN samples
-        python scripts/runLocalAnalysis.py -i /store/group/cmst3/user/mseidel/ReReco2016/b312177_GEN_merged -q ${queue} -o ${summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --farmappendix samplesGEN;
+        python scripts/runLocalAnalysis.py -i /store/group/cmst3/user/mseidel/ReReco2016/b312177_GEN_merged -q ${queue} -o ${run_summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --farmappendix samplesGEN;
         ;;
     
     MERGE )
@@ -78,7 +80,7 @@ case $WHAT in
 
     TESTPLOTSEL )
         commonOpts="-i ${summaryeosdir} -j data/era2016/samples.json,data/era2016/qcd_samples.json --systJson data/era2016/syst_samples.json,data/era2016/expsyst_samples.json -l ${lumi}"
-        python scripts/plotter.py ${commonOpts} --outDir plots/test --only L4_1l4j2b2w_njets,L4_1l4j2b2w_nvtx,js_tau32_charged,js_mult_charged;
+        python scripts/plotter.py ${commonOpts} --outDir plots/test --only L4_1l4j2b2w_njets,L4_1l4j2b2w_nvtx,js_tau32_charged,js_mult_charged,L4_1l4j2b2w_l0eta;
         #python scripts/plotter.py ${commonOpts} --outDir plots/test --only L4_1l4j2b2w_nvtx;
         ;;
 
@@ -110,7 +112,7 @@ case $WHAT in
         ;;
     
     MERGEFILL )
-        ./scripts/mergeOutputs.py unfolding/fill True - True
+        ./scripts/mergeOutputs.py unfolding/fill True - False
         ;;
         
     TOYUNFOLDING )
@@ -185,6 +187,19 @@ case $WHAT in
             do
               for RECO in charged all
               do
+                python test/TopJSAnalysis/scanAlphaS.py --generator ${GENERATOR} --flavor ${FLAVOR} --obs ${OBS} --reco ${RECO}
+              done
+            done
+          done
+        done
+        for OBS in ga_width
+        do
+          for GENERATOR in pythia8 #herwigpp
+          do
+            for FLAVOR in incl bottom light gluon
+            do
+              for RECO in charged all
+              do
                 python test/TopJSAnalysis/fitAlphaS.py --generator ${GENERATOR} --flavor ${FLAVOR} --obs ${OBS} --reco ${RECO}
               done
             done
@@ -204,6 +219,13 @@ case $WHAT in
         mkdir -p ${wwwdir}/fit
         cp fit/*.{png,pdf} ${wwwdir}/fit
         cp test/index.php ${wwwdir}/fit
+        ;;
+    
+    WWW )
+        sh scripts/steerTOPJS.sh WWWSEL;
+        sh scripts/steerTOPJS.sh WWWBINNING;
+        sh scripts/steerTOPJS.sh WWWUNFOLDING;
+        sh scripts/steerTOPJS.sh WWWTUNING;
         ;;
 
 esac

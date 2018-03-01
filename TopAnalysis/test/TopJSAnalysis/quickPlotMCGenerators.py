@@ -28,18 +28,18 @@ def main():
     flavormap = {'bottom': 5, 'light': 1, 'gluon': 0}
     flavor_label = {'incl': 'inclusive', 'bottom': 'bottom', 'light': 'light-enriched', 'gluon': 'gluon-enriched'}
     
-    generators = ['pythia', 'fsrup', 'fsrdn', 'pythia8_asfsr0.120_meon_crdefault', 'herwig7', 'sherpa']
-    name = {'pythia': 'Powheg+Pythia 8', 'fsrup': '#minus FSR up', 'fsrdn': '#minus FSR down', 'pythia8_asfsr0.120_meon_crdefault': '#minus FSR tuned', 'herwig7': 'Powheg+Herwig 7', 'sherpa': 'Sherpa'}
-    color = {'pythia': ROOT.kRed+1, 'fsrup': ROOT.kRed+1, 'fsrdn': ROOT.kRed+1, 'pythia8_asfsr0.120_meon_crdefault': ROOT.kOrange+1, 'herwig7': ROOT.kAzure+2, 'sherpa': ROOT.kGreen+2}
-    marker = {'pythia': 24, 'fsrup': 26, 'fsrdn': 32, 'pythia8_asfsr0.120_meon_crdefault': 0, 'herwig7': 25, 'sherpa': 27}
-    line = {'pythia': 0, 'fsrup': 0, 'fsrdn': 0, 'pythia8_asfsr0.120_meon_crdefault': 2, 'herwig7': 7, 'sherpa': 5}
-    draw = {'pythia': 'h', 'fsrup': 'same p x0 e1', 'fsrdn': 'same p x0 e1', 'pythia8_asfsr0.120_meon_crdefault': 'same h', 'herwig7': 'same h', 'sherpa': 'same h'}
-    legend_opt = {'pythia': 'pl', 'fsrup': 'p', 'fsrdn': 'p', 'pythia8_asfsr0.120_meon_crdefault': 'pl', 'herwig7': 'pl', 'sherpa': 'pl'}
+    generators = ['pythia', 'fsrup', 'fsrdn', 'herwig7', 'sherpa', 'dire']
+    name = {'pythia': 'POWHEG+PYTHIA 8', 'fsrup': '#minus FSR up', 'fsrdn': '#minus FSR down', 'pythia8_asfsr0.120_meon_crdefault': '#minus FSR tuned', 'herwig7': 'POWHEG+HERWIG 7', 'sherpa': 'SHERPA 2', 'dire': 'DIRE NLO'}
+    color = {'pythia': ROOT.kRed+1, 'fsrup': ROOT.kRed+1, 'fsrdn': ROOT.kRed+1, 'pythia8_asfsr0.120_meon_crdefault': ROOT.kOrange+1, 'herwig7': ROOT.kAzure+2, 'sherpa': ROOT.kGreen+2, 'dire': ROOT.kMagenta+3}
+    marker = {'pythia': 24, 'fsrup': 26, 'fsrdn': 32, 'pythia8_asfsr0.120_meon_crdefault': 0, 'herwig7': 25, 'sherpa': 27, 'dire': 30}
+    line = {'pythia': 0, 'fsrup': 0, 'fsrdn': 0, 'pythia8_asfsr0.120_meon_crdefault': 2, 'herwig7': 7, 'sherpa': 5, 'dire': 2}
+    draw = {'pythia': 'h', 'fsrup': 'same p x0 e1', 'fsrdn': 'same p x0 e1', 'pythia8_asfsr0.120_meon_crdefault': 'same h', 'herwig7': 'same h', 'sherpa': 'same h', 'dire': 'same h'}
+    legend_opt = {'pythia': 'pl', 'fsrup': 'p', 'fsrdn': 'p', 'pythia8_asfsr0.120_meon_crdefault': 'pl', 'herwig7': 'pl', 'sherpa': 'pl', 'dire': 'pl'}
     
     hist = {}
     ratio = {}
     
-    eosdir = '/eos/user/m/mseidel/analysis/TopJetShapes/b312177_new/Chunks/'
+    eosdir = '/eos/cms/store/group/cmst3/user/mseidel/analysis/TopJetShapes/b312177/Chunks/'
 
     for generator in generators:
         t_mc = ROOT.TChain('tjsev')
@@ -57,8 +57,8 @@ def main():
         
         hist[generator].Scale(1./hist[generator].Integral())
         
-        hist[generator].GetXaxis().SetTitleSize(0.045)
-        hist[generator].GetXaxis().SetLabelSize(0.04)
+        hist[generator].GetXaxis().SetTitleSize(0)
+        hist[generator].GetXaxis().SetLabelSize(0)
         hist[generator].GetYaxis().SetTitleSize(0.05)
         hist[generator].GetYaxis().SetLabelSize(0.045)
         hist[generator].GetYaxis().SetTitleOffset(1.2)
@@ -89,7 +89,7 @@ def main():
     p1.cd()
     #ROOT.gPad.SetLogy()
     
-    hist['pythia'].GetYaxis().SetRangeUser(0.0002, hist['pythia'].GetMaximum()*1.5)
+    hist['pythia'].GetYaxis().SetRangeUser(0.00001, hist['pythia'].GetMaximum()*1.5)
     hist['pythia'].Draw()
     for generator in generators:
         hist[generator].Draw(draw[generator])
@@ -97,30 +97,30 @@ def main():
     c.cd()
     p2 = ROOT.TPad('p2','p2',0.0,0.0,1.0,0.2)
     p2.Draw()
-    p2.SetBottomMargin(0.4)
+    p2.SetBottomMargin(0.45)
     p2.SetRightMargin(0.05)
     p2.SetLeftMargin(0.12)
     p2.SetTopMargin(0.01)
     p2.cd()
     
     ratio['pythia'].SetTitle('')
-    ratio['pythia'].SetYTitle('#frac{MC}{Pythia 8}')
+    ratio['pythia'].SetYTitle('#frac{MC}{#scale[0.5]{POWHEG+PYTHIA 8}}')
     ratio['pythia'].GetXaxis().SetTitleSize(0.2)
-    ratio['pythia'].GetXaxis().SetTitleOffset(0.8)
+    ratio['pythia'].GetXaxis().SetTitleOffset(0.95)
     ratio['pythia'].GetXaxis().SetLabelSize(0.18)
     ratio['pythia'].GetYaxis().SetTitleSize(0.2)
     ratio['pythia'].GetYaxis().SetTitleOffset(0.26)
     ratio['pythia'].GetYaxis().SetLabelSize(0.18)
     ratio['pythia'].GetYaxis().SetRangeUser(0.4,1.6)
     ratio['pythia'].GetYaxis().SetNdivisions(503)
-    ratio['pythia'].GetYaxis().SetRangeUser(0.75,1.25)
+    ratio['pythia'].GetYaxis().SetRangeUser(0.35,1.65)
     ratio['pythia'].Draw(draw['pythia'])
     for generator in generators:
         ratio[generator].Draw(draw[generator])
     
     c.cd()
     
-    legend = ROOT.TLegend(0.6,0.7,0.95,0.925)
+    legend = ROOT.TLegend(0.55,0.6,0.95,0.9)
     legend.SetLineWidth(0)
     legend.SetFillStyle(0)
     for generator in generators:
@@ -132,9 +132,9 @@ def main():
     txt.SetTextFont(42)
     txt.SetTextSize(0.041)
     txt.SetTextAlign(12)
-    txt.DrawLatex(0.15,0.91,cmsLabel)
-    txt.DrawLatex(0.15,0.85,'#scale[0.9]{t#bar{t} #rightarrow lepton+jets}')
-    txt.DrawLatex(0.15,0.8, '#scale[0.8]{'+flavor_label[opt.flavor]+' jets}')
+    txt.DrawLatex(0.15,0.9,'#scale[1.2]{%s}'%cmsLabel)
+    txt.DrawLatex(0.15,0.85,'#scale[1.0]{t#bar{t} #rightarrow lepton+jets}')
+    txt.DrawLatex(0.15,0.8, '#scale[1.0]{'+flavor_label[opt.flavor]+' jets}')
     
     filename = filter(str.isalnum, opt.var)
     c.Print('quickplots/%s_%s.pdf'%(filename, opt.flavor))

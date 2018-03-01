@@ -44,7 +44,7 @@ def main():
     
     nice_observables_tex = {"mult": "$\\lambda_{0}^{0}$ (N)", "ptds": "$\\lambda_{0}^{2}$ ($p_{T}D^{*})$", "ecc": "$\\varepsilon$", "tau21": "$\\tau_{21}$", "tau32": "$\\tau_{32}$", "tau43": "$\\tau_{43}$", "zg": "$z_{g}$", "zgdr": "$\\Delta R_{g}$", "ga_width": "$\\lambda_{1}^{1}$ (width)", "ga_lha": "$\\lambda_{0.5}^{1}$ (LHA)", "ga_thrust": "$\\lambda_{2}^{1}$ (thrust)", "c1_00": "$C_{1}^{(0.0)}$", "c1_02": "$C_{1}^{(0.2)}$", "c1_05": "$C_{1}^{(0.5)}$", "c1_10": "$C_{1}^{(1.0)}$", "c1_20": "$C_{1}^{(2.0)}$", "c2_00": "$C_{2}^{(0.0)}$", "c2_02": "$C_{2}^{(0.2)}$", "c2_05": "$C_{2}^{(0.5)}$", "c2_10": "$C_{2}^{(1.0)}$", "c2_20":  "$C_{2}^{(2.0)}$", "c3_00": "$C_{3}^{(0.0)}$", "c3_02": "$C_{3}^{(0.2)}$", "c3_05": "$C_{3}^{(0.5)}$", "c3_10": "$C_{3}^{(1.0)}$", "c3_20": "$C_{3}^{(2.0)}$", "m2_b1": "$M_{2}^{(1)}$", "n2_b1": "$N_{2}^{(1)}$", "n3_b1": "$N_{3}^{(1)}$", "m2_b2": "$M_{2}^{(2)}$", "n2_b2": "$N_{2}^{(2)}$", "n3_b2": "$N_{3}^{(2)}$", "nsd": "$n_{SD}$"}
     
-    observables_low = ["ptds", "ecc", "tau43", "zg", "zgdr"]
+    #observables_low = ["ptds", "ecc", "tau43", "zg", "zgdr"]
     observables_low = ["ga_width", "ecc", "zg", "tau43"]
     
     flavors = ['incl', 'bottom', 'light', 'gluon']
@@ -96,16 +96,17 @@ def main():
     varList += varExpWgt
 
     modelsToTest = varModel + [['cflip'], ['nominalGen']]
-    modelsToTest.append(['pythia8_asfsr0.1365_meoff_crdefault'])
+    #modelsToTest.append(['pythia8_asfsr0.1365_meoff_crdefault'])
     modelsToTest.append(['herwig7'])
     modelsToTest.append(['sherpa'])
+    modelsToTest.append(['dire'])
     #FSR scan
-    modelsToTest.append(['herwigpp_asfsr0.100_meon_crdefault'])
-    modelsToTest.append(['herwigpp_asfsr0.110_meon_crdefault'])
-    modelsToTest.append(['herwigpp_asfsr0.115_meon_crdefault'])
-    modelsToTest.append(['herwigpp_asfsr0.120_meon_crdefault'])
-    modelsToTest.append(['herwigpp_asfsr0.125_meon_crdefault'])
-    modelsToTest.append(['herwigpp_asfsr0.130_meon_crdefault'])
+    #modelsToTest.append(['herwigpp_asfsr0.100_meon_crdefault'])
+    #modelsToTest.append(['herwigpp_asfsr0.110_meon_crdefault'])
+    #modelsToTest.append(['herwigpp_asfsr0.115_meon_crdefault'])
+    #modelsToTest.append(['herwigpp_asfsr0.120_meon_crdefault'])
+    #modelsToTest.append(['herwigpp_asfsr0.125_meon_crdefault'])
+    #modelsToTest.append(['herwigpp_asfsr0.130_meon_crdefault'])
     modelsToTest.append(['pythia8_asfsr0.070_meon_crdefault'])
     modelsToTest.append(['pythia8_asfsr0.080_meon_crdefault'])
     modelsToTest.append(['pythia8_asfsr0.090_meon_crdefault'])
@@ -121,7 +122,7 @@ def main():
     modelsToTest.append(['pythia8_asfsr0.150_meon_crdefault'])
     modelsToTest.append(['pythia8_asfsr0.160_meon_crdefault'])
     
-    modelsToTex = ['fsrdn', 'nominalGen', 'fsrup', 'herwig7', 'sherpa']
+    modelsToTex = ['fsrdn', 'nominalGen', 'fsrup', 'herwig7', 'sherpa', 'dire']
     
     obsgroups = ['all', 'low']
     
@@ -138,8 +139,9 @@ def main():
                     'm171v5': 'mt down',
                     'm173v5': 'mt up',
                     'herwig': 'Herwig++',
-                    'herwig7': 'Herwig7',
-                    'sherpa': 'Sherpa',
+                    'herwig7': 'Herwig 7',
+                    'sherpa': 'Sherpa 2',
+                    'dire': 'Dire NLO',
                     'isrup': 'ISR up',
                     'isrdn': 'ISR down',
                     'fsrup': 'FSR up',
@@ -187,29 +189,6 @@ def main():
                     'pythia8_asfsr0.160_meon_crdefault' : 'P8 asfsr=0.160',
                     'pythia8_asfsr0.1365_meoff_crdefault' : 'ME corr. off',
                     }
-    
-    sumNominal = 0.
-    sumFSRUp = 0.
-    sumFSRDown = 0.
-    sumHerwig = 0.
-    sumSherpa = 0.
-    
-    sumLowNominal = {}
-    sumLowFSRUp   = {}
-    sumLowFSRDown = {}
-    sumLowHerwig  = {}
-    sumLowSherpa  = {}
-    sumLowNominal['total'] = 0.
-    sumLowFSRUp  ['total'] = 0.
-    sumLowFSRDown['total'] = 0.
-    sumLowHerwig ['total'] = 0.
-    sumLowSherpa ['total'] = 0.
-    for flavor in flavors:
-        sumLowNominal[flavor] = 0.
-        sumLowFSRUp  [flavor] = 0.
-        sumLowFSRDown[flavor] = 0.
-        sumLowHerwig [flavor] = 0.
-        sumLowSherpa [flavor] = 0.
     
     # 11-class RdBu http://colorbrewer2.org/#type=diverging&scheme=RdBu&n=11
     stops = array('d', [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
@@ -499,7 +478,7 @@ def returnChi2(fIn, cov_reduced, data, prediction):
     chi2 = numpy.array(diff[1:]).T.dot(numpy.linalg.inv(cov_reduced).dot(numpy.array(diff[1:])))
     ndf  = hpred.GetNbinsX()-1
     #prob = ROOT.TMath.Prob(chi2, ndf)
-    return chi2/ndf
+    return chi2
 
 def normalizeAndDivideByBinWidth(hist):
     hist.Scale(1./hist.Integral())

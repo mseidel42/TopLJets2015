@@ -51,12 +51,13 @@ def main():
     pythiaratios = {}
     pythiafsrupratios = {}
     pythiafsrdownratios = {}
-    pythiafsrtuneratios = {}
+    #pythiafsrtuneratios = {}
     herwigratios = {}
     sherparatios = {}
+    direratios = {}
     line = {}
     
-    nice_observables_root = {"mult": "#lambda_{0}^{0} (N)", "width": "#lambda_{1}^{1} (width)", "ptd": "#lambda_{0}^{2} (p_{T}D)", "ptds": "#lambda_{0}^{2}* (p_{T}D*)", "ecc": "#varepsilon", "tau21": "#tau_{21}", "tau32": "#tau_{32}", "tau43": "#tau_{43}", "zg": "z_{g}", "zgxdr": "z_{g} #times #DeltaR", "zgdr": "#DeltaR_{g}", "ga_width": "#lambda_{1}^{1} (width)", "ga_lha": "#lambda_{0.5}^{1} (LHA)", "ga_thrust": "#lambda_{2}^{1} (thrust)", "c1_00": "C_{1}^{(0.0)}", "c1_02": "C_{1}^{(0.2)}", "c1_05": "C_{1}^{(0.5)}", "c1_10": "C_{1}^{(1.0)}", "c1_20": "C_{1}^{(2.0)}", "c2_00": "C_{2}^{(0.0)}", "c2_02": "C_{2}^{(0.2)}", "c2_05": "C_{2}^{(0.5)}", "c2_10": "C_{2}^{(1.0)}", "c2_20":  "C_{2}^{(2.0)}", "c3_00": "C_{3}^{(0.0)}", "c3_02": "C_{3}^{(0.2)}", "c3_05": "C_{3}^{(0.5)}", "c3_10": "C_{3}^{(1.0)}", "c3_20": "C_{3}^{(2.0)}", "m2_b1": "M_{ 2}^{ (1)}", "n2_b1": "N_{ 2}^{ (1)}", "n3_b1": "N_{ 3}^{ (1)}", "m2_b2": "M_{ 2}^{ (2)}", "n2_b2": "N_{ 2}^{ (2)}", "n3_b2": "N_{ 3}^{ (2)}", "nsd": "n_{SD}"}
+    nice_observables_root = {"mult": "#lambda_{0}^{0} (N)", "width": "#lambda_{1}^{1} (width)", "ptd": "#lambda_{0}^{2} (p_{T}^{d})", "ptds": "#lambda_{0}^{2}* (p_{T}^{d,}*)", "ecc": "#varepsilon", "tau21": "#tau_{21}", "tau32": "#tau_{32}", "tau43": "#tau_{43}", "zg": "z_{g}", "zgxdr": "z_{g} #times #DeltaR", "zgdr": "#DeltaR_{g}", "ga_width": "#lambda_{1}^{1} (width)", "ga_lha": "#lambda_{0.5}^{1} (LHA)", "ga_thrust": "#lambda_{2}^{1} (thrust)", "c1_00": "C_{1}^{(0.0)}", "c1_02": "C_{1}^{(0.2)}", "c1_05": "C_{1}^{(0.5)}", "c1_10": "C_{1}^{(1.0)}", "c1_20": "C_{1}^{(2.0)}", "c2_00": "C_{2}^{(0.0)}", "c2_02": "C_{2}^{(0.2)}", "c2_05": "C_{2}^{(0.5)}", "c2_10": "C_{2}^{(1.0)}", "c2_20":  "C_{2}^{(2.0)}", "c3_00": "C_{3}^{(0.0)}", "c3_02": "C_{3}^{(0.2)}", "c3_05": "C_{3}^{(0.5)}", "c3_10": "C_{3}^{(1.0)}", "c3_20": "C_{3}^{(2.0)}", "m2_b1": "M_{ 2}^{ (1)}", "n2_b1": "N_{ 2}^{ (1)}", "n3_b1": "N_{ 3}^{ (1)}", "m2_b2": "M_{ 2}^{ (2)}", "n2_b2": "N_{ 2}^{ (2)}", "n3_b2": "N_{ 3}^{ (2)}", "nsd": "n_{SD}"}
     
     nice_observables_root_short = {"mult": "#lambda_{0}^{0}", "width": "#lambda_{1}^{1}", "ptd": "#lambda_{0}^{2}", "ptds": "#lambda_{0}^{2}*", "ecc": "#varepsilon", "tau21": "#tau_{21}", "tau32": "#tau_{32}", "tau43": "#tau_{43}", "zg": "z_{g}", "zgxdr": "z_{g} #times #DeltaR", "zgdr": "#DeltaR_{g}", "ga_width": "#lambda_{1}^{1}", "ga_lha": "#lambda_{0.5}^{1}", "ga_thrust": "#lambda_{2}^{1}", "c1_00": "C_{1}^{(0.0)}", "c1_02": "C_{1}^{(0.2)}", "c1_05": "C_{1}^{(0.5)}", "c1_10": "C_{1}^{(1.0)}", "c1_20": "C_{1}^{(2.0)}", "c2_00": "C_{2}^{(0.0)}", "c2_02": "C_{2}^{(0.2)}", "c2_05": "C_{2}^{(0.5)}", "c2_10": "C_{2}^{(1.0)}", "c2_20":  "C_{2}^{(2.0)}", "c3_00": "C_{3}^{(0.0)}", "c3_02": "C_{3}^{(0.2)}", "c3_05": "C_{3}^{(0.5)}", "c3_10": "C_{3}^{(1.0)}", "c3_20": "C_{3}^{(2.0)}", "m2_b1": "M_{ 2}^{ (1)}", "n2_b1": "N_{ 2}^{ (1)}", "n3_b1": "N_{ 3}^{ (1)}", "m2_b2": "M_{ 2}^{ (2)}", "n2_b2": "N_{ 2}^{ (2)}", "n3_b2": "N_{ 3}^{ (2)}", "nsd": "n_{SD}"}
     
@@ -68,8 +69,8 @@ def main():
         hists[flavor].SetMarkerColor(colors[flavor])
         hists[flavor].SetMarkerStyle(markers[flavor])
         hists[flavor].SetLineColor(colors[flavor])
-        hists[flavor].SetFillColor(colors[flavor])
-        hists[flavor].SetFillStyle(fills[flavor])
+        hists[flavor].SetFillColor(lightcolors[flavor])
+        #hists[flavor].SetFillStyle(fills[flavor])
         
         unchists[flavor] = infiles[flavor].Get('dataUnfoldedSys').Clone()
         unchists[flavor].SetMarkerStyle(0)
@@ -80,9 +81,10 @@ def main():
         pythiaratios[flavor] = infiles[flavor].Get('nominalGenRatio')
         pythiafsrupratios[flavor] = infiles[flavor].Get('FSRUpGenRatio')
         pythiafsrdownratios[flavor] = infiles[flavor].Get('FSRDownGenRatio')
-        pythiafsrtuneratios[flavor] = infiles[flavor].Get('tunedGenRatio')
+        #pythiafsrtuneratios[flavor] = infiles[flavor].Get('tunedGenRatio')
         herwigratios[flavor] = infiles[flavor].Get('herwigGenRatio')
         sherparatios[flavor] = infiles[flavor].Get('sherpaGenRatio')
+        direratios[flavor] = infiles[flavor].Get('direGenRatio')
         
         pythiauncratios[flavor] = infiles[flavor].Get('dataUnfoldedSysRatio').Clone()
         pythiauncratios[flavor].SetMarkerColor(colors[flavor])
@@ -108,7 +110,7 @@ def main():
         ratios[flavor].Divide(hists['incl'])
         uncratios[flavor] = unchists[flavor].Clone()
         uncratios[flavor].Divide(hists['incl'])
-        yrange = [0.4,1.6]
+        yrange = [-0.25,2.25]
         if opt.obs == 'zg': yrange = [0.75,1.25]
         limitToRange(uncratios[flavor], yrange)
         limitToRange(pythiauncratios[flavor], yrange)
@@ -141,9 +143,9 @@ def main():
     unchists['incl'].GetXaxis().SetLabelOffset(1.)
     unchists['incl'].GetYaxis().SetTitleSize(0.04*pow(0.68/0.40,2))
     unchists['incl'].GetYaxis().SetTitleOffset(1.4/pow(0.68/0.40,2))
-    unchists['incl'].GetYaxis().SetLabelSize(0.035*pow(0.68/0.40,2))
+    unchists['incl'].GetYaxis().SetLabelSize(0.08)
     unchists['incl'].GetYaxis().SetNdivisions(505)
-    unchists['incl'].GetYaxis().SetRangeUser(0.0001, unchists['incl'].GetMaximum()*1.5)
+    unchists['incl'].GetYaxis().SetRangeUser(0.0001, unchists['incl'].GetMaximum()*1.75)
     m = re.search('(.*) (\(.+\))', hists['incl'].GetXaxis().GetTitle())
     unchists['incl'].GetXaxis().SetTitle('')
     unchists['incl'].Draw('e2')
@@ -161,13 +163,17 @@ def main():
         fliplegend = True
     inix = 0.6 if not fliplegend else 0.15
     
-    legend = ROOT.TLegend(inix,0.7/(0.68/0.40),inix+0.35,0.85)
+    legend = ROOT.TLegend(inix,0.25,inix+0.3,0.85)
     legend.SetLineWidth(0)
     legend.SetFillStyle(0)
-    legend.AddEntry(hists['incl'], 'Inclusive jets',  'flp')
-    legend.AddEntry(hists['bottom'], 'Bottom jets',   'ep')
-    legend.AddEntry(hists['light'], 'Light-enriched', 'ep')
-    legend.AddEntry(hists['gluon'], 'Gluon-enriched', 'ep')
+    legend.AddEntry(hists['incl'], 'Inclusive jets',  'fepl')
+    legend.AddEntry(hists['bottom'], 'Bottom jets',   'fepl')
+    legend.AddEntry(hists['light'], 'Light-enriched', 'fepl')
+    legend.AddEntry(hists['gluon'], 'Gluon-enriched', 'fepl')
+    dummy = ROOT.TH1F("", "", 1, 0, 1)
+    dummy.SetLineWidth(0)
+    dummy.SetMarkerSize(0)
+    legend.AddEntry(dummy, '(p_{T} > 30 GeV)', '')
     legend.Draw()
     
     txt=ROOT.TLatex()
@@ -175,11 +181,11 @@ def main():
     txt.SetTextFont(42)
     txt.SetTextSize(0.10)
     txt.SetTextAlign(12)
-    txt.DrawLatex(0.7,0.95,'#scale[0.8]{%3.1f fb^{-1} (%s)}' % (opt.lumi/1000.,opt.com) )
+    txt.DrawLatex(0.66,0.95,'#scale[1.0]{%3.1f fb^{-1} (%s)}' % (opt.lumi/1000.,opt.com) )
     inix = 0.15 if not fliplegend else 0.92
     if fliplegend: txt.SetTextAlign(32)
-    txt.DrawLatex(inix,0.80,cmsLabel)
-    txt.DrawLatex(inix,0.71,'#scale[0.8]{t#bar{t} #rightarrow lepton+jets}')
+    txt.DrawLatex(inix,0.80,'#scale[1.2]{%s}'%cmsLabel)
+    txt.DrawLatex(inix,0.71,'#scale[1.0]{t#bar{t} #rightarrow lepton+jets}')
     
     c.cd()
     p2 = ROOT.TPad('p2','p2',0.0,0.48,1.0,0.60)
@@ -219,7 +225,7 @@ def main():
     
     #pythiauncratios['bottom'].GetYaxis().SetTitleColor(colors['bottom'])
     pythiauncratios['bottom'].GetYaxis().SetTitle('#splitline{MC/data}{(bottom)}  ')
-    pythiauncratios['bottom'].GetYaxis().SetTitleSize(0.23)
+    pythiauncratios['bottom'].GetYaxis().SetTitleSize(0.25)
     pythiauncratios['bottom'].GetYaxis().SetTitleOffset(0.22)
     pythiauncratios['bottom'].GetYaxis().SetLabelSize(0.18*(0.32/0.2))
     pythiauncratios['bottom'].Draw('e2')
@@ -228,9 +234,10 @@ def main():
     pythiaratios['bottom'].Draw('same h')
     pythiafsrupratios['bottom'].Draw('SAME P X0 E1')
     pythiafsrdownratios['bottom'].Draw('SAME P X0 E1')
-    pythiafsrtuneratios['bottom'].Draw('same h')
+    #pythiafsrtuneratios['bottom'].Draw('same h')
     herwigratios['bottom'].Draw('same h')
     sherparatios['bottom'].Draw('same h')
+    direratios['bottom'].Draw('same h')
     
     c.cd()
     plegend = ROOT.TPad('plegend','plegend',0.0,0.4415,1.0,0.48)
@@ -245,12 +252,13 @@ def main():
     mclegend.SetLineWidth(0)
     mclegend.SetFillStyle(0)
     mclegend.SetNColumns(6)
-    mclegend.AddEntry(pythiaratios['bottom'], "Powheg+Pythia 8", "pl")
+    mclegend.AddEntry(pythiaratios['bottom'], "POWHEG+PYTHIA 8 ", "pl")
     mclegend.AddEntry(pythiafsrupratios['bottom'], "FSR up", "p")
-    mclegend.AddEntry(pythiafsrdownratios['bottom'], "down", "p")
-    mclegend.AddEntry(pythiafsrtuneratios['bottom'], "tuned", "l")
-    mclegend.AddEntry(herwigratios['bottom'], "Powheg+Herwig 7", "pl")
-    mclegend.AddEntry(sherparatios['bottom'], "Sherpa", "pl")
+    mclegend.AddEntry(pythiafsrdownratios['bottom'], "down  ", "p")
+    #mclegend.AddEntry(pythiafsrtuneratios['bottom'], "tuned", "l")
+    mclegend.AddEntry(herwigratios['bottom'], "POWHEG+HERWIG 7  ", "pl")
+    mclegend.AddEntry(sherparatios['bottom'], "SHERPA 2 ", "pl")
+    mclegend.AddEntry(direratios['bottom'], "DIRE NLO", "pl")
     mclegend.Draw()
     
     c.cd()
@@ -264,7 +272,7 @@ def main():
     
     #pythiauncratios['light'].GetYaxis().SetTitleColor(colors['light'])
     pythiauncratios['light'].GetYaxis().SetTitle('#splitline{MC/data}{  (light)}  ')
-    pythiauncratios['light'].GetYaxis().SetTitleSize(0.23)
+    pythiauncratios['light'].GetYaxis().SetTitleSize(0.25)
     pythiauncratios['light'].GetYaxis().SetTitleOffset(0.22)
     pythiauncratios['light'].GetYaxis().SetLabelSize(0.18*(0.32/0.2))
     pythiauncratios['light'].Draw('e2')
@@ -273,9 +281,10 @@ def main():
     pythiaratios['light'].Draw('same h')
     pythiafsrupratios['light'].Draw('SAME P X0 E1')
     pythiafsrdownratios['light'].Draw('SAME P X0 E1')
-    pythiafsrtuneratios['light'].Draw('same h')
+    #pythiafsrtuneratios['light'].Draw('same h')
     herwigratios['light'].Draw('same h')
     sherparatios['light'].Draw('same h')
+    direratios['light'].Draw('same h')
     
     c.cd()
     p5 = ROOT.TPad('p5','p5',0.0,0.0,1.0,0.20)
@@ -289,7 +298,7 @@ def main():
     pythiauncratios['gluon'].GetXaxis().SetTitle(nice_observables_root[opt.obs])
     #pythiauncratios['gluon'].GetYaxis().SetTitleColor(colors['gluon'])
     pythiauncratios['gluon'].GetYaxis().SetTitle('#splitline{MC/data}{ (gluon)}  ')
-    pythiauncratios['gluon'].GetYaxis().SetTitleSize(0.15)
+    pythiauncratios['gluon'].GetYaxis().SetTitleSize(0.16)
     pythiauncratios['gluon'].GetYaxis().SetTitleOffset(0.34)
     pythiauncratios['gluon'].Draw('e2')
     line['gluon'].Draw('x0 e1 same')
@@ -297,9 +306,10 @@ def main():
     pythiaratios['gluon'].Draw('same h')
     pythiafsrupratios['gluon'].Draw('SAME P X0 E1')
     pythiafsrdownratios['gluon'].Draw('SAME P X0 E1')
-    pythiafsrtuneratios['gluon'].Draw('same h')
+    #pythiafsrtuneratios['gluon'].Draw('same h')
     herwigratios['gluon'].Draw('same h')
     sherparatios['gluon'].Draw('same h')
+    direratios['gluon'].Draw('same h')
     
     c.Print(opt.outDir+'/'+opt.obs+'_'+opt.reco+'_flavors.pdf')
     c.Print(opt.outDir+'/'+opt.obs+'_'+opt.reco+'_flavors.png')

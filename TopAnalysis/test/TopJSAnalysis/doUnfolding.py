@@ -40,7 +40,7 @@ def main():
     parser.add_option('-r', '--reco', dest='reco', default='charged', help='Use charged/puppi/all particles [default: %default]')
     (opt, args) = parser.parse_args()
     
-    nice_observables_root = {"mult": "#lambda_{0}^{0} (N)", "width": "#lambda_{1}^{1} (width)", "ptd": "#lambda_{0}^{2} (p_{T}D)", "ptds": "#lambda_{0}^{2}* (p_{T}D*)", "ecc": "#varepsilon", "tau21": "#tau_{21}", "tau32": "#tau_{32}", "tau43": "#tau_{43}", "zg": "z_{g}", "zgxdr": "z_{g} #times #DeltaR", "zgdr": "#DeltaR_{g}", "ga_width": "#lambda_{1}^{1} (width)", "ga_lha": "#lambda_{0.5}^{1} (LHA)", "ga_thrust": "#lambda_{2}^{1} (thrust)", "c1_00": "C_{1}^{(0.0)}", "c1_02": "C_{1}^{(0.2)}", "c1_05": "C_{1}^{(0.5)}", "c1_10": "C_{1}^{(1.0)}", "c1_20": "C_{1}^{(2.0)}", "c2_00": "C_{2}^{(0.0)}", "c2_02": "C_{2}^{(0.2)}", "c2_05": "C_{2}^{(0.5)}", "c2_10": "C_{2}^{(1.0)}", "c2_20":  "C_{2}^{(2.0)}", "c3_00": "C_{3}^{(0.0)}", "c3_02": "C_{3}^{(0.2)}", "c3_05": "C_{3}^{(0.5)}", "c3_10": "C_{3}^{(1.0)}", "c3_20": "C_{3}^{(2.0)}", "m2_b1": "M_{ 2}^{ (1)}", "n2_b1": "N_{ 2}^{ (1)}", "n3_b1": "N_{ 3}^{ (1)}", "m2_b2": "M_{ 2}^{ (2)}", "n2_b2": "N_{ 2}^{ (2)}", "n3_b2": "N_{ 3}^{ (2)}", "nsd": "n_{SD}"}
+    nice_observables_root = {"mult": "#lambda_{0}^{0} (N)", "width": "#lambda_{1}^{1} (width)", "ptd": "#lambda_{0}^{2} (p_{T}^{d})", "ptds": "#lambda_{0}^{2}* (p_{T}^{d,}*)", "ecc": "#varepsilon", "tau21": "#tau_{21}", "tau32": "#tau_{32}", "tau43": "#tau_{43}", "zg": "z_{g}", "zgxdr": "z_{g} #times #DeltaR", "zgdr": "#DeltaR_{g}", "ga_width": "#lambda_{1}^{1} (width)", "ga_lha": "#lambda_{0.5}^{1} (LHA)", "ga_thrust": "#lambda_{2}^{1} (thrust)", "c1_00": "C_{1}^{(0.0)}", "c1_02": "C_{1}^{(0.2)}", "c1_05": "C_{1}^{(0.5)}", "c1_10": "C_{1}^{(1.0)}", "c1_20": "C_{1}^{(2.0)}", "c2_00": "C_{2}^{(0.0)}", "c2_02": "C_{2}^{(0.2)}", "c2_05": "C_{2}^{(0.5)}", "c2_10": "C_{2}^{(1.0)}", "c2_20":  "C_{2}^{(2.0)}", "c3_00": "C_{3}^{(0.0)}", "c3_02": "C_{3}^{(0.2)}", "c3_05": "C_{3}^{(0.5)}", "c3_10": "C_{3}^{(1.0)}", "c3_20": "C_{3}^{(2.0)}", "m2_b1": "M_{ 2}^{ (1)}", "n2_b1": "N_{ 2}^{ (1)}", "n3_b1": "N_{ 3}^{ (1)}", "m2_b2": "M_{ 2}^{ (2)}", "n2_b2": "N_{ 2}^{ (2)}", "n3_b2": "N_{ 3}^{ (2)}", "nsd": "n_{SD}"}
     
     nice_reco = {'charged': 'charged', 'all': 'charged+neutral'}
 
@@ -99,15 +99,22 @@ def main():
     varList.append('pythia8_asfsr0.150_meon_crdefault')
     varList.append('pythia8_asfsr0.160_meon_crdefault')
     varList.append('pythia8_asfsr0.1365_meoff_crdefault')
+    varList.append('pythia8_asfsr0.1365_meon_croff_flavrope')
+    varList.append('pythia8_asfsr0.1365_meon_crdefault_flavrope')
+    varList.append('pythia8_asfsr0.120_meon_croff_flavrope')
+    varList.append('pythia8_asfsr0.120_meon_crdefault_flavrope')
+    
     varList.append('herwig7')
     #varList.append('herwig7dipole')
     varList.append('sherpa')
+    varList.append('dire')
 
     expSystSamplesList = []
     for var in varList:
         expSystSamplesList.append(['MC13TeV_TTJets_'+var, [832., 0., '', 't#bar{t} '+var]])
 
-    notSystList = ['MC13TeV_TTJets_cflip', 'MC13TeV_TTJets_herwig7', 'MC13TeV_TTJets_sherpa']
+    # list of sample not used as systematic uncertainty (+asfsr)
+    notSystList = ['MC13TeV_TTJets_cflip', 'MC13TeV_TTJets_herwig7', 'MC13TeV_TTJets_sherpa', 'MC13TeV_TTJets_dire']
     
     data        = None # data histogram
     backgrounds = {}   # background histograms
@@ -305,15 +312,16 @@ def main():
     p1.SetLeftMargin(0.12)
     p1.SetTopMargin(0.06)
     p1.SetBottomMargin(0.01)
+    #p1.SetLogy()
     p1.Draw()
     p1.cd()
     
     dataUnfolded.SetTitle('')
     dataUnfolded.SetXTitle('%s (%s)'%(nice_observables_root[opt.obs], nice_reco[opt.reco]))
-    dataUnfolded.GetXaxis().SetTitleSize(0.045)
-    dataUnfolded.GetXaxis().SetLabelSize(0.04)
+    dataUnfolded.GetXaxis().SetTitleSize(0)
+    dataUnfolded.GetXaxis().SetLabelSize(0)
     dataUnfolded.SetYTitle('1/N_{jet} dN_{jet} / d '+nice_observables_root[opt.obs])
-    dataUnfolded.GetYaxis().SetRangeUser(0.0001, 1.5*dataUnfolded.GetMaximum())
+    dataUnfolded.GetYaxis().SetRangeUser(0.0001, 2*dataUnfolded.GetMaximum())
     dataUnfolded.GetYaxis().SetTitleSize(0.05)
     dataUnfolded.GetYaxis().SetLabelSize(0.045)
     dataUnfolded.GetYaxis().SetTitleOffset(1.2)
@@ -358,14 +366,16 @@ def main():
     dataUnfoldedSysRatio.SetYTitle('MC/data')
     dataUnfoldedSysRatio.SetFillColor(ROOT.kGray)
     dataUnfoldedSysRatio.GetXaxis().SetTitleSize(0.2)
-    dataUnfoldedSysRatio.GetXaxis().SetTitleOffset(0.8)
+    dataUnfoldedSysRatio.GetXaxis().SetTitleOffset(0.95)
     dataUnfoldedSysRatio.GetXaxis().SetLabelSize(0.18)
     dataUnfoldedSysRatio.GetYaxis().SetTitleSize(0.2)
     dataUnfoldedSysRatio.GetYaxis().SetTitleOffset(0.3)
     dataUnfoldedSysRatio.GetYaxis().SetLabelSize(0.18)
-    dataUnfoldedSysRatio.GetYaxis().SetRangeUser(0.4,1.6)
+    dataUnfoldedSysRatio.GetYaxis().SetRangeUser(0.35,1.65)
+    if (nominalGenRatio.GetMaximum() > 1.6 or nominalGenRatio.GetMinimum() < 0.4):
+        dataUnfoldedSysRatio.GetYaxis().SetRangeUser(-0.25,2.25)
     if opt.obs == 'zg':
-      dataUnfoldedSysRatio.GetYaxis().SetRangeUser(0.75,1.25)
+        dataUnfoldedSysRatio.GetYaxis().SetRangeUser(0.75,1.25)
     limitToRange(dataUnfoldedSysRatio, [0.0, 2.0])
     dataUnfoldedSysRatio.GetYaxis().SetNdivisions(503)
     
@@ -402,17 +412,17 @@ def main():
     nominalGenFSRRatio=nominalGenFSR.Clone('nominalGenFSRRatio')
     nominalGenFSRRatio.Divide(dataUnfoldedNoErr)
     
-    tunedGen = normalizeAndDivideByBinWidth(systematics['MC13TeV_TTJets_pythia8_asfsr0.120_meon_crdefault'].ProjectionX("tunedGen"))
-    for i in range(1, tunedGen.GetNbinsX()+1):
-        tunedGen.SetBinError(i, 1e-20)
-    tunedGen.SetLineColor(ROOT.kOrange+1)
-    tunedGen.SetLineStyle(2)
-    tunedGen.SetLineWidth(2)
-    tunedGen.SetMarkerColor(ROOT.kOrange+1)
-    tunedGen.SetMarkerStyle(0)
-    tunedGen.Draw('SAME H')
-    tunedGenRatio=tunedGen.Clone('tunedGenRatio')
-    tunedGenRatio.Divide(dataUnfoldedNoErr)
+    #tunedGen = normalizeAndDivideByBinWidth(systematics['MC13TeV_TTJets_pythia8_asfsr0.120_meon_crdefault'].ProjectionX("tunedGen"))
+    #for i in range(1, tunedGen.GetNbinsX()+1):
+    #    tunedGen.SetBinError(i, 1e-20)
+    #tunedGen.SetLineColor(ROOT.kOrange+1)
+    #tunedGen.SetLineStyle(2)
+    #tunedGen.SetLineWidth(2)
+    #tunedGen.SetMarkerColor(ROOT.kOrange+1)
+    #tunedGen.SetMarkerStyle(0)
+    #tunedGen.Draw('SAME H')
+    #tunedGenRatio=tunedGen.Clone('tunedGenRatio')
+    #tunedGenRatio.Divide(dataUnfoldedNoErr)
     
     herwigGen = normalizeAndDivideByBinWidth(systematics['MC13TeV_TTJets_herwig7'].ProjectionX("herwigGen"))
     for i in range(1, herwigGen.GetNbinsX()+1):
@@ -450,6 +460,18 @@ def main():
     sherpaGenRatio=sherpaGen.Clone('sherpaGenRatio')
     sherpaGenRatio.Divide(dataUnfoldedNoErr)
     
+    direGen = normalizeAndDivideByBinWidth(systematics['MC13TeV_TTJets_dire'].ProjectionX("direGen"))
+    #for i in range(1, direGen.GetNbinsX()+1):
+    #    direGen.SetBinError(i, 1e-20)
+    direGen.SetLineColor(ROOT.kMagenta+3)
+    direGen.SetLineStyle(2)
+    direGen.SetLineWidth(2)
+    direGen.SetMarkerColor(ROOT.kMagenta+3)
+    direGen.SetMarkerStyle(30)
+    direGen.Draw('SAME H')
+    direGenRatio=direGen.Clone('direGenRatio')
+    direGenRatio.Divide(dataUnfoldedNoErr)
+    
     #fsrlist = []
     #fsrlist.append('pythia8_asfsr0.100_meon_crdefault')
     #fsrlist.append('pythia8_asfsr0.110_meon_crdefault')
@@ -468,39 +490,42 @@ def main():
         fliplegend = True
     inix = 0.55 if not fliplegend else 0.15
     
-    legend = ROOT.TLegend(inix,0.6,inix+0.45,0.9)
+    legend = ROOT.TLegend(inix,0.5,inix+0.4,0.9)
     legend.SetLineWidth(0)
     legend.SetFillStyle(0)
-    legend.AddEntry(dataUnfolded, "Data", "ep")
-    legend.AddEntry(nominalGen, "Powheg+Pythia 8", "pl")
+    dataUnfolded.SetFillColor(ROOT.kGray)
+    legend.AddEntry(dataUnfolded, "Data", "fepl")
+    legend.AddEntry(nominalGen, "POWHEG+PYTHIA 8", "pl")
     legend.AddEntry(FSRUpGen, "#minus FSR up", "p")
     legend.AddEntry(FSRDownGen, "#minus FSR down", "p")
-    legend.AddEntry(tunedGen, "#minus FSR tuned", "pl")
-    legend.AddEntry(herwigGen, "Powheg+Herwig 7", "pl")
-    legend.AddEntry(sherpaGen, "Sherpa", "pl")
+    #legend.AddEntry(tunedGen, "#minus FSR tuned", "pl")
+    legend.AddEntry(herwigGen, "POWHEG+HERWIG 7", "pl")
+    legend.AddEntry(sherpaGen, "SHERPA 2", "pl")
+    legend.AddEntry(direGen, "DIRE NLO", "pl")
     legend.Draw()
     txt=ROOT.TLatex()
     txt.SetNDC(True)
     txt.SetTextFont(42)
     txt.SetTextSize(0.05)
     txt.SetTextAlign(12)
-    txt.DrawLatex(0.7,0.97,'#scale[0.8]{%3.1f fb^{-1} (%s)}' % (opt.lumi/1000.,opt.com) )
+    txt.DrawLatex(0.66,0.97,'#scale[1.0]{%3.1f fb^{-1} (%s)}' % (opt.lumi/1000.,opt.com) )
     inix = 0.15 if not fliplegend else 0.92
     if fliplegend: txt.SetTextAlign(32)
-    txt.DrawLatex(inix,0.88,cmsLabel)
-    txt.DrawLatex(inix,0.83,'#scale[0.8]{t#bar{t} #rightarrow lepton+jets}')
+    txt.DrawLatex(inix,0.88,'#scale[1.2]{%s}'%cmsLabel)
+    txt.DrawLatex(inix,0.83,'#scale[1.0]{t#bar{t} #rightarrow lepton+jets}')
     flavor_postfix = ''
     flavor_label = opt.flavor
     if opt.flavor == 'incl':
         flavor_label = 'inclusive'
     if opt.flavor == 'gluon' or opt.flavor == 'light':
         flavor_label += '-enriched'
-    txt.DrawLatex(inix,0.78,'#scale[0.8]{(%s jets)}'%(flavor_label))
+    txt.DrawLatex(inix,0.77,'#scale[1.0]{%s jets}'%(flavor_label))
+    txt.DrawLatex(inix,0.72,'#scale[1.0]{p_{T} > 30 GeV}')
     
     c.cd()
     p2 = ROOT.TPad('p2','p2',0.0,0.0,1.0,0.2)
     p2.Draw()
-    p2.SetBottomMargin(0.4)
+    p2.SetBottomMargin(0.45)
     p2.SetRightMargin(0.05)
     p2.SetLeftMargin(0.12)
     p2.SetTopMargin(0.01)
@@ -510,17 +535,21 @@ def main():
     dataUnfoldedSysRatio.Draw('e2')
     dataUnfoldedRatio.SetMarkerStyle(0)
     dataUnfoldedRatio.Draw('e2,same')
-    line = dataUnfoldedRatio.Clone('line')
+    line = dataUnfoldedSysRatio.Clone('line')
     line.SetFillStyle(0)
+    line.SetLineWidth(1)
+    for xbin in range(line.GetNbinsX()+2):
+        line.SetBinContent(xbin, 1)
     line.Draw('hist,same')
     
     nominalGenRatio.Draw('SAME H')
     FSRUpGenRatio.Draw  ('SAME P X0 E1')
     FSRDownGenRatio.Draw('SAME P X0 E1')
-    tunedGenRatio.Draw('SAME H')
+    #tunedGenRatio.Draw('SAME H')
     herwigGenRatio.Draw ('SAME H')
     #herwigDipoleGenRatio.Draw ('SAME H')
     sherpaGenRatio.Draw ('SAME H')
+    direGenRatio.Draw ('SAME H')
     
     c.Print(opt.outDir+'/'+opt.obs+'_'+opt.reco+'_'+opt.flavor+'_result.pdf')
     c.Print(opt.outDir+'/'+opt.obs+'_'+opt.reco+'_'+opt.flavor+'_result.png')
@@ -577,7 +606,7 @@ def main():
     c.SetTopMargin(0.1)
     c.SetTopMargin(0.05)
     
-    legend = ROOT.TLegend(0.15,0.65,0.85,0.875)
+    legend = ROOT.TLegend(0.15,0.65,0.95,0.875)
     legend.SetNColumns(2)
     legend.SetLineWidth(0)
     legend.SetFillStyle(0)
@@ -591,7 +620,7 @@ def main():
     dataUnfoldedSysRatio.GetYaxis().SetTitleOffset(1.2)
     dataUnfoldedSysRatio.GetYaxis().SetTitle('variation/central data')
     dataUnfoldedSysRatio.GetYaxis().SetLabelSize(0.04)
-    dataUnfoldedSysRatio.GetYaxis().SetRangeUser(0.5,2.0)
+    dataUnfoldedSysRatio.GetYaxis().SetRangeUser(0.5,2.25)
     dataUnfoldedSysRatio.Draw('e2')
     legend.AddEntry(dataUnfoldedSysRatio, 'Total uncertainty', 'pf')
     dataUnfoldedRatio.SetFillColor(ROOT.kGray+1)
@@ -601,7 +630,7 @@ def main():
               ['MC13TeV_TTJets_tracking_down', 'Tracking down', ROOT.kCyan+1, 23],
               ['MC13TeV_TTJets_fsrup', 'FSR up', ROOT.kRed+1, 26],
               ['MC13TeV_TTJets_fsrdn', 'FSR down', ROOT.kRed+1, 32],
-              ['MC13TeV_TTJets_herwig', 'Herwig++', ROOT.kBlue+1, 25]
+              ['MC13TeV_TTJets_herwig', 'HERWIG++', ROOT.kBlue+1, 25]
              ]
     for sys in syslist: #systematicUnfolded.iteritems():
         hist = systematicUnfolded[sys[0]]
@@ -631,8 +660,8 @@ def main():
     txt.SetTextFont(42)
     txt.SetTextSize(0.041)
     txt.SetTextAlign(12)
-    txt.DrawLatex(0.16,0.91,cmsLabel)
-    txt.DrawLatex(0.7,0.97,'#scale[0.8]{%3.1f fb^{-1} (%s)}' % (opt.lumi/1000.,opt.com) )
+    txt.DrawLatex(0.16,0.91,'#scale[1.2]{%s}'%cmsLabel)
+    txt.DrawLatex(0.66,0.975,'#scale[1.0]{%3.1f fb^{-1} (%s)}' % (opt.lumi/1000.,opt.com) )
             
     c.Print(opt.outDir+'/'+opt.obs+'_'+opt.reco+'_'+opt.flavor+'_syst.pdf')
     c.Print(opt.outDir+'/'+opt.obs+'_'+opt.reco+'_'+opt.flavor+'_syst.png')

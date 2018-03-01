@@ -145,6 +145,7 @@ def main():
                                     keyIsSyst=True
                                     key = key[:-5]
                                     for ybin in xrange(1,obj.GetNbinsY()+1):
+                                        if ybin in [13, 14, 16, 18]: continue # remove "diagonal" scale uncertainties
                                         for xbin in xrange(0,obj.GetNbinsX()+2):
                                             if math.isnan(obj.GetBinContent(xbin, ybin)):
                                                 obj.SetBinContent(xbin, ybin, 0)

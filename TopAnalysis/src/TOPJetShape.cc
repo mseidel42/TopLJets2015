@@ -82,7 +82,7 @@ void RunTopJetShape(TString filename,
   TTree *t = (TTree*)f->Get("analysis/data");
   attachToMiniEventTree(t,ev,true);
   Int_t nentries(t->GetEntriesFast());
-  if (debug) nentries = 10000; //restrict number of entries for testing
+  if (debug) nentries = min(10000, nentries); //restrict number of entries for testing
   t->GetEntry(0);
 
   cout << "...producing " << outname << " from " << nentries << " events" << endl;

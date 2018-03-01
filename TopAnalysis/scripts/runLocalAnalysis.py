@@ -161,7 +161,10 @@ def main():
                 
                     outF=os.path.join(opt.output,'Chunks','%s_%d.root' %(tag,ifile))
                     if systVar != 'nominal' and not systVar in tag: outF=os.path.join(opt.output,'Chunks','%s_%s_%d.root' %(tag,systVar,ifile))
-                    if (opt.skipexisting and os.path.isfile(outF)):
+                    if (opt.skipexisting and not '/store' in outF and os.path.isfile(outF)):
+                        nexisting += 1
+                        continue
+                    if (opt.skipexisting and '/store' in outF and os.path.isfile('/eos/cms'+outF)):
                         nexisting += 1
                         continue
                     if (len(outputOnlyList) > 1 and not outF in outputOnlyList):
@@ -185,6 +188,9 @@ def main():
         
         print 'Preparing %d tasks to submit to the batch'%len(task_list)
         print 'Executables and condor wrapper are stored in %s'%FarmDirectory
+        
+        if len(task_list) == 0:
+            return
 
         with open ('%s/condor.sub'%FarmDirectory,'w') as condor:
 
