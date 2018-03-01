@@ -11,7 +11,7 @@ from math import isnan
 
 def main():
     
-    cmsLabel='#bf{CMS} #it{Simulation}'
+    cmsLabel='#bf{CMS} #it{Simulation} #it{Preliminary}'
     
     #configuration
     usage = 'usage: %prog [options]'
@@ -120,7 +120,7 @@ def main():
     
     c.cd()
     
-    legend = ROOT.TLegend(0.55,0.6,0.95,0.9)
+    legend = ROOT.TLegend(0.55,0.575,0.95,0.875)
     legend.SetLineWidth(0)
     legend.SetFillStyle(0)
     for generator in generators:

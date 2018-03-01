@@ -19,8 +19,8 @@ steer the script
 """
 def main():
     
-    cmsLabel='#bf{CMS}'
-    cmsSimLabel='#bf{CMS} #it{Simulation}'
+    cmsLabel='#bf{CMS} #it{Preliminary}'
+    cmsSimLabel='#bf{CMS} #it{Simulation} #it{Preliminary}'
     
     #configuration
     usage = 'usage: %prog [options]'

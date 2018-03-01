@@ -56,7 +56,7 @@ steer
 """
 def main():
 
-    cmsLabel='#bf{CMS} #it{Simulation}'
+    cmsLabel='#bf{CMS} #it{Simulation} #it{Prel.}'
     
     usage = 'usage: %prog [options]'
     parser = optparse.OptionParser(usage)

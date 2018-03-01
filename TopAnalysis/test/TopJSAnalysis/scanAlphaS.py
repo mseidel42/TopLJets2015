@@ -20,7 +20,7 @@ steer the script
 """
 def main():
     
-    cmsLabel='#bf{CMS}'
+    cmsLabel='#bf{CMS} #it{Preliminary}'
     
     #configuration
     usage = 'usage: %prog [options]'
