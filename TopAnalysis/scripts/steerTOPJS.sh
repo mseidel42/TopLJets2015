@@ -104,10 +104,10 @@ case $WHAT in
 
     FILL )
         cd batch;
-        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --skip MC13TeV_TTJets,MC13TeV_TTJets_herwigpp_asfsr*,MC13TeV_TTJets_pythia8_asfsr*,MC13TeV_TTJets_jec_* --skipexisting --farmappendix fill;
-        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --only MC13TeV_TTJets --skipexisting --nweights 20 --farmappendix fill_TTJets;
-        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --only MC13TeV_TTJets_herwigpp_asfsr*,MC13TeV_TTJets_pythia8_asfsr* --skipexisting --farmappendix fill_asfsr;
-        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --only MC13TeV_TTJets_jec_* --skipexisting --farmappendix fill_jec;
+        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --skip "MC13TeV_TTJets,MC13TeV_TTJets_herwigpp_asfsr*,MC13TeV_TTJets_pythia8_asfsr*,MC13TeV_TTJets_jec_*" --skipexisting --farmappendix fill;
+        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --only "MC13TeV_TTJets" --skipexisting --nweights 20 --farmappendix fill_TTJets;
+        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --only "MC13TeV_TTJets_herwigpp_asfsr*,MC13TeV_TTJets_pythia8_asfsr*" --skipexisting --farmappendix fill_asfsr;
+        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --only "MC13TeV_TTJets_jec_*" --skipexisting --farmappendix fill_jec;
         cd -;
         ;;
     
@@ -205,6 +205,10 @@ case $WHAT in
             done
           done
         done
+        ;;
+    
+    YODA )
+        python test/TopJSAnalysis/exportToYoda.py
         ;;
     
     SENSITIVITY )

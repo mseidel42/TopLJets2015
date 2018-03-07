@@ -85,8 +85,6 @@ def main():
               'mult': [ROOT.kCyan+1, 2],
              }
     defaultStyle = [ROOT.kBlack, 1]
-    
-    unsummedChi2 = pickle.load(open("unsummedChi2_"+opt.reco+".pkl", "rb"))
 
     modelsToTest = []
     if (opt.generator == 'pythia8'):        
@@ -118,20 +116,18 @@ def main():
     for model in modelsToTest:
         x0.append(float('0.'+model.split('.')[1][0:3]))
     
-    y0 = {'sum': []}
-    ymax = 0.
-    for obs in observables:
-        y0[obs] = []
-    for model in modelsToTest:
-        y0['sum'].append(0.)
-        for obs in observables:
-            chi2ndf = unsummedChi2[obs][model][opt.flavor]
-            y0['sum'][-1] += chi2ndf
-            y0[obs].append(chi2ndf)
-        if (y0['sum'][-1] > ymax):
-            ymax = y0['sum'][-1]
+    fIn = ROOT.TFile.Open('unfolding/result/%s_%s_%s_result.root'%(opt.obs, opt.reco, opt.flavor))
+    href = fIn.Get('FSRDownGen')
     
-    gr_sum = ROOT.TGraph(len(x0), array('d',x0) ,array('d',y0['sum']))
+    y0 = []
+    ymax = 0.
+    for model in modelsToTest:
+        htest = fIn.Get('MC13TeV_TTJets_%s_gen'%model)
+        y0.append(href.Chi2Test(htest, 'NORM,CHI2'))
+        if (y0[-1] > ymax):
+            ymax = y0[-1]
+    
+    gr_sum = ROOT.TGraph(len(x0), array('d',x0) ,array('d',y0))
     #gr_sum.SetBit(ROOT.TGraph.kIsSortedX)
     gr_sum.SetLineColor(ROOT.kWhite)
     gr_sum.SetTitle()
@@ -229,7 +225,7 @@ def main():
     gr = {}
     for obs in observables:
         #print(obs, 'chi2 values', y0[obs])
-        gr[obs] = ROOT.TGraph(len(x0), array('d',x0) ,array('d',y0[obs]))
+        gr[obs] = ROOT.TGraph(len(x0), array('d',x0) ,array('d',y0))
         #gr[obs].SetBit(ROOT.TGraph.kIsSortedX)
         gr[obs].SetFillColor(ROOT.kWhite)
         gr[obs].SetMarkerColor(styles.get(obs, defaultStyle)[0])
@@ -259,25 +255,12 @@ def main():
     
     ROOT.gPad.RedrawAxis()
     
-    c.Print('fit/fitAlphaS_'+opt.obs+'_'+opt.generator+'_'+opt.flavor+'_'+opt.reco+'.pdf')
-    c.Print('fit/fitAlphaS_'+opt.obs+'_'+opt.generator+'_'+opt.flavor+'_'+opt.reco+'.png')
+    c.Print('fit/fitGenAlphaS_'+opt.obs+'_'+opt.generator+'_'+opt.flavor+'_'+opt.reco+'.pdf')
+    c.Print('fit/fitGenAlphaS_'+opt.obs+'_'+opt.generator+'_'+opt.flavor+'_'+opt.reco+'.png')
     
     print('Best fit asfsr = %.4f'%(asfsr))
     print('dChi2 = 1 \n  envelope %.4f, %.4f \n  errors %.4f, %.4f'%(x1[0], x1[-1], x1[0] - asfsr, x1[-1] - asfsr))
     print('dChi2 = min(Chi2) = %.4f \n  envelope %.4f, %.4f \n  errors %.4f, %.4f'%(ymin, x2x[0], x2x[-1], x2x[0] - asfsr, x2x[-1] - asfsr))
-    
-    # What alpha_s do fsr scale up/down correspond to?
-    chi2fsrdn = unsummedChi2[obs]['fsrdn'][opt.flavor]
-    chi2fsrup = unsummedChi2[obs]['fsrup'][opt.flavor]
-    found_down = False
-    for xval in np.arange(x0[0], x0[-1], 0.000001):
-        yval = gr_sum.Eval(xval, 0, 'S')
-        if not found_down and yval < chi2fsrdn:
-            found_down = True
-            print('FSR down ~= %.4f'%xval)
-        if found_down and yval > chi2fsrup:
-            print('FSR up   ~= %.4f'%xval)
-            break
 
 def normalizeAndDivideByBinWidth(hist):
     hist.Scale(1./hist.Integral())

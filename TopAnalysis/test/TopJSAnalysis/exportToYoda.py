@@ -11,18 +11,6 @@ nice_observables_tex = {"mult": "$\\lambda_{0}^{0}$ (N)", "ptds": "$\\lambda_{0}
 
 flavors = ['incl', 'bottom', 'light', 'gluon']
 
-plotList=[
-    ('chmult/inc',     'd01-x01-y01'),
-    ('chflux/inc',     'd01-x02-y01'),
-    ('chfluxz/inc',    'd01-x03-y01'),
-    ('chavgpt/inc',    'd01-x04-y01'),
-    ('chavgpz/inc',    'd01-x05-y01'),
-    ('sphericity/inc', 'd01-x06-y01'),
-    ('aplanarity/inc', 'd01-x07-y01'),
-    ('C/inc',          'd01-x08-y01'),
-    ('D/inc',          'd01-x09-y01')
-    ]
-
 baseDir='./'
 outDir='./'
 if len(sys.argv)>1:  baseDir=sys.argv[1]
@@ -40,7 +28,7 @@ LogY=0
 LogX=0
 XTwosidedTicks=1
 YTwosidedTicks=1
-LegendXPos=0.48
+LegendXPos=0.55
 # END PLOT
 ''')
 
@@ -55,14 +43,6 @@ for reco in recos:
             iflavor += 1
             pname = 'd{0:0>2}-x{1:0>2}-y{2:0>2}'.format(ireco,iobs,iflavor)
             
-            fOut['plot'].write('''
-# BEGIN PLOT /CMS_2017_PAS_TOP_17_013/%s
-Title=CMS, 13 TeV, $t\\bar{t}$ lepton+jets, %s jets, %s particles
-XLabel=%s
-YLabel=1/N dN/d%s
-# END PLOT
-'''%(pname, flavor, reco, nice_observables_tex[obs], nice_observables_tex[obs]))
-            
             #readout data
             gr = {}
             resultfile = 'unfolding/result/%s_%s_%s_result.root'%(obs, reco, flavor)
@@ -70,6 +50,16 @@ YLabel=1/N dN/d%s
             gr['data'] = fIn.Get('MC13TeV_TTJets_Unfolded')
             gr['syst'] = fIn.Get('dataUnfoldedSys')
             gr['mc']   = fIn.Get('nominalGen')
+            
+            fOut['plot'].write('''
+# BEGIN PLOT /CMS_2017_PAS_TOP_17_013/%s
+Title=CMS, 13 TeV, $t\\bar{t}$ lepton+jets, %s jets, %s particles
+XLabel=%s
+YLabel=1/N dN/d%s
+'''%(pname, flavor, reco, nice_observables_tex[obs], nice_observables_tex[obs]))
+            if (gr['mc'].GetXaxis().GetBinCenter(gr['mc'].GetMaximumBin()) > (gr['mc'].GetXaxis().GetXmax() - gr['mc'].GetXaxis().GetXmin())*0.5):
+                fOut['plot'].write('LegendXPos=0.05\n')
+            fOut['plot'].write('# END PLOT\n')
             
             #dump plot in yoda format
             for t in ['data','mc']:
