@@ -129,20 +129,20 @@ std::vector<float> getJetResolutionScales(float pt, float eta, float genjpt)
 {
   std::vector<float> res(3,1.0);
 
-  float ptSF(1.0), ptSF_err(0.0);
-  if(TMath::Abs(eta)<0.5)       { ptSF=1.109; ptSF_err = 0.008; }
-  else if(TMath::Abs(eta)<0.8)  { ptSF=1.138; ptSF_err = 0.013; }
-  else if(TMath::Abs(eta)<1.1)  { ptSF=1.114; ptSF_err = 0.013; }
-  else if(TMath::Abs(eta)<1.3)  { ptSF=1.123; ptSF_err = 0.024; }
-  else if(TMath::Abs(eta)<1.7)  { ptSF=1.084; ptSF_err = 0.011; }  
-  else if(TMath::Abs(eta)<1.9)  { ptSF=1.082; ptSF_err = 0.035; }
-  else if(TMath::Abs(eta)<2.1)  { ptSF=1.140; ptSF_err = 0.047; }
-  else if(TMath::Abs(eta)<2.3)  { ptSF=1.067; ptSF_err = 0.053; }
-  else if(TMath::Abs(eta)<2.5)  { ptSF=1.177; ptSF_err = 0.041; }
-  else if(TMath::Abs(eta)<2.8)  { ptSF=1.364; ptSF_err = 0.039; }
-  else if(TMath::Abs(eta)<3.0)  { ptSF=1.857; ptSF_err = 0.071; }
-  else if(TMath::Abs(eta)<3.2)  { ptSF=1.328; ptSF_err = 0.022; }
-  else if(TMath::Abs(eta)<5.0)  { ptSF=1.160; ptSF_err = 0.029; }
+  float ptSF(1.0), ptSF_err(0.0);  
+  if(TMath::Abs(eta)<0.5)       { ptSF=1.109; ptSF_err = 0.065; }
+  else if(TMath::Abs(eta)<0.8)  { ptSF=1.138; ptSF_err = 0.066; }
+  else if(TMath::Abs(eta)<1.1)  { ptSF=1.114; ptSF_err = 0.064; }
+  else if(TMath::Abs(eta)<1.3)  { ptSF=1.123; ptSF_err = 0.101; }
+  else if(TMath::Abs(eta)<1.7)  { ptSF=1.084; ptSF_err = 0.099; }
+  else if(TMath::Abs(eta)<1.9)  { ptSF=1.082; ptSF_err = 0.109; }
+  else if(TMath::Abs(eta)<2.1)  { ptSF=1.140; ptSF_err = 0.120; }
+  else if(TMath::Abs(eta)<2.3)  { ptSF=1.067; ptSF_err = 0.114; }
+  else if(TMath::Abs(eta)<2.5)  { ptSF=1.177; ptSF_err = 0.210; }
+  else if(TMath::Abs(eta)<2.8)  { ptSF=1.364; ptSF_err = 0.161; }
+  else if(TMath::Abs(eta)<3.0)  { ptSF=1.857; ptSF_err = 0.203; }
+  else if(TMath::Abs(eta)<3.2)  { ptSF=1.328; ptSF_err = 0.125; }
+  else if(TMath::Abs(eta)<4.7)  { ptSF=1.160; ptSF_err = 0.147; }
 
   res[0] = TMath::Max((Float_t)0.,(Float_t)(genjpt+(ptSF)*(pt-genjpt)))/pt;
   res[1] = TMath::Max((Float_t)0.,(Float_t)(genjpt+(ptSF-ptSF_err)*(pt-genjpt)))/pt;
