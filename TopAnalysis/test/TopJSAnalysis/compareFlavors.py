@@ -15,7 +15,7 @@ steer the script
 """
 def main():
     
-    cmsLabel='#bf{CMS} #it{Preliminary}'
+    cmsLabel='#bf{CMS}'
     
     #configuration
     usage = 'usage: %prog [options]'
@@ -226,7 +226,7 @@ def main():
     #pythiauncratios['bottom'].GetYaxis().SetTitleColor(colors['bottom'])
     pythiauncratios['bottom'].GetYaxis().SetTitle('#splitline{MC/data}{(bottom)}  ')
     pythiauncratios['bottom'].GetYaxis().SetTitleSize(0.25)
-    pythiauncratios['bottom'].GetYaxis().SetTitleOffset(0.22)
+    pythiauncratios['bottom'].GetYaxis().SetTitleOffset(0.2)
     pythiauncratios['bottom'].GetYaxis().SetLabelSize(0.18*(0.32/0.2))
     pythiauncratios['bottom'].Draw('e2')
     line['bottom'].Draw('x0 e1 same')
@@ -273,7 +273,7 @@ def main():
     #pythiauncratios['light'].GetYaxis().SetTitleColor(colors['light'])
     pythiauncratios['light'].GetYaxis().SetTitle('#splitline{MC/data}{  (light)}  ')
     pythiauncratios['light'].GetYaxis().SetTitleSize(0.25)
-    pythiauncratios['light'].GetYaxis().SetTitleOffset(0.22)
+    pythiauncratios['light'].GetYaxis().SetTitleOffset(0.2)
     pythiauncratios['light'].GetYaxis().SetLabelSize(0.18*(0.32/0.2))
     pythiauncratios['light'].Draw('e2')
     line['light'].Draw('x0 e1 same')
@@ -296,10 +296,13 @@ def main():
     p5.cd()
     
     pythiauncratios['gluon'].GetXaxis().SetTitle(nice_observables_root[opt.obs])
+    pythiauncratios['gluon'].GetXaxis().SetTitleSize(0.18)
+    pythiauncratios['gluon'].GetXaxis().SetLabelSize(0.18)
     #pythiauncratios['gluon'].GetYaxis().SetTitleColor(colors['gluon'])
     pythiauncratios['gluon'].GetYaxis().SetTitle('#splitline{MC/data}{ (gluon)}  ')
     pythiauncratios['gluon'].GetYaxis().SetTitleSize(0.16)
-    pythiauncratios['gluon'].GetYaxis().SetTitleOffset(0.34)
+    pythiauncratios['gluon'].GetYaxis().SetLabelSize(0.17)
+    pythiauncratios['gluon'].GetYaxis().SetTitleOffset(0.305)
     pythiauncratios['gluon'].Draw('e2')
     line['gluon'].Draw('x0 e1 same')
     line['gluon'].Draw('same')

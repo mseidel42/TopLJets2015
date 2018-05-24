@@ -82,7 +82,7 @@ void RunTopJetShape(TString filename,
   TTree *t = (TTree*)f->Get("analysis/data");
   attachToMiniEventTree(t,ev,true);
   Int_t nentries(t->GetEntriesFast());
-  if (debug) nentries = min(10000, nentries); //restrict number of entries for testing
+  if (debug) nentries = min(1000, nentries); //restrict number of entries for testing
   t->GetEntry(0);
 
   cout << "...producing " << outname << " from " << nentries << " events" << endl;
@@ -155,6 +155,7 @@ void RunTopJetShape(TString filename,
   std::map<TString, TH1 *> allPlots;
   std::map<TString, TH2 *> all2dPlots;
   allPlots["puwgtctr"] = new TH1F("puwgtctr","Weight sums",2,0,2);
+  allPlots["weightmap"] = new TH1F("weightmap","Weight names",1000,0,1000);
 
   std::vector<TString> stageVec = { "0_pre", "1_1l", "2_1l4j", "3_1l4j2b", "4_1l4j2b2w" };
   std::vector<TString> chTags = { "L", "E", "M" };
@@ -384,10 +385,14 @@ void RunTopJetShape(TString filename,
       std::vector<std::pair<double, bool> > varweights;
       std::vector<double> plotwgts;
       
+      int w = 1;
+      
       allPlots["puwgtctr"]->Fill(0.,1.0);
       if (!ev.isData) {
         // norm weight
         wgt  = (normH? normH->GetBinContent(1) : 1.0);
+        //cannot set label of underflow bin
+        //allPlots["weightmap"]->GetXaxis()->SetBinLabel(w++, "nominal");
         
         // pu weight
         double puWgt(puWgtGr[period][0]->Eval(ev.g_pu));
@@ -398,9 +403,11 @@ void RunTopJetShape(TString filename,
         double puWgt1(puWgtGr[period][1]->Eval(ev.g_pu));
         if (std::isnan(puWgt1)) puWgt1 = 1.;
         varweights.push_back(std::make_pair(puWgt1/puWgt, true)); // 1
+        if (iev==0) allPlots["weightmap"]->GetXaxis()->SetBinLabel(w++, "pu_down");
         double puWgt2(puWgtGr[period][2]->Eval(ev.g_pu));
         if (std::isnan(puWgt2)) puWgt2 = 1.;
         varweights.push_back(std::make_pair(puWgt2/puWgt, true)); // 2
+        if (iev==0) allPlots["weightmap"]->GetXaxis()->SetBinLabel(w++, "pu_up");
         
         // lepton trigger*selection weights
         if (singleLepton) {
@@ -413,16 +420,25 @@ void RunTopJetShape(TString filename,
           wgt *= trigSF.first*selSF.first;
         }
         else varweights.insert(varweights.end(), 4, std::make_pair(1., true));
+        if (iev==0) allPlots["weightmap"]->GetXaxis()->SetBinLabel(w++, "leptrig_up");
+        if (iev==0) allPlots["weightmap"]->GetXaxis()->SetBinLabel(w++, "leptrig_down");
+        if (iev==0) allPlots["weightmap"]->GetXaxis()->SetBinLabel(w++, "lepsel_up");
+        if (iev==0) allPlots["weightmap"]->GetXaxis()->SetBinLabel(w++, "lepsel_down");
         
         // bfrag weights
         varweights.push_back(std::make_pair(computeBFragmentationWeight(ev, bfrag["upFrag"]), true));       // 7
+        if (iev==0) allPlots["weightmap"]->GetXaxis()->SetBinLabel(w++, "bfrag_up");
         varweights.push_back(std::make_pair(computeBFragmentationWeight(ev, bfrag["downFrag"]), true));     // 8
+        if (iev==0) allPlots["weightmap"]->GetXaxis()->SetBinLabel(w++, "bfrag_down");
         varweights.push_back(std::make_pair(computeBFragmentationWeight(ev, bfrag["PetersonFrag"]), true)); // 9
+        if (iev==0) allPlots["weightmap"]->GetXaxis()->SetBinLabel(w++, "bfrag_peterson");
         // weights for semilep BR
         // simultaneous variation for all hadrons, average over particle and antiparticle
         // divide by mean weight from 100k events to avoid change in cross section
         varweights.push_back(std::make_pair(computeSemilepBRWeight(ev, semilepbr["semilepbrUp"], 0, true)/1.00480, true)); // 10
+        if (iev==0) allPlots["weightmap"]->GetXaxis()->SetBinLabel(w++, "slbr_up");
         varweights.push_back(std::make_pair(computeSemilepBRWeight(ev, semilepbr["semilepbrDown"], 0, true)/0.992632, true)); // 11
+        if (iev==0) allPlots["weightmap"]->GetXaxis()->SetBinLabel(w++, "slbr_down");
         
     	  //top pt weighting
         double topptsf = 1.0;
@@ -433,6 +449,7 @@ void RunTopJetShape(TString filename,
           }
         }
         varweights.push_back(std::make_pair(topptsf, true)); // 12
+        if (iev==0) allPlots["weightmap"]->GetXaxis()->SetBinLabel(w++, "top_pt");
         
         // lhe weights
         wgt *= (ev.g_nw>0 ? ev.g_w[0] : 1.0);
@@ -448,6 +465,7 @@ void RunTopJetShape(TString filename,
         for (int i = 1; i < ev.g_nw; ++i) {
           bool forPlotter = (normH and scalesForPlotter.count(normH->GetXaxis()->GetBinLabel(i)) != 0);
           varweights.push_back(std::make_pair(ev.g_w[i]/ev.g_w[0], forPlotter));
+          if (iev==0) allPlots["weightmap"]->GetXaxis()->SetBinLabel(w++, normH->GetXaxis()->GetBinLabel(i));
         }
         
         tjsev.nw = 1 + varweights.size();
@@ -464,6 +482,8 @@ void RunTopJetShape(TString filename,
         tjsev.nw=1;
         tjsev.weight[0]=wgt;
         plotwgts.push_back(wgt);
+        //cannot set label of underflow bin
+        //allPlots["weightmap"]->GetXaxis()->SetBinLabel(0, "nominal");
       }
       
       //////////////////////////

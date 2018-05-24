@@ -56,7 +56,7 @@ steer
 """
 def main():
 
-    cmsLabel='#bf{CMS} #it{Simulation} #it{Prel.}'
+    cmsLabel='#bf{CMS} #it{Simulation}'
     
     usage = 'usage: %prog [options]'
     parser = optparse.OptionParser(usage)
@@ -139,6 +139,8 @@ def main():
     nbins = len(obsreco)
     h_correlations = ROOT.TH2D('h_correlations', '', nbins, 0, nbins, nbins, 0, nbins)
     
+    sum_abscor = 0.
+    sum_cells  = 0
     for i in range(len(obsreco)):
         h_correlations.GetXaxis().SetBinLabel(i+1, nice_observables_root[obsreco[i].rsplit('_', 1)[0]])
         h_correlations.GetYaxis().SetBinLabel(i+1, nice_observables_root[obsreco[i].rsplit('_', 1)[0]])
@@ -146,6 +148,10 @@ def main():
             correlation = 100.*getCorrelation(points, obsreco[i], obsreco[j])
             h_correlations.SetBinContent(i+1, j+1, correlation)
             h_correlations.SetBinContent(j+1, i+1, correlation)
+            if i != j:
+                sum_abscor += abs(correlation)
+                sum_cells  += 1
+    print('full average abs(corr)', sum_abscor/sum_cells)
     
     h_correlations.GetXaxis().LabelsOption('v')
     h_correlations.GetXaxis().SetLabelSize(0.02)
@@ -234,12 +240,18 @@ def main():
     
     h_correlations_low = ROOT.TH2D('h_correlations_low', '', len(observables_low), 0, len(observables_low), len(observables_low), 0, len(observables_low))
     
+    sum_abscor = 0.
+    sum_cells  = 0
     for i in range(len(observables_low)):
-        h_correlations_low.GetXaxis().SetBinLabel(i+1, nice_observables_root_short[observables_low[i].rsplit('_', 1)[0]])
-        h_correlations_low.GetYaxis().SetBinLabel(i+1, nice_observables_root_short[observables_low[i].rsplit('_', 1)[0]])
+        h_correlations_low.GetXaxis().SetBinLabel(i+1, nice_observables_root[observables_low[i].rsplit('_', 1)[0]])
+        h_correlations_low.GetYaxis().SetBinLabel(i+1, nice_observables_root[observables_low[i].rsplit('_', 1)[0]])
         for j in range(len(observables_low)):
             correlation = 100.*getCorrelation(points, observables_low[i], observables_low[j])
             h_correlations_low.SetBinContent(i+1, j+1, correlation)
+            if i != j:
+                sum_abscor += abs(correlation)
+                sum_cells  += 1
+    print('low average abs(corr)', sum_abscor/sum_cells)
     
     h_correlations_low.GetXaxis().LabelsOption('h')
     h_correlations_low.GetXaxis().SetLabelSize(0.07)

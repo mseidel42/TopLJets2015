@@ -20,7 +20,7 @@ steer the script
 """
 def main():
     
-    cmsLabel='#bf{CMS} #it{Preliminary}'
+    cmsLabel='#bf{CMS}'
     
     #configuration
     usage = 'usage: %prog [options]'
@@ -65,6 +65,9 @@ def main():
     elif opt.obs == 'lowcornew':
         observables = ["ga_width", "ecc", "zg", "tau43"]
         properSet = False
+    elif opt.obs == 'lowcormult':
+        observables = ["mult", "ecc", "zg", "zgdr"]
+        properSet = False
     elif opt.obs == 'lambda':
         observables = ['mult', 'ptds', 'ga_lha', 'ga_width', 'ga_thrust']
         properSet = False
@@ -72,21 +75,21 @@ def main():
     unsummedChi2 = pickle.load(open("unsummedChi2_"+opt.reco+".pkl", "rb"))
 
     modelsToTest = []
-    if (opt.generator == 'pythia8'):        
-        modelsToTest.append('pythia8_asfsr0.070_meon_crdefault')
-        modelsToTest.append('pythia8_asfsr0.080_meon_crdefault')
-        modelsToTest.append('pythia8_asfsr0.090_meon_crdefault')
-        modelsToTest.append('pythia8_asfsr0.100_meon_crdefault')
-        modelsToTest.append('pythia8_asfsr0.105_meon_crdefault')
-        modelsToTest.append('pythia8_asfsr0.110_meon_crdefault')
-        modelsToTest.append('pythia8_asfsr0.115_meon_crdefault')
-        modelsToTest.append('pythia8_asfsr0.120_meon_crdefault')
-        modelsToTest.append('pythia8_asfsr0.125_meon_crdefault')
-        modelsToTest.append('pythia8_asfsr0.130_meon_crdefault')
-        modelsToTest.append('pythia8_asfsr0.135_meon_crdefault')
-        modelsToTest.append('pythia8_asfsr0.140_meon_crdefault')
-        modelsToTest.append('pythia8_asfsr0.150_meon_crdefault')
-        modelsToTest.append('pythia8_asfsr0.160_meon_crdefault')
+    if (opt.generator == 'pythia8'):
+        #modelsToTest.append('pythia8_asfsr0.070_scale1.0_CMW_2loop')
+        modelsToTest.append('pythia8_asfsr0.080_scale1.0_CMW_2loop')
+        modelsToTest.append('pythia8_asfsr0.090_scale1.0_CMW_2loop')
+        modelsToTest.append('pythia8_asfsr0.100_scale1.0_CMW_2loop')
+        modelsToTest.append('pythia8_asfsr0.105_scale1.0_CMW_2loop')
+        modelsToTest.append('pythia8_asfsr0.110_scale1.0_CMW_2loop')
+        modelsToTest.append('pythia8_asfsr0.115_scale1.0_CMW_2loop')
+        modelsToTest.append('pythia8_asfsr0.120_scale1.0_CMW_2loop')
+        modelsToTest.append('pythia8_asfsr0.125_scale1.0_CMW_2loop')
+        modelsToTest.append('pythia8_asfsr0.130_scale1.0_CMW_2loop')
+        modelsToTest.append('pythia8_asfsr0.135_scale1.0_CMW_2loop')
+        modelsToTest.append('pythia8_asfsr0.140_scale1.0_CMW_2loop')
+        #modelsToTest.append('pythia8_asfsr0.150_scale1.0_CMW_2loop')
+        #modelsToTest.append('pythia8_asfsr0.160_scale1.0_CMW_2loop')
     elif (opt.generator == 'herwigpp'):
         modelsToTest.append('herwigpp_asfsr0.100_meon_crdefault')
         modelsToTest.append('herwigpp_asfsr0.110_meon_crdefault')
@@ -108,7 +111,7 @@ def main():
     for model in modelsToTest:
         y0['sum'].append(0.)
         for obs in observables:
-            chi2ndf = unsummedChi2[obs][model][opt.flavor]
+            chi2ndf = unsummedChi2[obs]['data'][model][opt.flavor]
             y0['sum'][-1] += chi2ndf
             y0[obs].append(chi2ndf)
         if (y0['sum'][-1] > ymax):
@@ -118,7 +121,7 @@ def main():
     #gr_sum.SetBit(ROOT.TGraph.kIsSortedX)
     gr_sum.SetLineColor(ROOT.kWhite)
     gr_sum.SetTitle()
-    gr_sum.GetXaxis().SetTitle('#alpha_{s}^{FSR}(m(Z))')
+    gr_sum.GetXaxis().SetTitle('#alpha_{S,CMW}^{FSR}(m(Z))')
     gr_sum.GetXaxis().SetTitleOffset(1.)
     gr_sum.GetXaxis().SetTitleSize(0.045)
     gr_sum.GetXaxis().SetLabelSize(0.04)
@@ -127,7 +130,7 @@ def main():
     gr_sum.GetYaxis().SetTitleSize(0.045)
     gr_sum.GetYaxis().SetLabelSize(0.04)
     gr_sum.GetXaxis().SetRangeUser(x0[0], x0[-1])
-    gr_sum.GetYaxis().SetRangeUser(0., 1000)
+    gr_sum.GetYaxis().SetRangeUser(0., 750)
     if opt.obs == 'ga_width':
         gr_sum.GetXaxis().SetRangeUser(0.115, 0.13)
         gr_sum.GetYaxis().SetRangeUser(0., 20)
@@ -248,7 +251,9 @@ def main():
     txt.DrawLatex(0.90,0.75, '#scale[1.0]{'+opt.reco+' particles}')
     if properSet:
         txt.SetTextColor(ROOT.kRed+1)
-        txt.DrawLatex(0.90,0.675, "#scale[1.0]{#alpha_{s}^{FSR}(m_{Z}) = %.4f_{%+.4f}^{%+.4f}}"%(asfsr, x1[0] - asfsr, x1[-1] - asfsr))
+        txt.DrawLatex(0.90,0.675, "#scale[1.0]{#alpha_{S,CMW}^{FSR}(m_{Z}) = %.4f_{%+.4f}^{%+.4f}}"%(asfsr, x1[0] - asfsr, x1[-1] - asfsr))
+    if (opt.generator == 'pythia8'):
+        txt.DrawLatex(0.90,0.67, 'LO, CMW, 2-loop')
     
     ROOT.gPad.RedrawAxis()
     

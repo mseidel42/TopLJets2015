@@ -48,7 +48,7 @@ class Plot(object):
 
     def __init__(self,name,com='13 TeV'):
         self.name = name
-        self.cmsLabel='#bf{CMS} #it{Preliminary}'
+        self.cmsLabel='#bf{CMS}'
         self.com=com
         self.wideCanvas = True if 'ratevsrun' in self.name else False
         self.doPoissonErrorBars=True
@@ -72,6 +72,10 @@ class Plot(object):
         if 'ratevsrun' in self.name and not isData: return
 
         h.SetTitle(title)
+        
+        #x-title replacements
+        if h.GetXaxis().GetTitle() == 'N (charged)':
+            h.GetXaxis().SetTitle('#lambda_{0}^{0} (N) (charged)')
 
         #check if color is given in hexadec format
         try:
@@ -227,7 +231,7 @@ class Plot(object):
 
         if self.dataH is not None:
             if self.data is None: self.finalize()
-            leg.AddEntry( self.data, self.data.GetTitle(),'fepl')
+            leg.AddEntry( self.data, self.data.GetTitle(),'ep')
             nlegCols += 1
         for h in self.mc:
 
@@ -292,7 +296,7 @@ class Plot(object):
             totalMCUnc = totalMC.Clone('totalmcunc')
             self._garbageList.append(totalMCUnc)
             totalMCUnc.SetDirectory(0)
-            totalMCUnc.SetFillColor(ROOT.TColor.GetColor('#99d8c9'))
+            totalMCUnc.SetFillColor(ROOT.TColor.GetColor('#333333'))
             ROOT.gStyle.SetHatchesLineWidth(1)
             totalMCUnc.SetFillStyle(3254)
             for xbin in xrange(1,nominalTTbar.GetNbinsX()+1):
@@ -452,7 +456,7 @@ class Plot(object):
             ratioframe.GetXaxis().SetTitleSize(0.2)
             ratioframe.GetXaxis().SetTitleOffset(0.8)
             ratioframe.SetFillStyle(3254)
-            ratioframe.SetFillColor(ROOT.TColor.GetColor('#99d8c9'))
+            ratioframe.SetFillColor(ROOT.TColor.GetColor('#333333'))
 
 
             #in case we didn't stack compare each distribution

@@ -35,8 +35,7 @@ def main():
     parser.add_option(      '--silent',      dest='silent' ,     help='only dump to ROOT file',         default=False,             action='store_true')
     parser.add_option(      '--saveTeX',     dest='saveTeX' ,    help='save as tex file as well',       default=False,             action='store_true')
     parser.add_option('-l', '--lumi',        dest='lumi' ,       help='lumi [/pb]',              default=35922.,              type=float)
-    parser.add_option('--obs', dest='obs',  default='mult', help='observable [default: %default]')
-    parser.add_option('--flavor', dest='flavor',  default='incl', help='flavor [default: %default]')
+    parser.add_option('--comparison', dest='comparison',  default='generators', help='set of models to include in the comparison [default: %default]')
     parser.add_option('-r', '--reco', dest='reco', default='charged', help='Use charged/puppi/all particles [default: %default]')
     (opt, args) = parser.parse_args()
     
@@ -45,7 +44,8 @@ def main():
     nice_observables_tex = {"mult": "$\\lambda_{0}^{0}$ (N)", "ptds": "$\\lambda_{0}^{2}$ ($p_{T}D^{*})$", "ecc": "$\\varepsilon$", "tau21": "$\\tau_{21}$", "tau32": "$\\tau_{32}$", "tau43": "$\\tau_{43}$", "zg": "$z_{g}$", "zgdr": "$\\Delta R_{g}$", "ga_width": "$\\lambda_{1}^{1}$ (width)", "ga_lha": "$\\lambda_{0.5}^{1}$ (LHA)", "ga_thrust": "$\\lambda_{2}^{1}$ (thrust)", "c1_00": "$C_{1}^{(0.0)}$", "c1_02": "$C_{1}^{(0.2)}$", "c1_05": "$C_{1}^{(0.5)}$", "c1_10": "$C_{1}^{(1.0)}$", "c1_20": "$C_{1}^{(2.0)}$", "c2_00": "$C_{2}^{(0.0)}$", "c2_02": "$C_{2}^{(0.2)}$", "c2_05": "$C_{2}^{(0.5)}$", "c2_10": "$C_{2}^{(1.0)}$", "c2_20":  "$C_{2}^{(2.0)}$", "c3_00": "$C_{3}^{(0.0)}$", "c3_02": "$C_{3}^{(0.2)}$", "c3_05": "$C_{3}^{(0.5)}$", "c3_10": "$C_{3}^{(1.0)}$", "c3_20": "$C_{3}^{(2.0)}$", "m2_b1": "$M_{2}^{(1)}$", "n2_b1": "$N_{2}^{(1)}$", "n3_b1": "$N_{3}^{(1)}$", "m2_b2": "$M_{2}^{(2)}$", "n2_b2": "$N_{2}^{(2)}$", "n3_b2": "$N_{3}^{(2)}$", "nsd": "$n_{SD}$"}
     
     #observables_low = ["ptds", "ecc", "tau43", "zg", "zgdr"]
-    observables_low = ["ga_width", "ecc", "zg", "tau43"]
+    #observables_low = ["ga_width", "ecc", "zg", "tau43"]
+    observables_low = ["mult", "ecc", "zg", "zgdr"]
     
     flavors = ['incl', 'bottom', 'light', 'gluon']
 
@@ -65,7 +65,8 @@ def main():
               'csv_light',
               'tracking',
               'singletop',
-              'wjets'
+              'wjets',
+              'qcd'
              ]
     for var in varExp:
         varList.append([var+'_up', var+'_down'])
@@ -79,19 +80,19 @@ def main():
                 ['erdON'],
                 ['qcdBased'],
                 ['gluonMove'],
-                ['wgt7', 'wgt8'], # b frag Bowler-Lund up/down
-                ['wgt9'], # b frag Peterson
-                ['wgt10', 'wgt11'], # B hadron semilep BR
-                ['wgt12'], # top pt reweighting
-                ['wgt13', 'wgt14'], # muF
-                ['wgt15', 'wgt18'], # muR
-                ['wgt16', 'wgt20'], # muF+muR
+                ['bfrag_up', 'bfrag_down'], # b frag Bowler-Lund up/down
+                ['bfrag_peterson'], # b frag Peterson
+                ['slbr_up', 'slbr_down'], # B hadron semilep BR
+                ['top_pt'], # top pt reweighting
+                ['id1005muR2muF2hdampmt272.7225', 'id1009muR0.5muF0.5hdampmt272.7225'], # muF+muR
+                ['id3001PDFset13100'], # PDF
+                ['id4001PDFset25200'], # PDF
                ]
     varList += varModel
     
-    varExpWgt = [['wgt1', 'wgt2'], # PU
-                 ['wgt3', 'wgt4'], # lepton trigger
-                 ['wgt5', 'wgt6'], # lepton selection
+    varExpWgt = [['pu_down', 'pu_up'], # PU
+                 ['leptrig_up', 'leptrig_down'], # lepton trigger
+                 ['lepsel_up', 'lepsel_down'], # lepton selection
                 ]
     varList += varExpWgt
 
@@ -121,19 +122,34 @@ def main():
     modelsToTest.append(['pythia8_asfsr0.140_meon_crdefault'])
     modelsToTest.append(['pythia8_asfsr0.150_meon_crdefault'])
     modelsToTest.append(['pythia8_asfsr0.160_meon_crdefault'])
+    modelsToTest.append(['pythia8_asfsr0.1365_meon_croff_flavrope'])
+    modelsToTest.append(['pythia8_asfsr0.1365_meon_crdefault_flavrope'])
     
-    modelsToTex = ['fsrdn', 'nominalGen', 'fsrup', 'herwig7', 'sherpa', 'dire']
+    cmw_as = ['0.070', '0.080', '0.090', '0.100', '0.105', '0.110', '0.115', '0.120', '0.125', '0.130', '0.135', '0.140', '0.150']
+    cmw_scale = ['0.5', '1.0', '2.0']
+    for alphas in cmw_as:
+        for scale in cmw_scale:
+            modelsToTest.append(['pythia8_asfsr%s_scale%s_CMW_2loop'%(alphas, scale)])
+    
+    if opt.comparison == 'generators':
+        modelsToTex = ['fsrdn', 'nominalGen', 'fsrup', 'herwig7', 'sherpa', 'dire']
+    elif opt.comparison == 'pythia':
+        modelsToTex = ['nominalGen', 'qcdBased', 'gluonMove', 'pythia8_asfsr0.1365_meon_croff_flavrope', 'bfrag_up', 'bfrag_down', 'bfrag_peterson']
     
     obsgroups = ['all', 'low']
     
+    ndf = {}
     unsummedChi2 = OrderedDict()
     for obs in observables + obsgroups:
         unsummedChi2[obs] = {}
-        for var in modelsToTest:
-            for vardir in var:
-                unsummedChi2[obs][vardir] = {}
-                for flavor in flavors:
-                    unsummedChi2[obs][vardir][flavor] = 0.
+        for var1 in modelsToTest:
+            for vardir1 in var1 + ['data']:
+                unsummedChi2[obs][vardir1] = {}
+                for var2 in modelsToTest:
+                    for vardir2 in var2:
+                        unsummedChi2[obs][vardir1][vardir2] = {}
+                        for flavor in flavors:
+                            unsummedChi2[obs][vardir1][vardir2][flavor] = 0.
     
     varModelDict = {'evtgen': 'EvtGen',
                     'm171v5': 'mt down',
@@ -153,18 +169,16 @@ def main():
                     'erdON': 'CR: erd on',
                     'qcdBased': 'CR: QCD-inspired',
                     'gluonMove': 'CR: gluon-move',
-                    'wgt7': 'b frag up',
-                    'wgt8': 'b frag down', # b frag Bowler-Lund up/down
-                    'wgt9': 'b frag Peterson', # b frag Peterson
-                    'wgt10': 'B semilep BR up',
-                    'wgt11': 'B semilep BR down', # B hadron semilep BR
-                    'wgt12': 'top pt', # top pt reweighting
-                    'wgt13': 'muF up',
-                    'wgt14': 'muF down', # muF
-                    'wgt15': 'muR up',
-                    'wgt18': 'muR down', # muR
-                    'wgt16': 'muF+muR up',
-                    'wgt20': 'muF+muR down', # muF+muR
+                    'bfrag_up': 'b frag up',
+                    'bfrag_down': 'b frag down', # b frag Bowler-Lund up/down
+                    'bfrag_peterson': 'b frag Peterson', # b frag Peterson
+                    'slbr_up': 'B semilep BR up',
+                    'slbr_down': 'B semilep BR down', # B hadron semilep BR
+                    'top_pt': 'top pt', # top pt reweighting
+                    'id1005muR2muF2hdampmt272.7225': 'muF+muR up',
+                    'id1009muR0.5muF0.5hdampmt272.7225': 'muF+muR down', # muF+muR
+                    'id3001PDFset13100': 'PDF CT14NLO',
+                    'id4001PDFset25200': 'PDF MMHT2014nlo68clas118',
                     'cflip': 'Color octet W',
                     'nominalGen': 'nominal sample',
                     'herwigpp_asfsr0.100_meon_crdefault' : 'H++ asfsr=0.100',
@@ -214,7 +228,7 @@ def main():
     
     ROOT.gStyle.SetOptStat(0)
 
-    with open('unfolding/chi2table_%s.tex'%(opt.reco), 'w') as tex:
+    with open('unfolding/chi2table_%s_%s.tex'%(opt.reco,opt.comparison), 'w') as tex:
         for obs in observables:
             for flavor in flavors:
         
@@ -302,6 +316,8 @@ def main():
                 data  = []
                 for i in range(1, hdata.GetNbinsX()+1):
                     data.append(hdata.GetBinContent(i))
+                
+                ndf[obs] = len(data) - 1
                 
                 systcov = copy.copy(statcov)
                 systcov -= systcov
@@ -416,23 +432,42 @@ def main():
                 #print(numpy.linalg.det(cov_reduced))
                 #print(numpy.linalg.inv(cov_reduced))
                 
+                # Chi2 test data vs. models
                 for var in modelsToTest:
                     for vardir in var:
                         if vardir in ['nominalGen']:
                             prediction = vardir
                         else:
                             prediction = 'MC13TeV_TTJets_'+vardir+'_gen'
-                        unsummedChi2[obs][vardir][flavor] = returnChi2(fIn, cov_reduced, data, prediction)
-                        unsummedChi2['all'][vardir][flavor] += unsummedChi2[obs][vardir][flavor]
+                        unsummedChi2[obs]['data'][vardir][flavor] = returnChi2(fIn, cov_reduced, data, prediction)
+                        unsummedChi2['all']['data'][vardir][flavor] += unsummedChi2[obs]['data'][vardir][flavor]
                         if obs in observables_low:
-                            unsummedChi2['low'][vardir][flavor] += unsummedChi2[obs][vardir][flavor]
+                            unsummedChi2['low']['data'][vardir][flavor] += unsummedChi2[obs]['data'][vardir][flavor]
                 
+                # # Chi2 test models vs. models (-> get alpha_s for each model)
+                for var1 in modelsToTest:
+                    for vardir1 in var1:
+                        for var2 in modelsToTest:
+                            for vardir2 in var2:
+                                if 'asfsr' in vardir1 and 'asfsr' in vardir2 and 'crdefault' in vardir1 and 'crdefault' in vardir2: continue # reduce file size
+                                if vardir1 in ['nominalGen']:
+                                    prediction1 = vardir1
+                                else:
+                                    prediction1 = 'MC13TeV_TTJets_'+vardir1+'_gen'
+                                if vardir2 in ['nominalGen']:
+                                    prediction2 = vardir2
+                                else:
+                                    prediction2 = 'MC13TeV_TTJets_'+vardir2+'_gen'
+                                unsummedChi2[obs][vardir1][vardir2][flavor] = returnModelModelChi2(fIn, cov_reduced, prediction1, prediction2)
+        
         for obs in observables:
-            tex.write('\\hline\n%s\n'%(nice_observables_tex[obs]))
+            tex.write('\\hline\n\multirow{2}{*}{%s}\n'%(nice_observables_tex[obs]))
             for flavor in flavors:
+                if flavor == 'bottom':
+                    tex.write('\multirow{2}{*}{ndf = %i}'%ndf[obs])
                 tex.write(' & %s'%(flavor))
                 for model in modelsToTex:
-                    tex.write(' & %.1f'%(unsummedChi2[obs][model][flavor]))
+                    tex.write(' & %.1f'%(unsummedChi2[obs]['data'][model][flavor]))
                 tex.write('\\\\\n')
         
         nice_groups  = {'all': 'All observables', 'low': 'Low correlation'}
@@ -441,7 +476,7 @@ def main():
             for flavor in flavors:
                 tex.write(' & %s'%(flavor))
                 for model in modelsToTex:
-                    tex.write(' & %.1f'%(unsummedChi2[group][model][flavor]))
+                    tex.write(' & %.1f'%(unsummedChi2[group]['data'][model][flavor]))
                 tex.write('\\\\\n')
                 
         #tex.write('\\hline\nTotal &  & %.1f & %.1f & %.1f & %.1f \\\\\n'%(sumNominal, sumFSRUp, sumFSRDown, sumHerwig))
@@ -459,10 +494,13 @@ def main():
         
         for var in modelsToTest:
             for vardir in var:
-                tex.write('%s & $\chi^{2}$/ndf'%(varModelDict[vardir]))
-                for flavor in flavors:
-                    tex.write(' & %.1f'%(unsummedChi2['low'][vardir][flavor]))
-                tex.write('\\\\\n')
+                try:
+                    tex.write('%s & $\chi^{2}$'%(varModelDict[vardir]))
+                    for flavor in flavors:
+                        tex.write(' & %.1f'%(unsummedChi2['low']['data'][vardir][flavor]))
+                    tex.write('\\\\\n')
+                except:
+                    print('not in dict', vardir)
         
         pickle.dump(unsummedChi2, open("unsummedChi2_"+opt.reco+".pkl", "wb"))
     
@@ -478,6 +516,21 @@ def returnChi2(fIn, cov_reduced, data, prediction):
     chi2 = numpy.array(diff[1:]).T.dot(numpy.linalg.inv(cov_reduced).dot(numpy.array(diff[1:])))
     ndf  = hpred.GetNbinsX()-1
     #prob = ROOT.TMath.Prob(chi2, ndf)
+    return chi2
+
+def returnModelModelChi2(fIn, cov_reduced, prediction1, prediction2):
+    hpred1 = fIn.Get(prediction1)
+    hpred2 = fIn.Get(prediction2)
+    pred1  = []
+    pred2  = []
+    for i in range(1, hpred1.GetNbinsX()+1):
+        pred1.append(hpred1.GetBinContent(i))
+        pred2.append(hpred2.GetBinContent(i))
+    diff = []
+    for i in range(len(pred1)):
+        diff.append(pred2[i] - pred1[i])
+    
+    chi2 = numpy.array(diff[1:]).T.dot(numpy.linalg.inv(cov_reduced).dot(numpy.array(diff[1:])))
     return chi2
 
 def normalizeAndDivideByBinWidth(hist):

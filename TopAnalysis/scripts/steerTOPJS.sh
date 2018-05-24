@@ -51,13 +51,13 @@ case $WHAT in
         ;;
 
     FULLSELCENTRAL )
-        python scripts/runLocalAnalysis.py -i ${eosdir} -q ${queue} -o ${run_summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --only MC13TeV_TTJets --exactonly;
+        python scripts/runLocalAnalysis.py -i ${eosdir} -q ${queue} -o ${run_summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --only MC13TeV_TTJets --exactonly --skipexisting;
         ;;
 
     FULLSELSYST )
         python scripts/runLocalAnalysis.py -i ${eosdir} -q ${queue} -o ${run_summaryeosdir}_expsyst --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --only MC13TeV_TTJets --systVar all --exactonly;
         ;;
-    
+
     FULLSELGEN_OLD )
         #ttbar GEN samples
         python scripts/runLocalAnalysis.py -i /eos/user/m/mseidel/ReReco2016/b312177_merged -q ${queue} -o ${run_summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --farmappendix samplesGEN;
@@ -67,9 +67,10 @@ case $WHAT in
         #ttbar GEN samples
         python scripts/runLocalAnalysis.py -i /store/group/cmst3/user/mseidel/ReReco2016/b312177_GEN_merged -q ${queue} -o ${run_summaryeosdir} --era era2016 -m TOPJetShape::RunTopJetShape --skipexisting --farmappendix samplesGEN;
         ;;
-    
+
     MERGE )
-        python scripts/mergeOutputs.py ${summaryeosdir} True;
+        # options: -T outdir -f
+        python scripts/mergeOutputs.py ${summaryeosdir} True - False;
         ;;
 
     PLOTSEL )
@@ -80,7 +81,7 @@ case $WHAT in
 
     TESTPLOTSEL )
         commonOpts="-i ${summaryeosdir} -j data/era2016/samples.json,data/era2016/qcd_samples.json --systJson data/era2016/syst_samples.json,data/era2016/expsyst_samples.json -l ${lumi}"
-        python scripts/plotter.py ${commonOpts} --outDir plots/test --only L4_1l4j2b2w_njets,L4_1l4j2b2w_nvtx,js_tau32_charged,js_mult_charged,L4_1l4j2b2w_l0eta;
+        python scripts/plotter.py ${commonOpts} --outDir plots/test --only L4_1l4j2b2w_njets,L4_1l4j2b2w_nvtx,js_tau32_charged,js_mult_charged,L4_1l4j2b2w_l0eta,L2_1l4j_nbjets,L3_1l4j2b_nwjets;
         #python scripts/plotter.py ${commonOpts} --outDir plots/test --only L4_1l4j2b2w_nvtx;
         ;;
 
@@ -105,16 +106,17 @@ case $WHAT in
     FILL )
         cd batch;
         python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --skip "MC13TeV_TTJets,MC13TeV_TTJets_herwigpp_asfsr*,MC13TeV_TTJets_pythia8_asfsr*,MC13TeV_TTJets_jec_*" --skipexisting --farmappendix fill;
-        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --only "MC13TeV_TTJets" --skipexisting --nweights 20 --farmappendix fill_TTJets;
+        python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --only "MC13TeV_TTJets" --skipexisting --weights pu_down,pu_up,leptrig_up,leptrig_down,lepsel_up,lepsel_down,bfrag_up,bfrag_down,bfrag_peterson,slbr_up,slbr_down,top_pt,id1005muR2muF2hdampmt272.7225,id1009muR0.5muF0.5hdampmt272.7225,id3001PDFset13100,id4001PDFset25200 --farmappendix fill_TTJets;
         python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --only "MC13TeV_TTJets_herwigpp_asfsr*,MC13TeV_TTJets_pythia8_asfsr*" --skipexisting --farmappendix fill_asfsr;
         python ../test/TopJSAnalysis/fillUnfoldingMatrix.py -q workday -i ${summaryeosdir}/Chunks/ --only "MC13TeV_TTJets_jec_*" --skipexisting --farmappendix fill_jec;
         cd -;
         ;;
-    
+
     MERGEFILL )
+        # options: -T outdir -f
         ./scripts/mergeOutputs.py unfolding/fill True - False
         ;;
-        
+
     TOYUNFOLDING )
         mkdir unfolding/toys;
         # mult width ptd ptds ecc tau21 tau32 tau43 zg zgxdr zgdr ga_width ga_lha ga_thrust c1_02 c1_05 c1_10 c1_20 c2_02 c2_05 c2_10 c2_20 c3_02 c3_05 c3_10 c3_20 m2_b1 n2_b1 n3_b1 m2_b2 n2_b2 n3_b2
@@ -132,7 +134,7 @@ case $WHAT in
           done
         done
         ;;
-        
+
     UNFOLDING )
         for OBS in mult width ptd ptds ecc tau21 tau32 tau43 zg zgxdr zgdr ga_width ga_lha ga_thrust c1_00 c1_02 c1_05 c1_10 c1_20 c2_00 c2_02 c2_05 c2_10 c2_20 c3_00 c3_02 c3_05 c3_10 c3_20 m2_b1 n2_b1 n3_b1 m2_b2 n2_b2 n3_b2 nsd
         do
@@ -153,21 +155,21 @@ case $WHAT in
         python test/TopJSAnalysis/doCovarianceAndChi2.py
         python test/TopJSAnalysis/doCovarianceAndChi2.py --reco all
         ;;
-    
+
     WWWUNFOLDING )
         rm -r ${wwwdir}/result
         mkdir -p ${wwwdir}/result
         cp unfolding/result/*.{png,pdf} ${wwwdir}/result
         cp test/index.php ${wwwdir}/result
         ;;
-    
+
     GENPTPLOTS )
         for FLAVOR in incl bottom light gluon
         do
           python test/TopJSAnalysis/quickPlotMCGenerators.py -n 100000000 --flavor ${FLAVOR} &
         done
         ;;
-    
+
     FLAVORPLOTS )
         for RECO in charged all
           do
@@ -177,8 +179,8 @@ case $WHAT in
           done
         done
         ;;
-    
-    TUNING )
+
+    SCANAS )
         for OBS in lowcornew c1all lambda lowcor #c1pert
         do
           for GENERATOR in pythia8 #herwigpp
@@ -192,7 +194,10 @@ case $WHAT in
             done
           done
         done
-        for OBS in ga_width
+        ;;
+    
+    FITAS )
+        for OBS in zgdr
         do
           for GENERATOR in pythia8 #herwigpp
           do
@@ -200,31 +205,31 @@ case $WHAT in
             do
               for RECO in charged all
               do
-                python test/TopJSAnalysis/fitAlphaS.py --generator ${GENERATOR} --flavor ${FLAVOR} --obs ${OBS} --reco ${RECO}
+                python test/TopJSAnalysis/fitAlphaS.py --generator ${GENERATOR} --flavor ${FLAVOR} --obs ${OBS} --reco ${RECO} --cmw
               done
             done
           done
         done
         ;;
-    
+
     YODA )
         python test/TopJSAnalysis/exportToYoda.py
         ;;
-    
+
     SENSITIVITY )
         for OBS in mult width ptd ptds ecc tau21 tau32 tau43 zg zgxdr zgdr ga_width ga_lha ga_thrust c1_00 c1_02 c1_05 c1_10 c1_20 c2_00 c2_02 c2_05 c2_10 c2_20 c3_00 c3_02 c3_05 c3_10 c3_20 m2_b1 n2_b1 n3_b1 m2_b2 n2_b2 n3_b2 nsd
         do
           python test/TopJSAnalysis/fitAlphaS.py --generator pythia8 --flavor incl --obs ${OBS}
         done
         ;;
-    
+
     WWWTUNING )
         rm -r ${wwwdir}/fit
         mkdir -p ${wwwdir}/fit
         cp fit/*.{png,pdf} ${wwwdir}/fit
         cp test/index.php ${wwwdir}/fit
         ;;
-    
+
     WWW )
         sh scripts/steerTOPJS.sh WWWSEL;
         sh scripts/steerTOPJS.sh WWWBINNING;

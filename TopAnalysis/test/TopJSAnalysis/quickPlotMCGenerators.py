@@ -11,7 +11,7 @@ from math import isnan
 
 def main():
     
-    cmsLabel='#bf{CMS} #it{Simulation} #it{Preliminary}'
+    cmsLabel='#bf{CMS} #it{Simulation}'
     
     #configuration
     usage = 'usage: %prog [options]'
@@ -40,6 +40,9 @@ def main():
     ratio = {}
     
     eosdir = '/eos/cms/store/group/cmst3/user/mseidel/analysis/TopJetShapes/b312177/Chunks/'
+    
+    p1correction = 0.8/0.69
+    p2correction = 0.2/0.31
 
     for generator in generators:
         t_mc = ROOT.TChain('tjsev')
@@ -49,19 +52,19 @@ def main():
         else:
             t_mc.Add(eosdir+'MC13TeV_TTJets_'+generator+'_*.root')
     
-        hist[generator] = ROOT.TH1F(generator, ';Jet p_{T} [GeV];1/N_{jet} dN_{jet} / d p_{T}', 27,30,300)
+        hist[generator] = ROOT.TH1F(generator, ';Jet p_{T} [GeV];1/N_{jet} dN_{jet} / d p_{T}', 10,30,230)
         if opt.flavor == 'incl':
-            t_mc.Draw(opt.var+' >> '+generator, '(gen_sel == 1 & abs(gj_eta) < 2. & gj_overlap == 0)*weight[0]', '', opt.nevents)
+            t_mc.Draw(opt.var+' >> '+generator, '(gen_sel == 1 & abs(gj_eta) < 2. & gj_overlap == 0 & abs(weight[0])<10000)*weight[0]', '', opt.nevents)
         else:
-            t_mc.Draw(opt.var+' >> '+generator, '(gen_sel == 1 & abs(gj_eta) < 2. & gj_overlap == 0 & gj_flavor == '+str(flavormap[opt.flavor])+')*weight[0]', '', opt.nevents)
+            t_mc.Draw(opt.var+' >> '+generator, '(gen_sel == 1 & abs(gj_eta) < 2. & gj_overlap == 0 & gj_flavor == '+str(flavormap[opt.flavor])+' & abs(weight[0])<10000)*weight[0]', '', opt.nevents)
         
         hist[generator].Scale(1./hist[generator].Integral())
         
         hist[generator].GetXaxis().SetTitleSize(0)
         hist[generator].GetXaxis().SetLabelSize(0)
-        hist[generator].GetYaxis().SetTitleSize(0.05)
-        hist[generator].GetYaxis().SetLabelSize(0.045)
-        hist[generator].GetYaxis().SetTitleOffset(1.2)
+        hist[generator].GetYaxis().SetTitleSize(0.05*p1correction)
+        hist[generator].GetYaxis().SetLabelSize(0.045*p1correction)
+        hist[generator].GetYaxis().SetTitleOffset(1.2/p1correction)
         hist[generator].SetLineColor(color[generator])
         hist[generator].SetLineStyle(line[generator])
         hist[generator].SetLineWidth(2)
@@ -80,10 +83,10 @@ def main():
     c.SetRightMargin(0.00)
     c.cd()
     
-    p1=ROOT.TPad('p1','p1',0.0,0.2,1.0,1.0)
+    p1=ROOT.TPad('p1','p1',0.0,0.31,1.0,1.0)
     p1.SetRightMargin(0.05)
     p1.SetLeftMargin(0.12)
-    p1.SetTopMargin(0.06)
+    p1.SetTopMargin(0.07)
     p1.SetBottomMargin(0.01)
     p1.Draw()
     p1.cd()
@@ -95,23 +98,22 @@ def main():
         hist[generator].Draw(draw[generator])
     
     c.cd()
-    p2 = ROOT.TPad('p2','p2',0.0,0.0,1.0,0.2)
+    p2 = ROOT.TPad('p2','p2',0.0,0.0,1.0,0.31)
     p2.Draw()
-    p2.SetBottomMargin(0.45)
+    p2.SetBottomMargin(0.29)
     p2.SetRightMargin(0.05)
     p2.SetLeftMargin(0.12)
     p2.SetTopMargin(0.01)
     p2.cd()
     
     ratio['pythia'].SetTitle('')
-    ratio['pythia'].SetYTitle('#frac{MC}{#scale[0.5]{POWHEG+PYTHIA 8}}')
-    ratio['pythia'].GetXaxis().SetTitleSize(0.2)
+    ratio['pythia'].SetYTitle('#frac{MC}{#scale[0.5]{POWHEG+PYTHIA 8}}  ')
+    ratio['pythia'].GetXaxis().SetTitleSize(0.2*p2correction)
     ratio['pythia'].GetXaxis().SetTitleOffset(0.95)
-    ratio['pythia'].GetXaxis().SetLabelSize(0.18)
-    ratio['pythia'].GetYaxis().SetTitleSize(0.2)
-    ratio['pythia'].GetYaxis().SetTitleOffset(0.26)
-    ratio['pythia'].GetYaxis().SetLabelSize(0.18)
-    ratio['pythia'].GetYaxis().SetRangeUser(0.4,1.6)
+    ratio['pythia'].GetXaxis().SetLabelSize(0.18*p2correction)
+    ratio['pythia'].GetYaxis().SetTitleSize(0.2*p2correction)
+    ratio['pythia'].GetYaxis().SetTitleOffset(0.26/p2correction)
+    ratio['pythia'].GetYaxis().SetLabelSize(0.18*p2correction)
     ratio['pythia'].GetYaxis().SetNdivisions(503)
     ratio['pythia'].GetYaxis().SetRangeUser(0.35,1.65)
     ratio['pythia'].Draw(draw['pythia'])
@@ -120,7 +122,7 @@ def main():
     
     c.cd()
     
-    legend = ROOT.TLegend(0.55,0.575,0.95,0.875)
+    legend = ROOT.TLegend(0.55,0.6,0.95,0.9)
     legend.SetLineWidth(0)
     legend.SetFillStyle(0)
     for generator in generators:
