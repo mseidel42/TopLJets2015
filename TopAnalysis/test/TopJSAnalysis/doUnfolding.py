@@ -40,7 +40,7 @@ def main():
     parser.add_option('-r', '--reco', dest='reco', default='charged', help='Use charged/puppi/all particles [default: %default]')
     (opt, args) = parser.parse_args()
 
-    nice_observables_root = {"mult": "#lambda_{0}^{0} (N)", "width": "#lambda_{1}^{1} (width)", "ptd": "#lambda_{0}^{2} (p_{T}^{d})", "ptds": "#lambda_{0}^{2}* (p_{T}^{d,}*)", "ecc": "#varepsilon", "tau21": "#tau_{21}", "tau32": "#tau_{32}", "tau43": "#tau_{43}", "zg": "z_{g}", "zgxdr": "z_{g} #times #DeltaR", "zgdr": "#DeltaR_{g}", "ga_width": "#lambda_{1}^{1} (width)", "ga_lha": "#lambda_{0.5}^{1} (LHA)", "ga_thrust": "#lambda_{2}^{1} (thrust)", "c1_00": "C_{1}^{(0.0)}", "c1_02": "C_{1}^{(0.2)}", "c1_05": "C_{1}^{(0.5)}", "c1_10": "C_{1}^{(1.0)}", "c1_20": "C_{1}^{(2.0)}", "c2_00": "C_{2}^{(0.0)}", "c2_02": "C_{2}^{(0.2)}", "c2_05": "C_{2}^{(0.5)}", "c2_10": "C_{2}^{(1.0)}", "c2_20":  "C_{2}^{(2.0)}", "c3_00": "C_{3}^{(0.0)}", "c3_02": "C_{3}^{(0.2)}", "c3_05": "C_{3}^{(0.5)}", "c3_10": "C_{3}^{(1.0)}", "c3_20": "C_{3}^{(2.0)}", "m2_b1": "M_{ 2}^{ (1)}", "n2_b1": "N_{ 2}^{ (1)}", "n3_b1": "N_{ 3}^{ (1)}", "m2_b2": "M_{ 2}^{ (2)}", "n2_b2": "N_{ 2}^{ (2)}", "n3_b2": "N_{ 3}^{ (2)}", "nsd": "n_{SD}"}
+    nice_observables_root = {"mult": "#lambda_{0}^{0} (N)", "width": "#lambda_{1}^{1} (width)", "ptd": "#lambda_{0}^{2} (p_{T}^{d})", "ptds": "#lambda_{0}^{2}* (p_{T}^{d,}*)", "ecc": "#varepsilon", "tau21": "#tau_{21}", "tau32": "#tau_{32}", "tau43": "#tau_{43}", "zg": "z_{g}", "zgxdr": "z_{g} #times #DeltaR", "zgdr": "#DeltaR_{g}", "ga_width": "#lambda_{1}^{1} (width)", "ga_lha": "#lambda_{0.5}^{1} (LHA)", "ga_thrust": "#lambda_{2}^{1} (thrust)", "c1_00": "C_{1}^{(0)}", "c1_02": "C_{1}^{(0.2)}", "c1_05": "C_{1}^{(0.5)}", "c1_10": "C_{1}^{(1)}", "c1_20": "C_{1}^{(2)}", "c2_00": "C_{2}^{(0)}", "c2_02": "C_{2}^{(0.2)}", "c2_05": "C_{2}^{(0.5)}", "c2_10": "C_{2}^{(1)}", "c2_20":  "C_{2}^{(2)}", "c3_00": "C_{3}^{(0)}", "c3_02": "C_{3}^{(0.2)}", "c3_05": "C_{3}^{(0.5)}", "c3_10": "C_{3}^{(1)}", "c3_20": "C_{3}^{(2)}", "m2_b1": "M_{ 2}^{ (1)}", "n2_b1": "N_{ 2}^{ (1)}", "n3_b1": "N_{ 3}^{ (1)}", "m2_b2": "M_{ 2}^{ (2)}", "n2_b2": "N_{ 2}^{ (2)}", "n3_b2": "N_{ 3}^{ (2)}", "nsd": "n_{SD}"}
 
     nice_reco = {'charged': 'charged', 'all': 'charged+neutral'}
 
@@ -59,9 +59,10 @@ def main():
         systSamplesList=json.load(jsonFile,encoding='utf-8', object_pairs_hook=OrderedDict).items()
         jsonFile.close()
 
-    allSystVars = ['jec_CorrelationGroupMPFInSitu',
-                   'jec_RelativeFSR',
-                   'jec_CorrelationGroupUncorrelated',
+    allSystVars = ['jec_SubTotalPileUp',
+                   'jec_SubTotalPt',
+                   'jec_SubTotalRelative',
+                   'jec_SubTotalScale',
                    'jec_FlavorPureGluon',
                    'jec_FlavorPureQuark',
                    'jec_FlavorPureCharm',
@@ -116,7 +117,7 @@ def main():
     varList.append('herwig7')
     #varList.append('herwig7dipole')
     varList.append('sherpa')
-    varList.append('dire')
+    varList.append('dire2002')
     varList.append('pythia8a14')
 
     expSystSamplesList = []
@@ -124,7 +125,7 @@ def main():
         expSystSamplesList.append(['MC13TeV_TTJets_'+var, [832., 0., '', 't#bar{t} '+var]])
 
     # list of sample not used as systematic uncertainty (+asfsr)
-    notSystList = ['MC13TeV_TTJets_cflip', 'MC13TeV_TTJets_herwig7', 'MC13TeV_TTJets_sherpa', 'MC13TeV_TTJets_dire', 'MC13TeV_TTJets_pythia8a14']
+    notSystList = ['MC13TeV_TTJets_cflip', 'MC13TeV_TTJets_herwig7', 'MC13TeV_TTJets_sherpa', 'MC13TeV_TTJets_dire2002', 'MC13TeV_TTJets_pythia8a14']
 
     data        = None # data histogram
     backgrounds = {}   # background histograms
@@ -139,7 +140,9 @@ def main():
             isBkg  = not (isData or isSig or isSyst)
             xs = sample[0]
 
-            if (not os.path.isfile('%s/%s.root'%(opt.inDir, tag))): continue
+            if (not os.path.isfile('%s/%s.root'%(opt.inDir, tag))):
+                if not '_ext' in tag: print('FILE NOT FOUND: %s/%s.root!'%(opt.inDir, tag))
+                continue
             fIn=ROOT.TFile.Open('%s/%s.root'%(opt.inDir, tag))
             if not fIn : continue
 
@@ -504,7 +507,7 @@ def main():
     sherpaGenRatio=sherpaGen.Clone('sherpaGenRatio')
     sherpaGenRatio.Divide(dataUnfoldedNoErr)
 
-    direGen = normalizeAndDivideByBinWidth(systematics['MC13TeV_TTJets_dire'].ProjectionX("direGen"))
+    direGen = normalizeAndDivideByBinWidth(systematics['MC13TeV_TTJets_dire2002'].ProjectionX("direGen"))
     #for i in range(1, direGen.GetNbinsX()+1):
     #    direGen.SetBinError(i, 1e-20)
     direGen.SetLineColor(ROOT.kMagenta+3)
@@ -540,12 +543,12 @@ def main():
     dataUnfolded.SetFillColor(ROOT.kGray)
     legend.AddEntry(dataUnfolded, "Data", "ep")
     legend.AddEntry(nominalGen, "POWHEG+PYTHIA 8", "pl")
-    legend.AddEntry(FSRUpGen, "#minus FSR up", "p")
-    legend.AddEntry(FSRDownGen, "#minus FSR down", "p")
+    legend.AddEntry(FSRUpGen, "PP8 FSR up", "p")
+    legend.AddEntry(FSRDownGen, "PP8 FSR down", "p")
     #legend.AddEntry(tunedGen, "#minus FSR tuned", "pl")
     legend.AddEntry(herwigGen, "POWHEG+HERWIG 7", "pl")
     legend.AddEntry(sherpaGen, "SHERPA 2", "pl")
-    legend.AddEntry(direGen, "DIRE NLO", "pl")
+    legend.AddEntry(direGen, "DIRE 2", "pl")
     legend.Draw()
     txt=ROOT.TLatex()
     txt.SetNDC(True)
@@ -555,16 +558,16 @@ def main():
     txt.DrawLatex(0.66,0.965,'#scale[1.0]{%3.1f fb^{-1} (%s)}' % (opt.lumi/1000.,opt.com) )
     inix = 0.15 if not fliplegend else 0.92
     if fliplegend: txt.SetTextAlign(32)
-    txt.DrawLatex(inix,0.88,'#scale[1.2]{%s}'%cmsLabel)
-    txt.DrawLatex(inix,0.82,'#scale[1.0]{t#bar{t} #rightarrow lepton+jets}')
+    txt.DrawLatex(inix,0.86,'#scale[1.2]{%s}'%cmsLabel)
+    txt.DrawLatex(inix,0.785,'#scale[1.0]{t#bar{t} #rightarrow lepton+jets}')
     flavor_postfix = ''
     flavor_label = opt.flavor
     if opt.flavor == 'incl':
         flavor_label = 'inclusive'
     if opt.flavor == 'gluon' or opt.flavor == 'light':
         flavor_label += '-enriched'
-    txt.DrawLatex(inix,0.76,'#scale[1.0]{%s jets}'%(flavor_label))
-    txt.DrawLatex(inix,0.69,'#scale[1.0]{p_{T} > 30 GeV}')
+    txt.DrawLatex(inix,0.71,'#scale[1.0]{%s jets}'%(flavor_label))
+    txt.DrawLatex(inix,0.63,'#scale[1.0]{p_{T} > 30 GeV}')
 
     c.cd()
     p2 = ROOT.TPad('p2','p2',0.0,0.0,1.0,0.31)

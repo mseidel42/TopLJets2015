@@ -121,7 +121,7 @@ def main():
     #gr_sum.SetBit(ROOT.TGraph.kIsSortedX)
     gr_sum.SetLineColor(ROOT.kWhite)
     gr_sum.SetTitle()
-    gr_sum.GetXaxis().SetTitle('#alpha_{S,CMW}^{FSR}(m(Z))')
+    gr_sum.GetXaxis().SetTitle('#alpha_{S}^{FSR}(m_{#lower[-0.3]{Z}})')
     gr_sum.GetXaxis().SetTitleOffset(1.)
     gr_sum.GetXaxis().SetTitleSize(0.045)
     gr_sum.GetXaxis().SetLabelSize(0.04)
@@ -251,9 +251,12 @@ def main():
     txt.DrawLatex(0.90,0.75, '#scale[1.0]{'+opt.reco+' particles}')
     if properSet:
         txt.SetTextColor(ROOT.kRed+1)
-        txt.DrawLatex(0.90,0.675, "#scale[1.0]{#alpha_{S,CMW}^{FSR}(m_{Z}) = %.4f_{%+.4f}^{%+.4f}}"%(asfsr, x1[0] - asfsr, x1[-1] - asfsr))
+        txt.DrawLatex(0.90,0.675, "#scale[1.0]{#alpha_{S}^{FSR}(m_{Z}) = %.4f_{%+.4f}^{%+.4f}}"%(asfsr, x1[0] - asfsr, x1[-1] - asfsr))
     if (opt.generator == 'pythia8'):
-        txt.DrawLatex(0.90,0.67, 'LO, CMW, 2-loop')
+        if opt.flavor == 'bottom':
+            txt.DrawLatex(0.90,0.67, 'LO+LL, 2-loop CMW')
+        else:
+            txt.DrawLatex(0.90,0.67, 'LL, 2-loop CMW')
     
     ROOT.gPad.RedrawAxis()
     

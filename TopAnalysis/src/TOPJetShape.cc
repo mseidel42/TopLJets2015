@@ -30,6 +30,7 @@
 #include "fastjet/contrib/EnergyCorrelator.hh"
 using namespace fastjet;
 using namespace fastjet::contrib;
+#include "fastjet/tools/GridMedianBackgroundEstimator.hh"
 
 #include "Rivet/Math/MatrixN.hh"
 #include "Rivet/Math/MatrixDiag.hh"
@@ -82,7 +83,7 @@ void RunTopJetShape(TString filename,
   TTree *t = (TTree*)f->Get("analysis/data");
   attachToMiniEventTree(t,ev,true);
   Int_t nentries(t->GetEntriesFast());
-  if (debug) nentries = min(1000, nentries); //restrict number of entries for testing
+  if (debug) nentries = min(10000, nentries); //restrict number of entries for testing
   t->GetEntry(0);
 
   cout << "...producing " << outname << " from " << nentries << " events" << endl;
@@ -465,7 +466,10 @@ void RunTopJetShape(TString filename,
         for (int i = 1; i < ev.g_nw; ++i) {
           bool forPlotter = (normH and scalesForPlotter.count(normH->GetXaxis()->GetBinLabel(i)) != 0);
           varweights.push_back(std::make_pair(ev.g_w[i]/ev.g_w[0], forPlotter));
-          if (iev==0) allPlots["weightmap"]->GetXaxis()->SetBinLabel(w++, normH->GetXaxis()->GetBinLabel(i));
+          if (iev==0) {
+            if (normH) allPlots["weightmap"]->GetXaxis()->SetBinLabel(w++, normH->GetXaxis()->GetBinLabel(i));
+            else allPlots["weightmap"]->GetXaxis()->SetBinLabel(w++, "default");
+          }
         }
         
         tjsev.nw = 1 + varweights.size();
@@ -566,8 +570,67 @@ void RunTopJetShape(TString filename,
       }
       
       //fill MET
-      tjsev.met_pt=ev.met_pt[0];
-      tjsev.met_phi=ev.met_phi[0];
+      tjsev.met_pt  = ev.met_pt[0];
+      tjsev.met_phi = ev.met_phi[0];
+      
+      //fill charged rho
+      //GridMedianBackgroundEstimator does not deal well with empty cells...
+      GridMedianBackgroundEstimator bge(2.4, 1.);
+      
+      TH2F  rhogrid( "rhogrid",  "rhogrid", 5, -2.4, 2.4, 6, -TMath::Pi(), TMath::Pi());
+      TH2F grhogrid("grhogrid", "grhogrid", 5, -2.4, 2.4, 6, -TMath::Pi(), TMath::Pi());
+      
+      std::vector<fastjet::PseudoJet> inputs;
+      for (int p = 0; p < ev.npf; p++) {
+        if (ev.pf_c[p] == 0 or ev.pf_pt[p] < 1.) continue;
+        rhogrid.Fill(ev.pf_eta[p], ev.pf_phi[p], ev.pf_pt[p]);
+        //TLorentzVector pp4;
+        //pp4.SetPtEtaPhiM(ev.pf_pt[p],ev.pf_eta[p],ev.pf_phi[p],ev.pf_m[p]);
+        //inputs.push_back( fastjet::PseudoJet(pp4.Px(), pp4.Py(), pp4.Pz(), pp4.Energy()) );
+      }
+      //bge.set_particles(inputs);
+      //tjsev.rho_ch = bge.rho();
+      std::vector<double> len;
+      for (int i = 1; i < rhogrid.GetNbinsX(); ++i) {
+        for (int j = 1; j < rhogrid.GetNbinsY(); ++j) {
+          double content = rhogrid.GetBinContent(i,j);
+          if (content > 0.)
+            len.push_back(content);
+        }
+      }
+      std::sort(len.begin(), len.end());
+      //std::cout << len.size() << std::endl;
+      double median = 0.;
+      if (len.size() > 0) median = len[len.size() / 2];
+      tjsev.rho_ch = median;
+      
+      std::vector<fastjet::PseudoJet> ginputs;
+      for (int p = 0; p < ev.ngpf; p++) {
+        if (ev.gpf_c[p] == 0 or ev.gpf_pt[p] < 1.) continue;
+        grhogrid.Fill(ev.gpf_eta[p], ev.gpf_phi[p], ev.gpf_pt[p]);
+        TLorentzVector pp4;
+        pp4.SetPtEtaPhiM(ev.gpf_pt[p],ev.gpf_eta[p],ev.gpf_phi[p],ev.gpf_m[p]);
+        ginputs.push_back( fastjet::PseudoJet(pp4.Px(), pp4.Py(), pp4.Pz(), pp4.Energy()) );
+      }
+      bge.set_particles(ginputs);
+      //tjsev.grho_ch = bge.rho();
+      //std::cout << inputs.size() << std::endl;
+      //std::cout << bge.rho() << std::endl;
+      //std::cout << bge.sigma() << std::endl;
+      //std::cout << bge.mean_area() << std::endl << std::endl;
+      std::vector<double> glen;
+      for (int i = 1; i < grhogrid.GetNbinsX(); ++i) {
+        for (int j = 1; j < grhogrid.GetNbinsY(); ++j) {
+          double content = grhogrid.GetBinContent(i,j);
+          if (content > 0.)
+            glen.push_back(content);
+        }
+      }
+      std::sort(glen.begin(), glen.end());
+      //std::cout << len.size() << std::endl;
+      double gmedian = 0.;
+      if (glen.size() > 0) gmedian = glen[glen.size() / 2];
+      tjsev.grho_ch = gmedian;
       
       //fill jets (with jet shapes)
       for(int ij=0; ij<(int)jets.size(); ij++) {
@@ -1320,6 +1383,10 @@ void createTopJetShapeEventTree(TTree *t,TopJetShapeEvent_t &tjsev)
   //met
   t->Branch("met_pt",  &tjsev.met_pt, "met_pt/F");
   t->Branch("met_phi",  &tjsev.met_phi, "met_phi/F");
+  
+  //rho charged
+  t->Branch("rho_ch",  &tjsev.rho_ch, "rho_ch/F");
+  t->Branch("grho_ch",  &tjsev.grho_ch, "grho_ch/F");
 
   //leptons
   t->Branch("nl",  &tjsev.nl, "nl/I");
@@ -1520,7 +1587,7 @@ void createTopJetShapeEventTree(TTree *t,TopJetShapeEvent_t &tjsev)
 //
 void resetTopJetShapeEvent(TopJetShapeEvent_t &tjsev)
 {
-  tjsev.period=-1;   tjsev.nw=0;   tjsev.nl=0;   tjsev.nj=0;   tjsev.ngj=0;   tjsev.ngl=0;   tjsev.met_pt=0; tjsev.met_phi=0;
+  tjsev.period=-1;   tjsev.nw=0;   tjsev.nl=0;   tjsev.nj=0;   tjsev.ngj=0;   tjsev.ngl=0;   tjsev.met_pt=0; tjsev.met_phi=0; tjsev.rho_ch=0; tjsev.grho_ch=0;
   for(int i=0; i<1000; i++) tjsev.weight[i]=0;
   for(int i=0; i<5; i++) { tjsev.l_pt[i]=0;   tjsev.l_eta[i]=0;   tjsev.l_phi[i]=0;   tjsev.l_m[i]=0; tjsev.l_id[i]=0; tjsev.gl_pt[i]=0;   tjsev.gl_eta[i]=0;   tjsev.gl_phi[i]=0;   tjsev.gl_m[i]=0; tjsev.gl_id[i]=0; }
   for(int i=0; i<50; i++) {

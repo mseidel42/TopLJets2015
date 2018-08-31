@@ -33,6 +33,10 @@ case $WHAT in
     TESTSEL )
         scram b -j 8 && python scripts/runLocalAnalysis.py -i ${eosdir}/MC13TeV_TTJets/MergedMiniEvents_0_ext0.root --tag MC13TeV_TTJets -o analysis.root --era era2016 -m TOPJetShape::RunTopJetShape --debug;
         ;;
+    
+    TESTSELDIRE )
+        scram b -j 8 && python scripts/runLocalAnalysis.py -i /store/group/cmst3/user/mseidel/ReReco2016/b312177_GEN_merged/MC13TeV_TTJets_dire2002/MergedMiniEvents_0.root --tag MC13TeV_TTJets -o analysis_dire.root --era era2016 -m TOPJetShape::RunTopJetShape --debug;
+        ;;
 
     NORMCACHE )
         python scripts/produceNormalizationCache.py -i ${eosdir} -o data/era2016/genweights.root;
@@ -154,6 +158,10 @@ case $WHAT in
         done
         python test/TopJSAnalysis/doCovarianceAndChi2.py
         python test/TopJSAnalysis/doCovarianceAndChi2.py --reco all
+        python test/TopJSAnalysis/doCovarianceAndChi2.py --comparison pythia
+        python test/TopJSAnalysis/doCovarianceAndChi2.py --comparison pythia --reco all
+        python test/TopJSAnalysis/writeSystematicsTable.py
+        python test/TopJSAnalysis/writeSystematicsTable.py --reco all
         ;;
 
     WWWUNFOLDING )
@@ -181,7 +189,7 @@ case $WHAT in
         ;;
 
     SCANAS )
-        for OBS in lowcornew c1all lambda lowcor #c1pert
+        for OBS in lowcormult lowcornew c1all lambda lowcor #c1pert
         do
           for GENERATOR in pythia8 #herwigpp
           do
@@ -197,7 +205,7 @@ case $WHAT in
         ;;
     
     FITAS )
-        for OBS in zgdr
+        for OBS in zgdr ga_width
         do
           for GENERATOR in pythia8 #herwigpp
           do
@@ -205,7 +213,9 @@ case $WHAT in
             do
               for RECO in charged all
               do
-                python test/TopJSAnalysis/fitAlphaS.py --generator ${GENERATOR} --flavor ${FLAVOR} --obs ${OBS} --reco ${RECO} --cmw
+                while [ $(jobs | wc -l) -ge 4 ] ; do sleep 1 ; done
+                python test/TopJSAnalysis/fitAlphaS.py --generator ${GENERATOR} --flavor ${FLAVOR} --obs ${OBS} --reco ${RECO} --cmw &
+                python test/TopJSAnalysis/fitAlphaS.py --generator ${GENERATOR} --flavor ${FLAVOR} --obs ${OBS} --reco ${RECO} &
               done
             done
           done

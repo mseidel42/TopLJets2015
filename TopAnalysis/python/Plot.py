@@ -95,7 +95,7 @@ class Plot(object):
                 self.dataH.SetLineColor(ROOT.kBlack)
                 self.dataH.SetLineWidth(2)
                 self.dataH.SetFillColor(ROOT.kBlack)
-                self.dataH.SetFillStyle(3245)
+                self.dataH.SetFillStyle(3001)
                 self._garbageList.append(h)
         elif isSyst:
             try:
@@ -419,9 +419,9 @@ class Plot(object):
             txt.DrawLatex(inixlumi,0.97,'#scale[1.0]{%3.1f pb^{-1} (%s)}' % (lumi,self.com) )
         else:
             txt.DrawLatex(inixlumi,0.97,'#scale[1.0]{%3.1f fb^{-1} (%s)}' % (lumi/1000.,self.com) )
-        txt.DrawLatex(inix,0.83,'#scale[1.0]{t#bar{t} #rightarrow lepton+jets}')
-        txt.DrawLatex(inix,0.77,'#scale[1.0]{inclusive jets}')
-        txt.DrawLatex(inix,0.72,'#scale[1.0]{p_{T} > 30 GeV}')
+        txt.DrawLatex(inix,0.815,'#scale[1.0]{t#bar{t} #rightarrow lepton+jets}')
+        txt.DrawLatex(inix,0.75,'#scale[1.0]{inclusive jets}')
+        txt.DrawLatex(inix,0.68,'#scale[1.0]{p_{T} > 30 GeV}')
         try:
             extraCtr=1
             for extra in extraText.split('\\'):
@@ -517,7 +517,7 @@ class Plot(object):
                         ratio.SetBinError  (xbin, 0.)
                         ratio.SetBinContent(xbin, 0.)
                 ratio.SetMarkerSize(0)
-                ratio.SetFillStyle(3245)
+                ratio.SetFillStyle(3001)
                 ratio.SetFillColor(ROOT.kBlack)
                 ratio.SetLineColor(ROOT.kBlack)
                 ratio.Draw('e2 same')

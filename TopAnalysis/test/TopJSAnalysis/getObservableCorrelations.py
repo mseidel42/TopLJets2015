@@ -51,6 +51,33 @@ def getPointsFromTree(tree, observables, recos):
     
     return points
     
+
+def DrawHist2D(hist, cmsLabel, lumi, com):
+    hist.GetXaxis().LabelsOption('v')
+    hist.GetXaxis().SetLabelSize(0.02)
+    hist.GetYaxis().SetLabelSize(0.02)
+    hist.GetZaxis().SetRangeUser(-100., 100.)
+    hist.GetZaxis().SetTitle('Correlation [%]     ')
+    hist.GetZaxis().SetTitleSize(0.04)
+    hist.SetMarkerSize(0.5)
+    hist.Draw('colz,text')
+    
+    ROOT.gPad.Update()
+    tl1 = ROOT.TLine(ROOT.gPad.GetUxmin(), ROOT.gPad.GetUymax(),
+                     ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax())
+    tl1.Draw()
+    tl2 = ROOT.TLine(ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymin(),
+                     ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax())
+    tl2.Draw()
+    
+    txt=ROOT.TLatex()
+    txt.SetNDC(True)
+    txt.SetTextFont(42)
+    txt.SetTextSize(0.041)
+    txt.SetTextAlign(12)
+    txt.DrawLatex(0.14,0.97, '#scale[1.1]{%s}'%cmsLabel)
+    txt.DrawLatex(0.59,0.97, '#scale[1.0]{%3.1f fb^{-1} (%s)}' % (lumi/1000.,com) )
+
 """
 steer
 """
@@ -99,9 +126,9 @@ def main():
         for obs in observables:
             obsreco.append(obs+'_'+reco)
     
-    nice_observables_root = {"mult": "#lambda_{0}^{0} (N)", "width": "width", "ptd": "p_{T}D", "ptds": "#lambda_{0}^{2}* (p_{T}D*)", "ecc": "#varepsilon", "tau21": "#tau_{21}", "tau32": "#tau_{32}", "tau43": "#tau_{43}", "zg": "z_{g}", "zgxdr": "z_{g} #times #DeltaR", "zgdr": "#DeltaR_{g}", "ga_width": "#lambda_{1}^{1} (width)", "ga_lha": "#lambda_{0.5}^{1} (LHA)", "ga_thrust": "#lambda_{2}^{1} (thrust)", "c1_00": "C_{1}^{(0.0)}", "c1_02": "C_{1}^{(0.2)}", "c1_05": "C_{1}^{(0.5)}", "c1_10": "C_{1}^{(1.0)}", "c1_20": "C_{1}^{(2.0)}", "c2_00": "C_{2}^{(0.0)}", "c2_02": "C_{2}^{(0.2)}", "c2_05": "C_{2}^{(0.5)}", "c2_10": "C_{2}^{(1.0)}", "c2_20":  "C_{2}^{(2.0)}", "c3_00": "C_{3}^{(0.0)}", "c3_02": "C_{3}^{(0.2)}", "c3_05": "C_{3}^{(0.5)}", "c3_10": "C_{3}^{(1.0)}", "c3_20": "C_{3}^{(2.0)}", "m2_b1": "M_{ 2}^{ (1)}", "n2_b1": "N_{ 2}^{ (1)}", "n3_b1": "N_{ 3}^{ (1)}", "m2_b2": "M_{ 2}^{ (2)}", "n2_b2": "N_{ 2}^{ (2)}", "n3_b2": "N_{ 3}^{ (2)}", "nsd": "n_{SD}"}
+    nice_observables_root = {"mult": "#lambda_{0}^{0} (N)", "width": "width", "ptd": "p_{T}D", "ptds": "#lambda_{0}^{2}* (p_{T}D*)", "ecc": "#varepsilon", "tau21": "#tau_{21}", "tau32": "#tau_{32}", "tau43": "#tau_{43}", "zg": "z_{g}", "zgxdr": "z_{g} #times #DeltaR", "zgdr": "#DeltaR_{g}", "ga_width": "#lambda_{1}^{1} (width)", "ga_lha": "#lambda_{0.5}^{1} (LHA)", "ga_thrust": "#lambda_{2}^{1} (thrust)", "c1_00": "C_{1}^{(0)}", "c1_02": "C_{1}^{(0.2)}", "c1_05": "C_{1}^{(0.5)}", "c1_10": "C_{1}^{(1)}", "c1_20": "C_{1}^{(2)}", "c2_00": "C_{2}^{(0)}", "c2_02": "C_{2}^{(0.2)}", "c2_05": "C_{2}^{(0.5)}", "c2_10": "C_{2}^{(1)}", "c2_20":  "C_{2}^{(2)}", "c3_00": "C_{3}^{(0)}", "c3_02": "C_{3}^{(0.2)}", "c3_05": "C_{3}^{(0.5)}", "c3_10": "C_{3}^{(1)}", "c3_20": "C_{3}^{(2)}", "m2_b1": "M_{ 2}^{ (1)}", "n2_b1": "N_{ 2}^{ (1)}", "n3_b1": "N_{ 3}^{ (1)}", "m2_b2": "M_{ 2}^{ (2)}", "n2_b2": "N_{ 2}^{ (2)}", "n3_b2": "N_{ 3}^{ (2)}", "nsd": "n_{SD}"}
     
-    nice_observables_root_short = {"mult": "#lambda_{0}^{0}", "width": "#lambda_{1}^{1}", "ptd": "#lambda_{0}^{2}", "ptds": "#lambda_{0}^{2}*", "ecc": "#varepsilon", "tau21": "#tau_{21}", "tau32": "#tau_{32}", "tau43": "#tau_{43}", "zg": "z_{g}", "zgxdr": "z_{g} #times #DeltaR", "zgdr": "#DeltaR_{g}", "ga_width": "#lambda_{1}^{1}", "ga_lha": "#lambda_{0.5}^{1}", "ga_thrust": "#lambda_{2}^{1}", "c1_00": "C_{1}^{(0.0)}", "c1_02": "C_{1}^{(0.2)}", "c1_05": "C_{1}^{(0.5)}", "c1_10": "C_{1}^{(1.0)}", "c1_20": "C_{1}^{(2.0)}", "c2_00": "C_{2}^{(0.0)}", "c2_02": "C_{2}^{(0.2)}", "c2_05": "C_{2}^{(0.5)}", "c2_10": "C_{2}^{(1.0)}", "c2_20":  "C_{2}^{(2.0)}", "c3_00": "C_{3}^{(0.0)}", "c3_02": "C_{3}^{(0.2)}", "c3_05": "C_{3}^{(0.5)}", "c3_10": "C_{3}^{(1.0)}", "c3_20": "C_{3}^{(2.0)}", "m2_b1": "M_{ 2}^{ (1)}", "n2_b1": "N_{ 2}^{ (1)}", "n3_b1": "N_{ 3}^{ (1)}", "m2_b2": "M_{ 2}^{ (2)}", "n2_b2": "N_{ 2}^{ (2)}", "n3_b2": "N_{ 3}^{ (2)}", "nsd": "n_{SD}"}
+    nice_observables_root_short = {"mult": "#lambda_{0}^{0}", "width": "#lambda_{1}^{1}", "ptd": "#lambda_{0}^{2}", "ptds": "#lambda_{0}^{2}*", "ecc": "#varepsilon", "tau21": "#tau_{21}", "tau32": "#tau_{32}", "tau43": "#tau_{43}", "zg": "z_{g}", "zgxdr": "z_{g} #times #DeltaR", "zgdr": "#DeltaR_{g}", "ga_width": "#lambda_{1}^{1}", "ga_lha": "#lambda_{0.5}^{1}", "ga_thrust": "#lambda_{2}^{1}", "c1_00": "C_{1}^{(0)}", "c1_02": "C_{1}^{(0.2)}", "c1_05": "C_{1}^{(0.5)}", "c1_10": "C_{1}^{(1)}", "c1_20": "C_{1}^{(2)}", "c2_00": "C_{2}^{(0)}", "c2_02": "C_{2}^{(0.2)}", "c2_05": "C_{2}^{(0.5)}", "c2_10": "C_{2}^{(1)}", "c2_20":  "C_{2}^{(2)}", "c3_00": "C_{3}^{(0)}", "c3_02": "C_{3}^{(0.2)}", "c3_05": "C_{3}^{(0.5)}", "c3_10": "C_{3}^{(1)}", "c3_20": "C_{3}^{(2)}", "m2_b1": "M_{ 2}^{ (1)}", "n2_b1": "N_{ 2}^{ (1)}", "n3_b1": "N_{ 3}^{ (1)}", "m2_b2": "M_{ 2}^{ (2)}", "n2_b2": "N_{ 2}^{ (2)}", "n3_b2": "N_{ 3}^{ (2)}", "nsd": "n_{SD}"}
     
     points = getPointsFromTree(tree, observables, recos)
     
@@ -180,6 +207,116 @@ def main():
     
     c.Print('correlations.pdf')
     c.Print('correlations.png')
+    
+    # split plots
+    nsplit = 17
+    h_correlations_1 = ROOT.TH2D('h_correlations_1', '', nsplit, 0, nsplit, nsplit, 0, nsplit)
+    h_correlations_2 = ROOT.TH2D('h_correlations_2', '', nbins-nsplit, 0, nbins-nsplit, nbins-nsplit, 0, nbins-nsplit)
+    h_correlations_3 = ROOT.TH2D('h_correlations_3', '', nsplit, 0, nsplit, nbins-nsplit, 0, nbins-nsplit)
+    
+    for i in range(len(obsreco)):
+        for j in range(len(obsreco)):
+            bincontent = h_correlations.GetBinContent(i+1, j+1)
+            labelx = nice_observables_root_short[obsreco[i].rsplit('_', 1)[0]]
+            labely = nice_observables_root[obsreco[j].rsplit('_', 1)[0]]
+            if i < nsplit and j < nsplit:
+                h_correlations_1.GetXaxis().SetBinLabel(i+1, labelx)
+                h_correlations_1.GetYaxis().SetBinLabel(j+1, labely)
+                h_correlations_1.SetBinContent(i+1, j+1, bincontent)
+            if i >= nsplit and j >= nsplit:
+                h_correlations_2.GetXaxis().SetBinLabel(i+1-nsplit, labelx)
+                h_correlations_2.GetYaxis().SetBinLabel(j+1-nsplit, labely)
+                h_correlations_2.SetBinContent(i+1-nsplit, j+1-nsplit, bincontent)
+            if i< nsplit and j >= nsplit:
+                h_correlations_3.GetXaxis().SetBinLabel(i+1, labelx)
+                h_correlations_3.GetYaxis().SetBinLabel(j+1-nsplit, labely)
+                h_correlations_3.SetBinContent(i+1, j+1-nsplit, bincontent)
+                
+    h_correlations_1.GetXaxis().LabelsOption('v')
+    h_correlations_1.GetXaxis().SetLabelSize(0.04)
+    h_correlations_1.GetYaxis().SetLabelSize(0.04)
+    h_correlations_1.GetZaxis().SetRangeUser(-100., 100.)
+    h_correlations_1.GetZaxis().SetTitle('Correlation [%]     ')
+    h_correlations_1.GetZaxis().SetTitleSize(0.04)
+    h_correlations_1.SetMarkerSize(1.0)
+    h_correlations_1.Draw('colz,text')
+    
+    ROOT.gPad.Update()
+    tl1 = ROOT.TLine(ROOT.gPad.GetUxmin(), ROOT.gPad.GetUymax(),
+                     ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax())
+    tl1.Draw()
+    tl2 = ROOT.TLine(ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymin(),
+                     ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax())
+    tl2.Draw()
+    
+    txt=ROOT.TLatex()
+    txt.SetNDC(True)
+    txt.SetTextFont(42)
+    txt.SetTextSize(0.041)
+    txt.SetTextAlign(12)
+    txt.DrawLatex(0.14,0.97, '#scale[1.1]{%s}'%cmsLabel)
+    txt.DrawLatex(0.59,0.97, '#scale[1.0]{%3.1f fb^{-1} (%s)}' % (opt.lumi/1000.,opt.com) )
+    
+    c.Print('correlations_1.pdf')
+    c.Print('correlations_1.png')
+    
+    h_correlations_2.GetXaxis().LabelsOption('v')
+    h_correlations_2.GetXaxis().SetLabelSize(0.04)
+    h_correlations_2.GetYaxis().SetLabelSize(0.04)
+    h_correlations_2.GetZaxis().SetRangeUser(-100., 100.)
+    h_correlations_2.GetZaxis().SetTitle('Correlation [%]     ')
+    h_correlations_2.GetZaxis().SetTitleSize(0.04)
+    h_correlations_2.SetMarkerSize(1.0)
+    h_correlations_2.Draw('colz,text')
+    
+    ROOT.gPad.Update()
+    tl1 = ROOT.TLine(ROOT.gPad.GetUxmin(), ROOT.gPad.GetUymax(),
+                     ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax())
+    tl1.Draw()
+    tl2 = ROOT.TLine(ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymin(),
+                     ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax())
+    tl2.Draw()
+    
+    txt=ROOT.TLatex()
+    txt.SetNDC(True)
+    txt.SetTextFont(42)
+    txt.SetTextSize(0.041)
+    txt.SetTextAlign(12)
+    txt.DrawLatex(0.14,0.97, '#scale[1.1]{%s}'%cmsLabel)
+    txt.DrawLatex(0.59,0.97, '#scale[1.0]{%3.1f fb^{-1} (%s)}' % (opt.lumi/1000.,opt.com) )
+    
+    c.Print('correlations_2.pdf')
+    c.Print('correlations_2.png')
+    
+    h_correlations_3.GetXaxis().LabelsOption('v')
+    h_correlations_3.GetXaxis().SetLabelSize(0.04)
+    h_correlations_3.GetYaxis().SetLabelSize(0.04)
+    h_correlations_3.GetZaxis().SetRangeUser(-100., 100.)
+    h_correlations_3.GetZaxis().SetTitle('Correlation [%]     ')
+    h_correlations_3.GetZaxis().SetTitleSize(0.04)
+    h_correlations_3.SetMarkerSize(1.0)
+    h_correlations_3.Draw('colz,text')
+    
+    ROOT.gPad.Update()
+    tl1 = ROOT.TLine(ROOT.gPad.GetUxmin(), ROOT.gPad.GetUymax(),
+                     ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax())
+    tl1.Draw()
+    tl2 = ROOT.TLine(ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymin(),
+                     ROOT.gPad.GetUxmax(), ROOT.gPad.GetUymax())
+    tl2.Draw()
+    
+    txt=ROOT.TLatex()
+    txt.SetNDC(True)
+    txt.SetTextFont(42)
+    txt.SetTextSize(0.041)
+    txt.SetTextAlign(12)
+    txt.DrawLatex(0.14,0.97, '#scale[1.1]{%s}'%cmsLabel)
+    txt.DrawLatex(0.59,0.97, '#scale[1.0]{%3.1f fb^{-1} (%s)}' % (opt.lumi/1000.,opt.com) )
+    
+    c.Print('correlations_3.pdf')
+    c.Print('correlations_3.png')
+    
+    sys.exit()
     
     # actually try to remove some that cannot be measured too well by subjective criteria...
     blacklist = ['n3_b1_charged', 'n3_b1_all']

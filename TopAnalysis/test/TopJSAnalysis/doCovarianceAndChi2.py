@@ -51,9 +51,10 @@ def main():
 
     # Read lists of syst samples
     varList = []
-    varExp = ['jec_CorrelationGroupMPFInSitu',
-              'jec_RelativeFSR',
-              'jec_CorrelationGroupUncorrelated',
+    varExp = ['jec_SubTotalPileUp',
+              'jec_SubTotalPt',
+              'jec_SubTotalRelative',
+              'jec_SubTotalScale'
               'jec_FlavorPureGluon',
               'jec_FlavorPureQuark',
               'jec_FlavorPureCharm',
@@ -100,7 +101,7 @@ def main():
     #modelsToTest.append(['pythia8_asfsr0.1365_meoff_crdefault'])
     modelsToTest.append(['herwig7'])
     modelsToTest.append(['sherpa'])
-    modelsToTest.append(['dire'])
+    modelsToTest.append(['dire2002'])
     #FSR scan
     #modelsToTest.append(['herwigpp_asfsr0.100_meon_crdefault'])
     #modelsToTest.append(['herwigpp_asfsr0.110_meon_crdefault'])
@@ -132,7 +133,7 @@ def main():
             modelsToTest.append(['pythia8_asfsr%s_scale%s_CMW_2loop'%(alphas, scale)])
     
     if opt.comparison == 'generators':
-        modelsToTex = ['fsrdn', 'nominalGen', 'fsrup', 'herwig7', 'sherpa', 'dire']
+        modelsToTex = ['fsrdn', 'nominalGen', 'fsrup', 'herwig7', 'sherpa', 'dire2002']
     elif opt.comparison == 'pythia':
         modelsToTex = ['nominalGen', 'qcdBased', 'gluonMove', 'pythia8_asfsr0.1365_meon_croff_flavrope', 'bfrag_up', 'bfrag_down', 'bfrag_peterson']
     
@@ -157,7 +158,7 @@ def main():
                     'herwig': 'Herwig++',
                     'herwig7': 'Herwig 7',
                     'sherpa': 'Sherpa 2',
-                    'dire': 'Dire NLO',
+                    'dire2002': 'Dire 2 NLO',
                     'isrup': 'ISR up',
                     'isrdn': 'ISR down',
                     'fsrup': 'FSR up',
@@ -461,7 +462,7 @@ def main():
                                 unsummedChi2[obs][vardir1][vardir2][flavor] = returnModelModelChi2(fIn, cov_reduced, prediction1, prediction2)
         
         for obs in observables:
-            tex.write('\\hline\n\multirow{2}{*}{%s}\n'%(nice_observables_tex[obs]))
+            tex.write('\multirow{2}{*}{%s}\n'%(nice_observables_tex[obs]))
             for flavor in flavors:
                 if flavor == 'bottom':
                     tex.write('\multirow{2}{*}{ndf = %i}'%ndf[obs])
@@ -490,17 +491,18 @@ def main():
         #    tex.write('$P(\\chi^{2})$ &  & %.3f & %.3f & %.3f & %.3f \\\\\n'%(probLowNominal, probLowFSRUp, probLowFSRDown, probLowHerwig))
         #    
         
-        tex.write('\n'*4)
-        
-        for var in modelsToTest:
-            for vardir in var:
-                try:
-                    tex.write('%s & $\chi^{2}$'%(varModelDict[vardir]))
-                    for flavor in flavors:
-                        tex.write(' & %.1f'%(unsummedChi2['low']['data'][vardir][flavor]))
-                    tex.write('\\\\\n')
-                except:
-                    print('not in dict', vardir)
+        # sums for all models
+        #tex.write('\n'*4)
+        #
+        #for var in modelsToTest:
+        #    for vardir in var:
+        #        try:
+        #            tex.write('%s & $\chi^{2}$'%(varModelDict[vardir]))
+        #            for flavor in flavors:
+        #                tex.write(' & %.1f'%(unsummedChi2['low']['data'][vardir][flavor]))
+        #            tex.write('\\\\\n')
+        #        except:
+        #            print('not in dict', vardir)
         
         pickle.dump(unsummedChi2, open("unsummedChi2_"+opt.reco+".pkl", "wb"))
     

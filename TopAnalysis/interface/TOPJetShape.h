@@ -42,6 +42,8 @@ struct TopJetShapeEvent_t
   
   Float_t met_pt,met_phi;
   
+  Float_t rho_ch, grho_ch;
+  
   Float_t j_mult_charged[50];
   Float_t j_width_charged[50];
   Float_t j_ptd_charged[50];

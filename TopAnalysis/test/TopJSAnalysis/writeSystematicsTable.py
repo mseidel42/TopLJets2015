@@ -49,9 +49,10 @@ def main():
 
     # Read lists of syst samples
     varList = []
-    varExp = [['JEC/JER', ['jec_CorrelationGroupMPFInSitu',
-              'jec_RelativeFSR',
-              'jec_CorrelationGroupUncorrelated',
+    varExp = [['JEC/JER', ['jec_SubTotalPileUp',
+              'jec_SubTotalPt',
+              'jec_SubTotalRelative',
+              'jec_SubTotalScale',
               'jec_FlavorPureGluon',
               'jec_FlavorPureQuark',
               'jec_FlavorPureCharm',
@@ -76,24 +77,25 @@ def main():
                 ['UE/CR', [['ue', ['ueup', 'uedn']],
                  ['erdON', ['erdON']],
                  ['qcdBased', ['qcdBased']],
-                 #['gluonMove', ['gluonMove']], # TODO: needs reprocessing with new normCache
+                 ['gluonMove', ['gluonMove']],
                 ]],
-                ['FRAG', [['evtgen', ['evtgen']],
-                 ['bfragbl', ['wgt7', 'wgt8']], # b frag Bowler-Lund up/down
-                 ['bfragpeterson', ['wgt9']], # b frag Peterson
-                 ['semilepbr', ['wgt10', 'wgt11']], # B hadron semilep BR
+                ['FRAG',
+                [['evtgen', ['evtgen']],
+                 ['bfragbl', ['bfrag_up', 'bfrag_down']], # b frag Bowler-Lund up/down
+                 ['bfragpeterson', ['bfrag_peterson']], # b frag Peterson
+                 ['semilepbr', ['slbr_up', 'slbr_down']], # B hadron semilep BR
                 ]],
-                ['ME/ISR', [['toppt', ['wgt12']], # top pt reweighting
-                 ['muf', ['wgt13', 'wgt14']], # muF
-                 ['mur', ['wgt15', 'wgt18']], # muR
-                 ['mufmur', ['wgt16', 'wgt20']], # muF+muR
+                ['ME/ISR', 
+                [['toppt', ['top_pt']], # top pt reweighting
+                 ['mufmur', ['id1005muR2muF2hdampmt272.7225', 'id1009muR0.5muF0.5hdampmt272.7225']], # muF+muR
                  ['hdamp', ['hdampup', 'hdampdn']],
                  ['isr', ['isrup', 'isrdn']],
-                ]]
+                ]],
+                ['PDF', [['pdf', ['id3001PDFset13100', 'id4001PDFset25200']]]]
                ]
     varList += varModel
     
-    varExpWgt = [['PU', [['pu', ['wgt1', 'wgt2']]]], # PU
+    varExpWgt = [['PU', [['pu', ['pu_down', 'pu_up']]]], # PU
                  #['lepton', ['leptrigger', ['wgt3', 'wgt4']], # lepton trigger
                  # ['lepsel', ['wgt5', 'wgt6']], # lepton selection
                  #]
@@ -162,7 +164,7 @@ def main():
                             for vardir in var[1]:
                                 hsyst = fIn.Get('MC13TeV_TTJets_'+vardir+'_Unfolded')
                                 if not hsyst:
-                                    print(vardir, 'not loaded')  
+                                    print(resultfile, vardir, 'not loaded')  
                                     continue
                                 
                                 shifts = []
@@ -218,6 +220,7 @@ def main():
             tex.write('\\hline \n')
 
     # FIXME: this part does not work yet
+    '''
     with open('%s/syst_groups_low_incl.tex'%(opt.outDir), 'w') as tex:
         for obs in observables:
             if not obs in observables_low: continue
@@ -259,6 +262,7 @@ def main():
                             
                     tex.write(' & %.1f -- %.1f'%(min(groupbins), max(groupbins)))
             tex.write(' \\\\\n')
+    '''
         
 """
 for execution from another script

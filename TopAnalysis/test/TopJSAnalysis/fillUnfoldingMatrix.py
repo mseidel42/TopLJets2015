@@ -11,14 +11,17 @@ from math import isnan
 
 flavorMap = {'incl': -1, 'light': 1, 'bottom': 5, 'gluon': 0}
 
-def fillHist(hmap, tree, named_weights, weightmap):
+def fillHist(hmap, tree, named_weights, weightmap, maxweight):
+    count = 0
     for event in tree:
+        count += 1
+        if count%100 == 0: print('%i/%i events'%(count, tree.GetEntries()))
         weights = {}
-        if not isnan(event.weight[0]) and abs(event.weight[0])<10000:
+        if not isnan(event.weight[0]) and abs(event.weight[0])<maxweight:
             weights[0] = event.weight[0]
         else: weights[0] = 0.
         for w in named_weights:
-            if not isnan(event.weight[weightmap[w]]) and abs(event.weight[weightmap[w]])<10000:
+            if not isnan(event.weight[weightmap[w]]) and abs(event.weight[weightmap[w]])<maxweight:
                 weights[w] = event.weight[weightmap[w]]
             else: weights.append(0.)
         for obs,hmap_reco in hmap.iteritems():
@@ -152,7 +155,9 @@ def main():
             opt.input = '/eos/user/m/mseidel/analysis/TopJetShapes/b312177/Chunks/Data13TeV_SingleMuon_2016G_27.root'
         if (tree.Add(opt.input) == 0): return
 
-        fillHist(hmap, tree, weights, weightmap)
+        maxweight = 100000
+        if 'dire2002' in opt.input: maxweight = 10000
+        fillHist(hmap, tree, weights, weightmap, maxweight)
 
         for obs,hmap_reco in hmap.iteritems():
             for reco,hmap_flavor in hmap_reco.iteritems():

@@ -91,7 +91,7 @@ def main():
 
     modelsToTest = []
     if (opt.generator == 'pythia8'):
-        #modelsToTest.append('pythia8_asfsr0.070_meon_crdefault')
+        if not opt.cmw: modelsToTest.append('pythia8_asfsr0.070_meon_crdefault')
         modelsToTest.append('pythia8_asfsr0.080_meon_crdefault')
         modelsToTest.append('pythia8_asfsr0.090_meon_crdefault')
         modelsToTest.append('pythia8_asfsr0.100_meon_crdefault')
@@ -103,8 +103,8 @@ def main():
         modelsToTest.append('pythia8_asfsr0.130_meon_crdefault')
         modelsToTest.append('pythia8_asfsr0.135_meon_crdefault')
         modelsToTest.append('pythia8_asfsr0.140_meon_crdefault')
-        #modelsToTest.append('pythia8_asfsr0.150_meon_crdefault')
-        #modelsToTest.append('pythia8_asfsr0.160_meon_crdefault')
+        if not opt.cmw: modelsToTest.append('pythia8_asfsr0.150_meon_crdefault')
+        if not opt.cmw: modelsToTest.append('pythia8_asfsr0.160_meon_crdefault')
     elif (opt.generator == 'herwigpp'):
         modelsToTest.append('herwigpp_asfsr0.100_meon_crdefault')
         modelsToTest.append('herwigpp_asfsr0.110_meon_crdefault')
@@ -146,6 +146,10 @@ def main():
         varModel.append(['fsrup', 'fsrdn'])
     
     # START
+    
+    #offset for plotting uncertainties
+    offset = 50
+    
     x0 = []
     for model in modelsToTest:
         x0.append(float('0.'+model.split('.')[1][0:3]))
@@ -225,11 +229,11 @@ def main():
             ymin_syst = max(0, min(y_syst))
             asfsr_syst = x[y_syst.index(min(y_syst))]
             
-            if asfsr_syst > ref:
+            if asfsr_syst < ref: # needs to be inverted for effect on extracted a_s
                 up2 += (asfsr_syst-ref)**2
-            if asfsr_syst < ref:
+            if asfsr_syst > ref:
                 dn2 += (asfsr_syst-ref)**2
-            print(vardir, '%.3f'%(asfsr_syst-ref))
+            print(vardir, '%.3f'%(ref-asfsr_syst))
     
     up2_total = up2
     dn2_total = dn2
@@ -245,9 +249,9 @@ def main():
     #gr_sum.SetBit(ROOT.TGraph.kIsSortedX)
     gr_sum.SetLineColor(ROOT.kWhite)
     gr_sum.SetTitle()
-    gr_sum.GetXaxis().SetTitle('#alpha_{S}^{FSR}(m(Z))')
+    gr_sum.GetXaxis().SetTitle('#alpha_{S}^{FSR}(m_{#lower[-0.3]{Z}})')
     if opt.cmw:
-        gr_sum.GetXaxis().SetTitle('#alpha_{S,CMW}^{FSR}(m(Z))')
+        gr_sum.GetXaxis().SetTitle('#alpha_{S}^{FSR}(m_{#lower[-0.3]{Z}})')
     gr_sum.GetXaxis().SetTitleOffset(1.)
     gr_sum.GetXaxis().SetTitleSize(0.045)
     gr_sum.GetXaxis().SetLabelSize(0.04)
@@ -294,7 +298,7 @@ def main():
         yval = gr_sum.Eval(xval, 0, 'S')
         if (yval > ymin + 1): continue
         x1.append(xval)
-        y1.append(yval)
+        y1.append(yval+offset)
     up2_total += (x1[-1] - asfsr)**2
     dn2_total += (x1[0] - asfsr)**2
     
@@ -304,7 +308,7 @@ def main():
     for xval in np.arange(asfsr-sqrt(dn2_total), asfsr+sqrt(up2_total), 0.000001):
         yval = gr_sum.Eval(xval, 0, 'S')
         x2x.append(xval)
-        y2x.append(yval)
+        y2x.append(yval+offset)
     gr_unc_2x = ROOT.TGraph(len(x2x), array('d',x2x) ,array('d',y2x))
     gr_unc_2x.SetLineWidth(0)
     gr_unc_2x.SetFillColor(ROOT.kGreen+2)
@@ -319,7 +323,7 @@ def main():
         for xval in np.arange(asfsr_scale['0.5'], asfsr_scale['2.0'], 0.000001):
             yval = gr_sum.Eval(xval, 0, 'S')
             x2f.append(xval)
-            y2f.append(yval)
+            y2f.append(yval+offset)
         gr_unc_2f = ROOT.TGraph(len(x2f), array('d',x2f) ,array('d',y2f))
         gr_unc_2f.SetLineWidth(0)
         gr_unc_2f.SetFillColor(ROOT.kGreen-10)
@@ -342,7 +346,7 @@ def main():
     for xval in np.arange(asfsr-sqrt(dn2), asfsr+sqrt(up2), 0.000001):
         yval = gr_sum.Eval(xval, 0, 'S')
         x2m.append(xval)
-        y2m.append(yval)
+        y2m.append(yval+offset)
     gr_unc_2m = ROOT.TGraph(len(x2m), array('d',x2m) ,array('d',y2m))
     gr_unc_2m.SetLineWidth(0)
     gr_unc_2m.SetFillColor(ROOT.kBlack)
@@ -399,12 +403,12 @@ def main():
     txt.DrawLatex(0.90,0.75, '#scale[1.0]{'+opt.reco+' particles}')
     if properSet:
         #txt.SetTextColor(ROOT.kRed+1)
-        if opt.cmw:
-            txt.DrawLatex(0.90,0.675, "#scale[1.0]{#alpha_{S,CMW}^{FSR}(m_{Z}) = %.3f_{%+.3f}^{ %+.3f}}"%(asfsr, x2x[0] - asfsr, x2x[-1] - asfsr))
-        else:
-            txt.DrawLatex(0.90,0.675, "#scale[1.0]{#alpha_{S}^{FSR}(m_{Z}) = %.3f_{%+.3f}^{ %+.3f}}"%(asfsr, x2x[0] - asfsr, x2x[-1] - asfsr))
+        txt.DrawLatex(0.90,0.675, "#scale[1.0]{#alpha_{S}(m_{#lower[-0.2]{Z}}) = %.3f_{#lower[-0.2]{ #minus %.3f}}^{ #plus %.3f}}"%(asfsr, abs(x2x[0] - asfsr), x2x[-1] - asfsr))
     if opt.cmw:
-        txt.DrawLatex(0.90,0.6, 'LO, CMW, 2-loop')
+        if opt.flavor == 'bottom':
+            txt.DrawLatex(0.90,0.6, 'LO+LL, 2-loop CMW')
+        else:
+            txt.DrawLatex(0.90,0.6, 'LL, 2-loop CMW')
     
     ROOT.gPad.RedrawAxis()
     
