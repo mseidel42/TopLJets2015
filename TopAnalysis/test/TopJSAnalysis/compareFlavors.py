@@ -112,6 +112,7 @@ def main():
         uncratios[flavor].Divide(hists['incl'])
         yrange = [-0.25,2.25]
         if opt.obs == 'zg': yrange = [0.75,1.25]
+        if opt.obs == 'zgdr': yrange = [0.7,1.3]
         limitToRange(uncratios[flavor], yrange)
         limitToRange(pythiauncratios[flavor], yrange)
         if flavor == 'incl': continue

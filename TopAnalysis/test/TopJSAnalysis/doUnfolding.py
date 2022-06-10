@@ -1,6 +1,4 @@
 import ROOT
-ROOT.gROOT.SetBatch(True)
-ROOT.gErrorIgnoreLevel = ROOT.kError
 import optparse
 import os,sys,io
 import json
@@ -11,6 +9,10 @@ from array import *
 import random
 import numpy
 import copy
+from ctypes import c_int
+
+ROOT.gROOT.SetBatch(True)
+ROOT.gErrorIgnoreLevel = ROOT.kError
 
 debug = True
 
@@ -148,7 +150,7 @@ def main():
 
             if isData:
                 #if not 'SingleMuon' in tag: continue
-                if not any(x in tag for x in ['2016G', '2016H']): continue
+                #if not any(x in tag for x in ['2016G', '2016H']): continue
                 h=fIn.Get(opt.obs+'_'+opt.reco+'_'+opt.flavor+'_responsematrix_py')
                 try:
                     data.Add(h)
@@ -357,6 +359,7 @@ def main():
     dataUnfolded.GetXaxis().SetLabelSize(0)
     dataUnfolded.SetYTitle('1/N_{jet} dN_{jet} / d '+nice_observables_root[opt.obs])
     dataUnfolded.GetYaxis().SetRangeUser(0.0001, 2*dataUnfolded.GetMaximum())
+    dataUnfolded.GetYaxis().SetDecimals(True)
     dataUnfolded.GetYaxis().SetTitleSize(0.05*p1correction)
     dataUnfolded.GetYaxis().SetLabelSize(0.045*p1correction)
     dataUnfolded.GetYaxis().SetTitleOffset(1.1/p1correction)
@@ -406,13 +409,6 @@ def main():
     dataUnfoldedSysRatio.GetYaxis().SetTitleSize(0.2*p2correction)
     dataUnfoldedSysRatio.GetYaxis().SetTitleOffset(0.3/p2correction)
     dataUnfoldedSysRatio.GetYaxis().SetLabelSize(0.18*p2correction)
-    dataUnfoldedSysRatio.GetYaxis().SetRangeUser(0.35,1.65)
-    if (nominalGenRatio.GetMaximum() > 1.6 or nominalGenRatio.GetMinimum() < 0.4):
-        dataUnfoldedSysRatio.GetYaxis().SetRangeUser(-0.25,2.25)
-    if opt.obs == 'zg':
-        dataUnfoldedSysRatio.GetYaxis().SetRangeUser(0.75,1.25)
-    limitToRange(dataUnfoldedSysRatio, [0.0, 2.0])
-    dataUnfoldedSysRatio.GetYaxis().SetNdivisions(503)
 
     FSRUpGen = normalizeAndDivideByBinWidth(systematics['MC13TeV_TTJets_fsrup'].ProjectionX("FSRUpGen"))
     for i in range(1, FSRUpGen.GetNbinsX()+1):
@@ -518,6 +514,65 @@ def main():
     direGen.Draw('SAME H')
     direGenRatio=direGen.Clone('direGenRatio')
     direGenRatio.Divide(dataUnfoldedNoErr)
+
+    # Get min/max values for ratio
+    ratioMin = 9.
+    ratioMax = 0.
+    for ratio in [nominalGenRatio, FSRUpGenRatio, FSRDownGenRatio, herwigGenRatio, sherpaGenRatio, direGenRatio]:
+        if ratio.GetMinimum() < ratioMin:
+            ratioMin = ratio.GetMinimum()
+        for i in range(1, ratio.GetNbinsX()+1):
+            bincontent = ratio.GetBinContent(i)
+            if bincontent < 2.1 and bincontent > ratioMax:
+                ratioMax = bincontent
+    # Extend ratio to make sure that markers are inside the plot
+    ratioMean = (ratioMax + ratioMin) / 2.
+    ratioDiff = (ratioMax - ratioMin) / 2.
+    ratioMin = ratioMean - ratioDiff * 1.25
+    ratioMax = ratioMean + ratioDiff * 1.25
+    # Check spacing of upper/lower label
+    dataUnfoldedSysRatio.GetYaxis().SetNdivisions(504)
+    dataUnfoldedSysRatio.GetYaxis().SetDecimals(True)
+    ROOT.TGaxis.SetMaxDigits(3)
+    bl1 = ROOT.Double(0)
+    bh1 = ROOT.Double(0)
+    bl2 = ROOT.Double(0)
+    bh2 = ROOT.Double(0)
+    bw1 = ROOT.Double(0)
+    bn1 = c_int(0)
+    optimizeUp = True
+    optimizeDown = True
+    hasOne = False
+    while optimizeUp or optimizeDown or not hasOne:
+        ROOT.THLimitsFinder.Optimize(ratioMin, ratioMax, dataUnfoldedSysRatio.GetYaxis().GetNdivisions() % 100, bl1, bh1, bn1, bw1)
+        print(ratioMin, ratioMax, dataUnfoldedSysRatio.GetYaxis().GetNdivisions() % 100, bl1, bh1, bn1, bw1)
+        distUpDown = bh1 - bl1
+        minDistEdge = 0.1 * distUpDown
+        if bl1 - ratioMin < minDistEdge:
+            ratioMin = bl1 - minDistEdge * 1.01
+        else:
+            optimizeDown = False
+        if ratioMax - bh1 < minDistEdge:
+            ratioMax = bh1 + minDistEdge * 1.01
+        else:
+            optimizeUp = False
+        # Check for 1
+        diff = bh1 - bl1
+        step = diff / bn1.value
+        for i in range(bn1.value):
+            if bl1 + step * i - 1. < 0.0001:
+                hasOne = True
+                break
+            else:
+                hasOne = False
+        if not hasOne:
+            ratioMin = ratioMin * 0.99
+            ratioMax = ratioMax * 1.01
+        
+        
+    dataUnfoldedSysRatio.GetXaxis().SetTickLength(dataUnfoldedSysRatio.GetXaxis().GetTickLength() * 2.)
+    dataUnfoldedSysRatio.GetYaxis().SetRangeUser(ratioMin, ratioMax)
+    limitToRange(dataUnfoldedSysRatio, [ratioMin, ratioMax])
 
     #fsrlist = []
     #fsrlist.append('pythia8_asfsr0.100_meon_crdefault')
@@ -815,6 +870,7 @@ def unfold(Mtag, Morig, backgrounds, data, tau):
         sf = 1.
         if sigReco.GetBinContent(i) > 0:
           sf = sigRecoNonGen.GetBinContent(i) / sigReco.GetBinContent(i)
+          print('SF', sf)
         dataBkgSub.SetBinContent(i, (1.-sf)*dataBkgSub.GetBinContent(i))
         dataBkgSub.SetBinError  (i, (1.-sf)*dataBkgSub.GetBinError(i))
         M.SetBinContent(0, i, 0.)

@@ -186,8 +186,9 @@ int testUnfold0Toys(TString observable = "mult", TString reco = "charged", TStri
   histMdetMCsig->Scale(dataMCSF);
   
   double integral = histMdetGenMC->Integral(0,-1,0,-1);
-  //std::cout << "integral: " << integral << std::endl;
+  std::cout << "integral: " << integral << std::endl;
   double nExpectedEvents = integral*lumi*832.;
+  std::cout << "nExpectedEvents: " << nExpectedEvents << std::endl;
   std::vector<double> wheel = { 0. };
   for (int i = 0; i < histMdetGenMC->GetNcells()+1; ++i) {
     //std::cout << wheel.back() << std::endl;
@@ -209,7 +210,7 @@ int testUnfold0Toys(TString observable = "mult", TString reco = "charged", TStri
   TH2F* hPull = new TH2F("pull", "pull;bin;pull", histMgenMC->GetNbinsX(), 0.5, histMgenMC->GetNbinsX()+0.5, 50, -5, 5);
   std::vector<std::vector<double> > pseudoresults;
   
-  TFile outfile("unfolding/toys/"+observable+"_"+flavor+"_toys.root", "RECREATE");
+  TFile outfile("unfolding/toys2020/"+observable+"_"+flavor+"_toys.root", "RECREATE");
   
   for (int t = 0; t < nToys; ++t) {
     if(t%int(nToys/100)==0) std::cout << observable << " " << flavor << ", toy number " << t << "/" << nToys << std::endl;
@@ -271,8 +272,10 @@ int testUnfold0Toys(TString observable = "mult", TString reco = "charged", TStri
     //std::cout << "SF=" << SF << std::endl;
     //histMdetDataBGSubtracted->Add(histMdetNonGenMCbkg, -SF*832.);
     //*
+    double subtracted = 0;
     for (int i = 0; i < histMdetDataBGSubtracted->GetNbinsX()+2; ++i) {
       double sf = histMdetNonGenMCbkg->GetBinContent(i) / histMdetNonGenMCall->GetBinContent(i);
+      subtracted += sf*histMdetDataBGSubtracted->GetBinContent(i);
       histMdetDataBGSubtracted->SetBinContent(i, (1.-sf)*histMdetDataBGSubtracted->GetBinContent(i));
       if (std::isnan(histMdetDataBGSubtracted->GetBinContent(i)))
         histMdetDataBGSubtracted->SetBinContent(i, 0);
@@ -281,6 +284,9 @@ int testUnfold0Toys(TString observable = "mult", TString reco = "charged", TStri
         histMdetDataBGSubtracted->SetBinError(i, 0);
       
     }
+    
+    std::cout << "Subtract " << subtracted << " fakes from measured distribution" << std::endl;
+    
     //*/
     /*
     for (auto background : backgrounds) {
@@ -373,17 +379,17 @@ int testUnfold0Toys(TString observable = "mult", TString reco = "charged", TStri
   pull_1->GetYaxis()->SetRangeUser(-1.,1.);
   pull_1->Fit("pol0");
   
-  output.SaveAs("unfolding/toys/"+observable+"_"+flavor+"_pull_mean.pdf");
-  output.SaveAs("unfolding/toys/"+observable+"_"+flavor+"_pull_mean.png");
-  output.SaveAs("unfolding/toys/"+observable+"_"+flavor+"_pull_mean.root");
+  output.SaveAs("unfolding/toys2020/"+observable+"_"+flavor+"_pull_mean.pdf");
+  output.SaveAs("unfolding/toys2020/"+observable+"_"+flavor+"_pull_mean.png");
+  output.SaveAs("unfolding/toys2020/"+observable+"_"+flavor+"_pull_mean.root");
   
   TH1D *pull_2 = (TH1D*) gDirectory->Get("pull_2");
   pull_2->GetYaxis()->SetRangeUser(0.,2.);
   pull_2->Fit("pol0");
   
-  output.SaveAs("unfolding/toys/"+observable+"_"+flavor+"_pull_width.pdf");
-  output.SaveAs("unfolding/toys/"+observable+"_"+flavor+"_pull_width.png");
-  output.SaveAs("unfolding/toys/"+observable+"_"+flavor+"_pull_width.root");
+  output.SaveAs("unfolding/toys2020/"+observable+"_"+flavor+"_pull_width.pdf");
+  output.SaveAs("unfolding/toys2020/"+observable+"_"+flavor+"_pull_width.png");
+  output.SaveAs("unfolding/toys2020/"+observable+"_"+flavor+"_pull_width.root");
   
   for (int i = 0; i < pull_1->GetNbinsX()+2; ++i) {
     pull_1->SetBinError(i, pull_2->GetBinContent(i));
@@ -395,9 +401,9 @@ int testUnfold0Toys(TString observable = "mult", TString reco = "charged", TStri
   pull_1->SetLineWidth(4);
   pull_1->Draw("e1,same");
   
-  output.SaveAs("unfolding/toys/"+observable+"_"+flavor+"_pull.pdf");
-  output.SaveAs("unfolding/toys/"+observable+"_"+flavor+"_pull.png");
-  output.SaveAs("unfolding/toys/"+observable+"_"+flavor+"_pull.root");
+  output.SaveAs("unfolding/toys2020/"+observable+"_"+flavor+"_pull.pdf");
+  output.SaveAs("unfolding/toys2020/"+observable+"_"+flavor+"_pull.png");
+  output.SaveAs("unfolding/toys2020/"+observable+"_"+flavor+"_pull.root");
   
   /*
   vector<vector<double>> pseudoresults_T;
